@@ -5,7 +5,7 @@
 #include <err.h>
 #include <stdio.h>
 
-#include "matrix_maker.h"
+#include "image_matrix.h"
 
 #define LIMIT 230
 

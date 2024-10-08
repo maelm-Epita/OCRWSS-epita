@@ -1,5 +1,5 @@
-#ifndef MATRIX_MAKER_H
-#define MATRIX_MAKER_H
+#ifndef IMAGE_MATRIX_H
+#define IMAGE_MATRIX_H
 
 #include <SDL2/SDL.h>
 

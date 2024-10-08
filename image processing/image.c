@@ -7,7 +7,7 @@
 #include <stdlib.h>
 
 #include "image_tools.h"
-#include "matrix_maker.h"
+#include "image_matrix.h"
 
 #define STEP_ANGLE 5
 

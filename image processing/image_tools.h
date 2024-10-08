@@ -1,5 +1,5 @@
-#ifndef COLOR_REMOVAL_H
-#define COLOR_REMOVAL_H
+#ifndef IMAGE_TOOLS_H
+#define IMAGE_TOOLS_H
 
 #include <SDL2/SDL_pixels.h>
 #include <SDL2/SDL_surface.h>
