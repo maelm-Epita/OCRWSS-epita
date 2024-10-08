@@ -7,13 +7,11 @@
 
 #include "solver.h"
 
-#include <time.h>
 int main(int argc, char *argv[]) {
   if (argc != 3) {
     fprintf(stderr, "use solver : solver <grid file> <word to find>\n");
     return 1;
   }
-  clock_t begin = clock();
 
   struct word w = create_word(*(argv + 2));
   FILE *grid_file = fopen(*(argv + 1), "r");
@@ -34,8 +32,6 @@ int main(int argc, char *argv[]) {
   solver(g, &w);
   printf("(%i, %i) -> (%i, %i)\n", w.start.x, w.start.y, w.end.x, w.end.y);
 
-  clock_t end = clock();
-  printf("Time : %f\n", (double)(end - begin)/CLOCKS_PER_SEC);
   return 0;
 }
 
@@ -81,7 +77,7 @@ void solver(struct grid g, struct word *w) {
       }
     }
   }
-  puts("NOT FOUND");
+  puts("Not found");
 }
 
 int search(int x, int y, int addx, int addy, struct grid g, struct word *w) {
