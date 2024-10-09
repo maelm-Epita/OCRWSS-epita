@@ -1,8 +1,8 @@
 CC := gcc
-CFLAGS := -std=c99 -Wextra -Wall -pedantic -Werror -Wvla
+CFLAGS := -Wextra -Wall -pedantic -Werror -Wvla
 SRC := multi_solver.c grid.c tree_words.c list_word.c
 OBJ := $(SRC:.c=.o)
-BIN := solver
+BIN := multi_solver
 
 all: $(BIN)
 
