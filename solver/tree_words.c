@@ -151,7 +151,7 @@ void export_tree(tree_word *tree, char *name) {
   fprintf(dot_file, "%s", res);
   fclose(dot_file);
 
-  pid_t pid = fork();
+  int pid = fork();
   if (pid == -1)
     errx(1, "fork()");
   else if (pid == 0) {
@@ -168,6 +168,7 @@ void export_tree(tree_word *tree, char *name) {
 }
 
 
+/*
 int main(void) {
   tree_word *tree = init_tree('\0');
   // print_tree(tree);
@@ -200,3 +201,4 @@ int main(void) {
   destroy_tree(&tree);
   return 0;
 }
+*/
