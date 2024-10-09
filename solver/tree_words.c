@@ -42,10 +42,20 @@ void add_word(tree_word *tree, char *word) {
 
 void remove_word(tree_word *tree, char *word) {
   tree_word *child = get_child(tree, *word);
-  if (child->child != NULL)
+  if (word[1] != 0 && child != NULL)
     remove_word(child, word + 1);
-  tree->child = child->brother;
-  free(child);
+
+  if (child != NULL && child->child == NULL) {
+    if (child == tree->child)
+      tree->child = child->brother;
+    else {
+      tree_word *prev = tree->child;
+      while (prev->brother != child)
+        prev = prev->brother;
+      prev->brother = child->brother;
+    }
+    free(child);
+  }
 }
 
 void destroy_aux(tree_word *tree) {
@@ -66,6 +76,29 @@ void destroy_tree(tree_word **tree) {
   free(*tree);
   *tree = NULL;
 }
+
+size_t nb_children(tree_word *tree){
+  size_t res = 0;
+  tree_word *child = tree->child;
+  while (child != NULL){
+    res++;
+    child = child->brother;
+  }
+  return res;
+}
+
+tree_word *get_child(tree_word *tree, char c) {
+  tree_word *res = tree->child;
+  while (res != NULL && res->c != c)
+    res = res->brother;
+  return res;
+}
+
+int is_leaf(tree_word *tree) {
+  return tree->child == NULL && tree->brother == NULL;
+}
+
+
 
 void print_tree(tree_word *tree) {
   putchar('<');
@@ -122,23 +155,18 @@ void export_tree(tree_word *tree, char *name) {
   if (pid == -1)
     errx(1, "fork()");
   else if (pid == 0) {
-    char *argv[4] = {"dot", "-Tsvg", name, "-O",};
+    char *argv[4] = {
+        "dot",
+        "-Tsvg",
+        name,
+        "-O",
+    };
     execvp(argv[0], argv);
   }
 
   free(res);
 }
 
-tree_word *get_child(tree_word *tree, char c) {
-  tree_word *res = tree->child;
-  while (res != NULL && res->c != c)
-    res = res->brother;
-  return res;
-}
-
-int is_leaf(tree_word *tree) {
-  return tree->child == NULL && tree->brother == NULL;
-}
 
 int main(void) {
   tree_word *tree = init_tree('\0');
@@ -157,6 +185,17 @@ int main(void) {
 
   putchar('\n');
   export_tree(tree, "farm");
+  remove_word(tree, "DOG");
+  remove_word(tree, "SHEEP");
+  remove_word(tree, "PIG");
+  remove_word(tree, "CAT");
+  remove_word(tree, "DUCK");
+  remove_word(tree, "COW");
+  remove_word(tree, "CHICK");
+  remove_word(tree, "GOAT");
+  remove_word(tree, "HORSE");
+  remove_word(tree, "COW");
+  export_tree(tree, "farm2");
 
   destroy_tree(&tree);
   return 0;

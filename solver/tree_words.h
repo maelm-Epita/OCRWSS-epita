@@ -22,14 +22,17 @@ void remove_word(tree_word *tree, char *word);
 
 void destroy_tree(tree_word **tree);
 
+size_t nb_children(tree_word *tree);
+
+tree_word *get_child(tree_word *tree, char c);
+
+int is_leaf(tree_word *tree);
+
 
 void print_tree(tree_word *tree);
 
 void export_tree(tree_word *tree, char *name);
 
 
-tree_word *get_child(tree_word *tree, char c);
-
-int is_leaf(tree_word *tree);
 
 #endif
