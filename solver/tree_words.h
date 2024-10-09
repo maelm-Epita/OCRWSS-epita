@@ -1,6 +1,8 @@
 #ifndef TREE_WORDS_H
 #define TREE_WORDS_H
 
+#include <stddef.h>
+
 
 typedef struct tree_word {
   char c;
@@ -10,11 +12,20 @@ typedef struct tree_word {
 
 tree_word *init_tree(char c);
 
+
+const size_t TWSIZE = sizeof(tree_word);
+
+
 void add_word(tree_word *tree, char *word);
+
+void remove_word(tree_word *tree, char *word);
 
 void destroy_tree(tree_word **tree);
 
+
 void print_tree(tree_word *tree);
+
+char *export_tree(tree_word *tree);
 
 
 tree_word *get_child(tree_word *tree, char c);
