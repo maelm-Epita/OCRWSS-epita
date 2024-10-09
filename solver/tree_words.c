@@ -69,6 +69,13 @@ void print_tree(tree_word *tree) {
   putchar('>');
 }
 
+tree_word *get_child(tree_word *tree, char c){
+  tree_word *res = tree->child;
+  while (res != NULL && res->c != c)
+    res = res->brother;
+  return res;
+}
+
 int is_leaf(tree_word *tree) {
   return tree->child == NULL && tree->brother == NULL;
 }

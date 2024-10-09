@@ -1,6 +1,7 @@
 #ifndef TREE_WORDS_H
 #define TREE_WORDS_H
 
+
 typedef struct tree_word {
   char c;
   struct tree_word* child;
@@ -15,6 +16,8 @@ void destroy_tree(tree_word **tree);
 
 void print_tree(tree_word *tree);
 
+
+tree_word *get_child(tree_word *tree, char c);
 
 int is_leaf(tree_word *tree);
 
