@@ -73,7 +73,12 @@ void fill_grid(FILE *file, int row, char *grid) {
 }
 
 void print_grid(struct grid g) {
-  puts("   0 1 2 3 4 5 6 7");
+  putchar(' ');
+  putchar(' ');
+  for (int i = 0; i <g.col; i++)
+    printf(" %i", i);
+  putchar('\n');
+
   putchar('\n');
   for (int i = 0; i < g.row; i++) {
     printf("%i  ", i);
