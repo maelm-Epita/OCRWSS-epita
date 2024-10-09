@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "tree_words.h"
 
@@ -39,6 +40,14 @@ void add_word(tree_word *tree, char *word) {
     add_aux(tree->child, word);
 }
 
+void remove_word(tree_word *tree, char *word) {
+  tree_word *child = get_child(tree, *word);
+  if (child->child != NULL)
+    remove_word(child, word + 1);
+  tree->child = child->brother;
+  free(child);
+}
+
 void destroy_aux(tree_word *tree) {
   if (tree->child != NULL) {
     destroy_aux(tree->child);
@@ -70,26 +79,54 @@ void print_tree(tree_word *tree) {
 }
 
 char *export_aux(tree_word *tree, int nb) {
+  char *old_res = NULL;
   char *res = NULL;
-  asprintf(&res, "\tnode [fillcolor=white shape=circle style=filled]\n\t%i [label=%c]\n", nb, tree->c == 0 ? '*' : tree->c);
+  if (tree->c != 0)
+    asprintf(
+        &old_res,
+        "\tnode [fillcolor=white shape=circle style=filled]\n\t%i [label=%c]\n",
+        nb, tree->c);
+  else
+    asprintf(&old_res,
+             "\tnode [fillcolor=white shape=circle style=filled]\n\t%i "
+             "[label=\"\"]\n",
+             nb);
 
   tree_word *child = tree->child;
   int child_nb = 2 * nb;
   while (child != NULL) {
-    asprintf(&res, "%s%s\t%i -> %i\n", res,export_aux(child, child_nb), nb, child_nb);
+    char *aux = export_aux(child, child_nb);
+    asprintf(&res, "%s%s\t%i -> %i\n", old_res, aux, nb, child_nb);
+    free(aux);
+    free(old_res);
+    old_res = res;
+
     child = child->brother;
     child_nb = child_nb * 2 + 1;
   }
 
-  return res;
+  return res == NULL ? old_res : res;
 }
 
-char *export_tree(tree_word *tree) {
+void export_tree(tree_word *tree, char *name) {
   char *res = "digraph {\n\tgraph [rankdir=TB]\n";
   char *aux = export_aux(tree, 1);
   asprintf(&res, "%s%s%s", res, aux, "}\n");
   free(aux);
-  return res;
+
+  FILE *dot_file = fopen(name, "w");
+  fprintf(dot_file, "%s", res);
+  fclose(dot_file);
+
+  pid_t pid = fork();
+  if (pid == -1)
+    errx(1, "fork()");
+  else if (pid == 0) {
+    char *argv[4] = {"dot", "-Tsvg", name, "-O",};
+    execvp(argv[0], argv);
+  }
+
+  free(res);
 }
 
 tree_word *get_child(tree_word *tree, char c) {
@@ -119,10 +156,8 @@ int main(void) {
   print_tree(tree);
 
   putchar('\n');
-  char *dot = export_tree(tree);
-  puts(dot);
+  export_tree(tree, "farm");
 
   destroy_tree(&tree);
-  free(dot);
   return 0;
 }

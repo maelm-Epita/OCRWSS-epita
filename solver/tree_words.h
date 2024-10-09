@@ -25,7 +25,7 @@ void destroy_tree(tree_word **tree);
 
 void print_tree(tree_word *tree);
 
-char *export_tree(tree_word *tree);
+void export_tree(tree_word *tree, char *name);
 
 
 tree_word *get_child(tree_word *tree, char c);
