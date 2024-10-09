@@ -1,28 +1,32 @@
 #include <stdlib.h>
+#include <err.h>
 
 #include "grid.h"
 
-struct grid init_grid(FILE *file) {
-  int dim[2];
-  get_dimensions(file, dim);
+grid *init_grid(FILE *file) {
+  int w, h;
+  get_dimensions(file, &w, &h);
 
-  if (*dim == -1)
-    return (struct grid){dim[0], dim[1], NULL};
+  grid *res = malloc(sizeof(grid));
+  if (res == NULL)
+    errx(1, "malloc()");
 
-  char *grid = calloc(*dim * *(dim + 1), sizeof(char));
+  res->letters = calloc(w * h, sizeof(char));
+  if (res->letters == NULL)
+    errx(1, "calloc()");
+
+  res->w = w;
+  res->h = h;
 
   rewind(file);
-  fill_grid(file, *dim, grid);
+  fill_grid(file, h, res->letters);
 
-  if (*grid == -1)
-    return (struct grid){dim[0], dim[1], NULL};
-
-  return (struct grid){dim[0], dim[1], grid};
+  return res;
 }
 
 /* We get dimensions of the grid by counting
  * char by line and \n into the file */
-void get_dimensions(FILE *file, int *res) {
+void get_dimensions(FILE *file, int *w, int *h) {
   char c;
   int lines = 0, char_by_line = 0, nb_char = 0;
 
@@ -32,12 +36,8 @@ void get_dimensions(FILE *file, int *res) {
         char_by_line = nb_char;
         lines++;
       } else {
-        if (nb_char != char_by_line) {
-          fprintf(stderr, "Invalid grid: all lines must have the same number "
-                          "of characters\n");
-          *res = -1;
-          return;
-        }
+        if (nb_char != char_by_line)
+          errx(1, "Invalid grid: all lines must have as much char");
         lines++;
       }
       nb_char = 0;
@@ -45,8 +45,8 @@ void get_dimensions(FILE *file, int *res) {
       nb_char++;
   }
 
-  *res = lines;
-  *(res + 1) = char_by_line;
+  *h = lines;
+  *w = char_by_line;
 }
 
 void fill_grid(FILE *file, int row, char *grid) {
@@ -62,28 +62,25 @@ void fill_grid(FILE *file, int row, char *grid) {
         *(grid + i * row + j) = c;
       else if (c >= 'A' && c <= 'Z')
         *(grid + i * row + j) = c - 'A' + 'a';
-      else {
-        fprintf(stderr, "Invalid grid: grid can only contain letters\n");
-        *grid = -1;
-        return;
-      }
+      else
+        errx(1, "Invalid grid: grid can only contain letters");
       j++;
     }
   }
 }
 
-void print_grid(struct grid g) {
+void print_grid(grid *g) {
   putchar(' ');
   putchar(' ');
-  for (int i = 0; i <g.col; i++)
+  for (int i = 0; i <g->w; i++)
     printf(" %i", i);
   putchar('\n');
 
   putchar('\n');
-  for (int i = 0; i < g.row; i++) {
+  for (int i = 0; i < g->h; i++) {
     printf("%i  ", i);
-    for (int j = 0; j < g.col; j++) {
-      putchar(*(g.letters + i * g.row + j));
+    for (int j = 0; j < g->w; j++) {
+      putchar(g->letters[i * g->h + j]);
       putchar(' ');
     }
     putchar('\n');

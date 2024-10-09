@@ -4,18 +4,18 @@
 #include <stdio.h>
 
 
-struct grid {
-  int row;
-  int col;
+typedef struct grid {
+  int w;
+  int h;
   char *letters;
-};
+} grid;
 
-struct grid init_grid(FILE *file);
+grid *init_grid(FILE *file);
 
-void get_dimensions(FILE *file, int *res);
+void get_dimensions(FILE *file, int *w, int *h);
 
 void fill_grid(FILE *file, int row, char *grid);
 
-void print_grid(struct grid g);
+void print_grid(grid *g);
 
 #endif
