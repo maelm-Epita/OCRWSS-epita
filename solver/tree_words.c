@@ -4,29 +4,39 @@
 
 #include "tree_words.h"
 
-tree_word *init_tree() {
+tree_word *init_tree(char c) {
   tree_word *res = malloc(sizeof(tree_word));
   if (res == NULL)
     errx(1, "malloc()");
-  *res = (tree_word){0, NULL, NULL};
+  *res = (tree_word){c, NULL, NULL};
   return res;
 }
 
-void add_word(tree_word *tree, char *word) {
+void add_aux(tree_word *tree, char *word) {
   if (*word != '\0') {
-    tree_word *old = NULL;
-    while (tree != NULL && tree->c != *word) {
-      old = tree;
-      tree = tree->brother;
-    }
-    if (tree == NULL) {
-      old->brother = malloc(sizeof(tree_word));
-      if (old->brother == NULL)
-        errx(1, "malloc()");
-      tree = old->brother;
-    }
-    add_word(tree, word + 1);
+      tree_word *new_tree = tree;
+      tree_word *old = NULL;
+      while (new_tree != NULL && new_tree->c != *word) {
+        old = new_tree;
+        new_tree = new_tree->brother;
+      }
+      if (new_tree == NULL) {
+        old->brother = init_tree(*word);
+        new_tree = old->brother;
+      }
+      add_word(new_tree, word + 1);
   }
+}
+void add_word(tree_word *tree, char *word) {
+  if (tree->child == NULL){
+    tree_word *child = tree;
+    for (size_t i = 0; word[i] != '\0'; i++){
+      child->child = init_tree(word[i]);
+      child = child->child;
+    }
+  }
+  else
+    add_aux(tree->child, word);
 }
 
 void destroy_aux(tree_word *tree) {
@@ -44,6 +54,7 @@ void destroy_aux(tree_word *tree) {
 
 void destroy_tree(tree_word **tree) {
   destroy_aux(*tree);
+  free(*tree);
   *tree = NULL;
 }
 
@@ -63,14 +74,17 @@ int is_leaf(tree_word *tree) {
 }
 
 int main(void) {
-  tree_word *tree = init_tree();
-  print_tree(tree);
+  tree_word *tree = init_tree('\0');
+  //print_tree(tree);
 
   add_word(tree, "pedantic");
   print_tree(tree);
-
-  putchar(tree->c);
-  putchar(tree->brother->c);
   putchar('\n');
+  add_word(tree, "papa");
+  print_tree(tree);
+
+  putchar('\n');
+  
+  destroy_tree(&tree);
   return 0;
 }

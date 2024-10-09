@@ -7,7 +7,7 @@ typedef struct tree_word {
   struct tree_word* brother;
 } tree_word;
 
-tree_word *init_tree();
+tree_word *init_tree(char c);
 
 void add_word(tree_word *tree, char *word);
 
