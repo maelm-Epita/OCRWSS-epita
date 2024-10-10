@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <wait.h>
 
 #include "tree_words.h"
 
@@ -115,7 +116,7 @@ int tree_length(tree_word *tree){
     res = len > res ? len : res;
     child = child->brother;
   }
-  return res;
+  return res + 1;
 }
 
 
@@ -181,6 +182,7 @@ void export_tree(tree_word *tree, char *name) {
         "-O",
     };
     execvp(argv[0], argv);
+    kill(getpid(), SIGKILL);
   }
 
   free(res);
