@@ -18,6 +18,8 @@ static const size_t TWSIZE = sizeof(tree_word);
 
 void add_word(tree_word *tree, char *word);
 
+tree_word *build_from_words(char **words, int nb_words);
+
 void remove_word(tree_word *tree, char *word);
 
 void destroy_tree(tree_word **tree);

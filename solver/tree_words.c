@@ -40,6 +40,15 @@ void add_word(tree_word *tree, char *word) {
     add_aux(tree->child, word);
 }
 
+tree_word *build_from_words(char **words, int nb_words){
+  tree_word *res = init_tree('\0');
+  for (size_t i = 0; i < nb_words; i++)
+    add_word(res, words[i]);
+  return res;
+}
+
+
+
 void remove_word(tree_word *tree, char *word) {
   tree_word *child = get_child(tree, *word);
   if (word[1] != 0 && child != NULL)
