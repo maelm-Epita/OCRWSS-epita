@@ -13,7 +13,7 @@ typedef struct tree_word {
 tree_word *init_tree(char c);
 
 
-const size_t TWSIZE = sizeof(tree_word);
+static const size_t TWSIZE = sizeof(tree_word);
 
 
 void add_word(tree_word *tree, char *word);

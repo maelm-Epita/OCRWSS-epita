@@ -15,7 +15,7 @@ typedef struct list_word{
 } list_word;
 
 
-const size_t LWSIZE = sizeof(list_word);
+static const size_t LWSIZE = sizeof(list_word);
 
 
 list_word *init_list(char *word, int startx, int starty, int endx, int endy);
