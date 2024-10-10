@@ -30,6 +30,8 @@ tree_word *get_child(tree_word *tree, char c);
 
 int is_leaf(tree_word *tree);
 
+int tree_length(tree_word *tree);
+
 
 void print_tree(tree_word *tree);
 

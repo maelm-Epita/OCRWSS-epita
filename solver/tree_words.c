@@ -42,7 +42,7 @@ void add_word(tree_word *tree, char *word) {
 
 tree_word *build_from_words(char **words, int nb_words){
   tree_word *res = init_tree('\0');
-  for (size_t i = 0; i < nb_words; i++)
+  for (int i = 0; i < nb_words; i++)
     add_word(res, words[i]);
   return res;
 }
@@ -107,6 +107,16 @@ int is_leaf(tree_word *tree) {
   return tree->child == NULL && tree->brother == NULL;
 }
 
+int tree_length(tree_word *tree){
+  int res = 0;
+  tree_word *child = tree->child;
+  while (child != NULL){
+    int len = tree_length(child);
+    res = len > res ? len : res;
+    child = child->brother;
+  }
+  return res;
+}
 
 
 void print_tree(tree_word *tree) {
