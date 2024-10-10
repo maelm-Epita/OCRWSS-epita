@@ -82,10 +82,10 @@ void print_grid(grid *g) {
   putchar('\n');
 
   putchar('\n');
-  for (int i = 0; i < g->w; i++) {
+  for (int i = 0; i < g->h; i++) {
     printf("%i  ", i);
-    for (int j = 0; j < g->h; j++) {
-      putchar(g->letters[i * g->h + j]);
+    for (int j = 0; j < g->w; j++) {
+      putchar(g->letters[i * g->w + j]);
       putchar(' ');
     }
     putchar('\n');
