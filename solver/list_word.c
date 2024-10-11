@@ -29,6 +29,7 @@ void destroy_list(list_word **list) {
   while (curr != NULL) {
     old = curr;
     curr = curr->next;
+    free(old->word);
     free(old);
   }
   *list = NULL;
