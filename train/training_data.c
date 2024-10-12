@@ -4,18 +4,26 @@
 #include "training_data.h"
 
 // create the training set from the input and output arrays
-struct training_set create_training_set(float** inputs, float* outputs, size_t data_number, size_t input_number){
+struct training_set create_training_set(float** inputs, float** outputs, size_t data_number, size_t input_number){
   // create dataset array
   struct training_data* data = calloc(data_number, sizeof(struct training_data));
   for (size_t i =0; i<data_number; i++){
-    // create input array for one data 
+    /* create input array for one data 
     float* input = calloc(input_number, sizeof(float));
     for (size_t j = 0; j<input_number; j++){
       // fill data array with respective inputs
       *(input+j) = *(*(inputs+i)+j);
     }
+    // do the same for outputs (with 26 because alphabet)
+    float* output = calloc(26, sizeof(float));
+    for (size_t j = 0; j<26; j++){
+      // fill data array with respective outputs
+      *(output+j) = *(*(outputs+i)+j);
+    }
+    */
     // create the data and put it in the data array
-    struct training_data d = {input, *(outputs+i)};
+    //struct training_data d = {input, output};
+    struct training_data d = {*(inputs+i), *(outputs+i)};
     *(data+i) = d;
   }
   // create the final training set
@@ -27,6 +35,7 @@ void free_training_set(struct training_set set){
   for (size_t i=0; i<set.data_number; i++){
     struct training_data data = *(set.data+i);
     free(data.inputs);
+    free(data.expected_output);
   }
   free(set.data);
 }
@@ -39,8 +48,12 @@ void print_training_set(struct training_set set){
     for (size_t j=0; j<set.input_number; j++){
       printf("%f, ", *(d.inputs+j));
     }
-    printf("} ; ");
-    printf("Expected Output : %f\n", d.expected_output);
+    printf("} ; \n");
+    printf("Expected Output : {");
+    for (size_t j=0; j<26; j++){
+      printf("%f, ", *(d.expected_output+j));
+    }
+    printf("}\n\n");
   }
 }
 
