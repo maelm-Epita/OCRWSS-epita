@@ -8,21 +8,6 @@ struct training_set create_training_set(float** inputs, float** outputs, size_t 
   // create dataset array
   struct training_data* data = calloc(data_number, sizeof(struct training_data));
   for (size_t i =0; i<data_number; i++){
-    /* create input array for one data 
-    float* input = calloc(input_number, sizeof(float));
-    for (size_t j = 0; j<input_number; j++){
-      // fill data array with respective inputs
-      *(input+j) = *(*(inputs+i)+j);
-    }
-    // do the same for outputs (with 26 because alphabet)
-    float* output = calloc(26, sizeof(float));
-    for (size_t j = 0; j<26; j++){
-      // fill data array with respective outputs
-      *(output+j) = *(*(outputs+i)+j);
-    }
-    */
-    // create the data and put it in the data array
-    //struct training_data d = {input, output};
     struct training_data d = {*(inputs+i), *(outputs+i)};
     *(data+i) = d;
   }
