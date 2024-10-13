@@ -38,3 +38,6 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+
+# ignore uncompressed training data DO NOT REMOVE
+uncompressed/
