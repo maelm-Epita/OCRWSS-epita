@@ -93,7 +93,7 @@ float* image_to_input(char* path){
     Uint32 pixel = *(pixels+i);
     SDL_GetRGB(pixel, format, &r, &g, &b);
     float greyscale = (float)(r+g+b)/3.0;
-    *(input+i) = greyscale;
+    *(input+i) = greyscale/255;
   }
   SDL_FreeSurface(img);
   return input;
