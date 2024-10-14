@@ -28,3 +28,16 @@ float partial_derivative_output(float(*f)(float*, float*, float, size_t), float*
     exit(EXIT_FAILURE);
   }
 }
+
+float float_rand( float min, float max )
+{
+    float scale = rand() / (float) RAND_MAX; /* [0, 1.0] */
+    return min + scale * ( max - min );      /* [min, max] */
+}
+float* rand_float_array(float min, float max, size_t size){
+  float* arr = calloc(size, sizeof(float));
+  for(size_t i=0; i<size; i++){
+    *(arr+i) = float_rand(min, max);
+  }
+  return arr;
+}

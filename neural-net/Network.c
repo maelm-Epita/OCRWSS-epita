@@ -33,3 +33,29 @@ float* feedforward(struct Network net, float* input){
   // the last layer's output is the network's output
   return prev_out;
 }
+
+void fill_network(struct Network* network){
+  size_t MIN_RAND = -10;
+  size_t MAX_RAND = 10;
+  // create the layer array
+  network->layers = calloc(network->layernb, sizeof(struct Layer));
+  size_t layer_inputsize = network->inputsize;
+  // foreach layer
+  for (size_t i=0; i<network->layernb; i++)
+  {
+    struct Layer *layer = network->layers+i;
+    size_t layersize = *(network->layersizes+i);
+    // create the neurons array
+    layer->neurons = calloc(layersize, sizeof(struct Neuron));
+    // foreach neuron
+    for (size_t j=0; j<layersize; j++){
+      struct Neuron *neuron = layer->neurons+j;
+      // each neuron has input size equal to the amount of neurons in the previous layer
+      neuron->inputsize = layer_inputsize;
+      // fill bias and weights with random values between MIN_RAND and MAX_RAND
+      neuron->bias = float_rand(MIN_RAND, MAX_RAND);
+      neuron->weights = rand_float_array(MIN_RAND, MAX_RAND, layer_inputsize);
+    }
+    layer_inputsize = layersize;
+  }
+}
