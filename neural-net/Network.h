@@ -16,7 +16,7 @@ struct Network{
 };
 
 float calculate_output(struct Neuron Neuron, float* inputs); // done
-void fill_network(struct Network *Network); 
+void fill_network(struct Network *Network); // done
 void save_network();
 struct Network load_network();
 float* feedfoward(struct Network *net, float* input); // done
