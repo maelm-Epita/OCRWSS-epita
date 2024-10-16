@@ -1,6 +1,9 @@
 #include <stddef.h>
+#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "math_helpers.h"
+#include "arr_helpers.h"
 #include "Network.h"
 
 float output(float* inputs, float* weights, float bias, size_t inputsize){
@@ -34,6 +37,12 @@ float* feedforward(struct Network net, float* input){
   return prev_out;
 }
 
+char* neuron_to_str(struct Neuron neur){
+  char* wstr = float_arr_to_str(neur.weights, neur.inputsize);
+  char* str = NULL;
+  asprintf(&str, "%s-%f", wstr, neur.bias);
+}
+
 void fill_network(struct Network* network){
   size_t MIN_RAND = -10;
   size_t MAX_RAND = 10;
@@ -58,4 +67,20 @@ void fill_network(struct Network* network){
     }
     layer_inputsize = layersize;
   }
+}
+
+void save_network(char *name, struct Network net){
+  // create file / open file
+  char* modelname = NULL;
+  asprintf(&modelname, "./%s.model", name);
+  FILE *fptr = fopen(modelname, "w");
+  free(modelname);
+  // start writing data
+  // first line : $inputsize $layernb
+  fprintf(fptr, "%lu %lu\n", net.inputsize, net.layernb);
+  // second line : $layersizes separated by spaces
+  char* lsizes = sze_arr_to_str(net.layersizes, net.layernb);
+  fprintf(fptr, "%s\n", lsizes);
+  free(lsizes);
+  // third line : 
 }

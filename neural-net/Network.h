@@ -17,9 +17,10 @@ struct Network{
 
 float calculate_output(struct Neuron Neuron, float* inputs); // done
 void fill_network(struct Network *Network); // done
-void save_network();
-struct Network load_network();
+void save_network(char *modelname, struct Network net);
+struct Network load_network(char *path);
 float* feedfoward(struct Network *net, float* input); // done
+char* neuron_to_str(struct Neuron neuron);
 
 // to create a new network
 // we can declare it this way
