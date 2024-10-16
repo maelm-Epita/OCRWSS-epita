@@ -54,7 +54,11 @@ void free_network(struct Network *net){
     }
     free(layer->neurons);
   }
-  free(net->layers);
+  free((*net).layers);
+}
+void free_network_loaded(struct Network *net){
+  free_network(net);
+  free((*net).layersizes);
 }
 
 void fill_network(struct Network* network){
@@ -116,23 +120,25 @@ struct Network load_network(char* path){
   // open file
   FILE *fptr = fopen(path, "r");
   // buffer to read char by char into
-  char buf=0;
+  int buf=0;
   // current line number
   size_t line=0;
   // current index of the data on the line (basically the column if treating the file as a 2d array)
   size_t line_column=0;
   // current index in the current data buffer
-  size_t cdi;
+  size_t cdi = 0;
   // current index of the layer we are "on"
-  size_t layindex;
+  size_t layindex = 0;
   // current index of the neuron we are "on"
-  size_t neurindex;
+  size_t neurindex = 0;
   char* curr_data = calloc(CALLOC_MAX_DATA_SIZE, sizeof(char));
   while (buf!=EOF){
     buf = fgetc(fptr);
-    // when we find a separator (space, newline, or EOF) we declare the current data as finished and we process it accordingly
-    if (buf == ' ' || buf == '\n' || buf == EOF){
+    // when we find a separator (space, newline) we declare the current data as finished and we process it accordingly
+    // the last line will always end with a newline, therefore we dont consider EOF as a separator, we just dont care for it
+    if (buf == ' ' || buf == '\n'){
       *(curr_data+cdi) = 0;
+      cdi=0;
       // inputsize and layernumber line
       if (line==0){
         // convert our buffer string to a size
@@ -171,21 +177,41 @@ struct Network load_network(char* path){
         // to get the previous layer's layersize, but if layindex is 0 then inputsize of the neuron is inputsize of the network
         //
         //
+        struct Layer layer = *(network.layers+layindex);
+        struct Neuron *neuron = layer.neurons+neurindex;
+        // if the neuron isnt initialized
+        if (neuron->inputsize == 0){
+          // initialize, the size is either the input size of the network (if first layer), or the number of neurons in the prev layer
+          if (layindex == 0){
+            neuron->inputsize = network.inputsize;
+          }
+          else{
+            neuron->inputsize = *(network.layersizes+layindex-1);
+          }
+          neuron->weights = calloc(neuron->inputsize, sizeof(float));
+        }
         // convert data buffer to float
-        float s_data = atof(curr_data);
-        if (s_data==0){
+        float f_data = atof(curr_data);
+        if (f_data==0){
           printf("data could not be converted to a float or was null");
           exit(EXIT_FAILURE);
         }
         // if the sep was a newline or a EOF, we know we were on the last column of the line, thus the data is the bias 
         // we can then increase the neuron index and then layer index if need be
         if (buf == EOF || buf == '\n'){
+          // we set the bias
+          neuron->bias = f_data;
           neurindex++;
           // if we were on the last neuron of the layer
           if (neurindex == *(network.layersizes+layindex)){
             layindex++;
             neurindex = 0;
+            // printf("%c\n", buf);
           }
+        }
+        // otherwise the data is a weight
+        else{
+          *(neuron->weights+line_column)=f_data;
         }
       }
       // we either increment the column or reset it and increment the line
@@ -196,6 +222,8 @@ struct Network load_network(char* path){
         line_column = 0;
         line++;
       }
+      // at the very end we reset curr_data
+      str_arr_clear(curr_data, CALLOC_MAX_DATA_SIZE);
     }
     // if we did not find a separator we just keep filling the current data buffer
     else{
@@ -203,6 +231,7 @@ struct Network load_network(char* path){
       cdi++;
     }
   }
+  free(curr_data);
   fclose(fptr);
   return network;
 }

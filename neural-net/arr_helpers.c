@@ -23,3 +23,9 @@ char* float_arr_to_str(float* arr, size_t size){
   str = realloc(str, str_size);
   return str;
 }
+
+void str_arr_clear(char* arr, size_t size){
+  for (size_t i=0; i<size; i++){
+    *(arr+i)=0;
+  }
+}
