@@ -82,8 +82,6 @@ list_word *find_all_words(char *grid_path, char **words, size_t nb_words) {
 
   solve(g, tree, list);
 
-  export_tree(tree, "tree");
-
   destroy_tree(&tree);
   destroy_grid(&g);
   list_word *res = list->next;
@@ -140,6 +138,7 @@ void check(grid *grid, tree_word *tree, list_word *res, int i, int j, int i_add,
   free(substring);
 }
 
+/*
 int main(int argc, char *argv[]) {
   if (argc != 3)
     errx(1, "usage: ./multi_solver <grid_file> <words_file>");
@@ -164,3 +163,4 @@ int main(int argc, char *argv[]) {
 
   return 0;
 }
+*/
