@@ -1,3 +1,5 @@
+#pragma once
+
 struct Neuron{
   size_t inputsize;
   float* weights;
@@ -17,10 +19,11 @@ struct Network{
 
 float calculate_output(struct Neuron Neuron, float* inputs); // done
 void fill_network(struct Network *Network); // done
-void save_network(char *modelname, struct Network net);
+void save_network(char *modelname, struct Network net); // done
 struct Network load_network(char *path);
 float* feedfoward(struct Network *net, float* input); // done
-char* neuron_to_str(struct Neuron neuron);
+char* neuron_to_str(struct Neuron neuron); // done
+void free_network(struct Network *net); // done
 
 // to create a new network
 // we can declare it this way

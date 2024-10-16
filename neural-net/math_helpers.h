@@ -1,4 +1,6 @@
-const float EPS = 1e-8;
+#pragma once
+
+static const float EPS = 1e-8;
 float sigmoid(float z);
 // partial derivative of 4 arguments function f (output function)
 // args : 0:function, 1:var1, 2:var2, 3:var3, 4:var4 3:partial derivative with respect to var #(1 or 2)

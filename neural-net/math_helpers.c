@@ -31,8 +31,8 @@ float partial_derivative_output(float(*f)(float*, float*, float, size_t), float*
 
 float float_rand( float min, float max )
 {
-    float scale = rand() / (float) RAND_MAX; /* [0, 1.0] */
-    return min + scale * ( max - min );      /* [min, max] */
+  float x = (float)rand()/(float)RAND_MAX;
+  return min + x * (max-min);
 }
 float* rand_float_array(float min, float max, size_t size){
   float* arr = calloc(size, sizeof(float));

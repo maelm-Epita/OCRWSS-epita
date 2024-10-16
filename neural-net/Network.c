@@ -41,11 +41,25 @@ char* neuron_to_str(struct Neuron neur){
   char* wstr = float_arr_to_str(neur.weights, neur.inputsize);
   char* str = NULL;
   asprintf(&str, "%s-%f", wstr, neur.bias);
+  free(wstr);
+  return str;
+}
+
+void free_network(struct Network *net){
+  for (size_t i=0; i<net->layernb; i++){
+    struct Layer *layer = (net->layers+i);
+    for (size_t j=0; j<*(net->layersizes+i); j++){
+      struct Neuron *neuron = (layer->neurons+j);
+      free(neuron->weights);
+    }
+    free(layer->neurons);
+  }
+  free(net->layers);
 }
 
 void fill_network(struct Network* network){
-  size_t MIN_RAND = -10;
-  size_t MAX_RAND = 10;
+  int MIN_RAND = -10;
+  int MAX_RAND = 10;
   // create the layer array
   network->layers = calloc(network->layernb, sizeof(struct Layer));
   size_t layer_inputsize = network->inputsize;
@@ -82,5 +96,15 @@ void save_network(char *name, struct Network net){
   char* lsizes = sze_arr_to_str(net.layersizes, net.layernb);
   fprintf(fptr, "%s\n", lsizes);
   free(lsizes);
-  // third line : 
+  // rest of the lines : 1 line = 1 neuron : 
+  for (size_t i=0; i<net.layernb; i++){
+    struct Layer layer = *(net.layers+i);
+    for (size_t j=0; j<*(net.layersizes+i); j++){
+      struct Neuron neuron = *(layer.neurons+j);
+      char* neu_str = neuron_to_str(neuron);
+      fprintf(fptr, "%s\n", neu_str);
+      free(neu_str);
+    }
+  }
+  fclose(fptr);
 }
