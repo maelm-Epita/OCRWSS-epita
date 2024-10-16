@@ -19,6 +19,12 @@ struct Network{
 
 float calculate_output(struct Neuron Neuron, float* inputs); // done
 void fill_network(struct Network *Network); // done
+// saves a neural network in a .model file with the following structure
+// first line contains 2 columns, first is the inputsize of the network, second is the layer number n
+// second line contains n columns, each column is the size of the respective layer
+// all subsequent lines until EOF represent a single neuron;
+// they each have N+1 columns where N is the number of inputs of the neuron (which can be determined from the previous layersize or inputsize of network)
+// the first N columns are the weights, the last column is the bias
 void save_network(char *modelname, struct Network net); // done
 struct Network load_network(char *path);
 float* feedfoward(struct Network *net, float* input); // done

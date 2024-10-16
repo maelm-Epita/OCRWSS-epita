@@ -40,7 +40,7 @@ float* feedforward(struct Network net, float* input){
 char* neuron_to_str(struct Neuron neur){
   char* wstr = float_arr_to_str(neur.weights, neur.inputsize);
   char* str = NULL;
-  asprintf(&str, "%s-%f", wstr, neur.bias);
+  asprintf(&str, "%s %f", wstr, neur.bias);
   free(wstr);
   return str;
 }
@@ -107,4 +107,102 @@ void save_network(char *name, struct Network net){
     }
   }
   fclose(fptr);
+}
+
+struct Network load_network(char* path){
+  struct Network network;
+  // arbitrary size to calloc with, we assume that no single float/size_t data will be more than 20 chars
+  size_t CALLOC_MAX_DATA_SIZE = 20;
+  // open file
+  FILE *fptr = fopen(path, "r");
+  // buffer to read char by char into
+  char buf=0;
+  // current line number
+  size_t line=0;
+  // current index of the data on the line (basically the column if treating the file as a 2d array)
+  size_t line_column=0;
+  // current index in the current data buffer
+  size_t cdi;
+  // current index of the layer we are "on"
+  size_t layindex;
+  // current index of the neuron we are "on"
+  size_t neurindex;
+  char* curr_data = calloc(CALLOC_MAX_DATA_SIZE, sizeof(char));
+  while (buf!=EOF){
+    buf = fgetc(fptr);
+    // when we find a separator (space, newline, or EOF) we declare the current data as finished and we process it accordingly
+    if (buf == ' ' || buf == '\n' || buf == EOF){
+      *(curr_data+cdi) = 0;
+      // inputsize and layernumber line
+      if (line==0){
+        // convert our buffer string to a size
+        size_t s_data = atoi(curr_data);
+        if (s_data==0){
+          printf("data could not be converted to an int or was null");
+          exit(EXIT_FAILURE);
+        }
+        // first data in the first line is the inputsize, second is the number of layers
+        if (line_column == 0){
+          network.inputsize = s_data;
+        }
+        else{
+          network.layernb = s_data;
+          // we can now declare the layer array and layersizes array since we know their size
+          network.layers = calloc(s_data, sizeof(struct Layer));
+          network.layersizes = calloc(s_data, sizeof(struct Layer));
+        }
+      }
+      // layersizes line
+      else if (line==1){
+        // convert buffer str to size
+        size_t s_data = atoi(curr_data);
+        if (s_data==0){
+          printf("data could not be converted to an int or was null");
+          exit(EXIT_FAILURE);
+        }
+        // set appropriate element of layersizes to the data
+        *(network.layersizes+line_column) = s_data;
+        // we can then calloc that layer's neuron array
+        (network.layers+line_column)->neurons= calloc(s_data, sizeof(struct Neuron));
+      }
+      // rest of the lines contain info for one neuron each ("$weight1 $weight2 ... $weightn_$bias)
+      else{
+        // TODO : get the layer and the neuron and stuff, also the code for getting the inputsize of the neuron can be
+        // to get the previous layer's layersize, but if layindex is 0 then inputsize of the neuron is inputsize of the network
+        //
+        //
+        // convert data buffer to float
+        float s_data = atof(curr_data);
+        if (s_data==0){
+          printf("data could not be converted to a float or was null");
+          exit(EXIT_FAILURE);
+        }
+        // if the sep was a newline or a EOF, we know we were on the last column of the line, thus the data is the bias 
+        // we can then increase the neuron index and then layer index if need be
+        if (buf == EOF || buf == '\n'){
+          neurindex++;
+          // if we were on the last neuron of the layer
+          if (neurindex == *(network.layersizes+layindex)){
+            layindex++;
+            neurindex = 0;
+          }
+        }
+      }
+      // we either increment the column or reset it and increment the line
+      if (buf == ' '){
+        line_column++;
+      }
+      else{
+        line_column = 0;
+        line++;
+      }
+    }
+    // if we did not find a separator we just keep filling the current data buffer
+    else{
+      *(curr_data+cdi) = buf;
+      cdi++;
+    }
+  }
+  fclose(fptr);
+  return network;
 }
