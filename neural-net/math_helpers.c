@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include "math_helpers.h"
 
+
 float sigmoid(float z){
   return 1/(1+exp(-z));
 }

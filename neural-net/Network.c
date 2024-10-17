@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include "math_helpers.h"
 #include "arr_helpers.h"
 #include "Network.h"
@@ -62,6 +63,7 @@ void free_network_loaded(struct Network *net){
 }
 
 void fill_network(struct Network* network){
+  srand(time(0));
   int MIN_RAND = -10;
   int MAX_RAND = 10;
   // create the layer array
