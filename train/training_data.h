@@ -1,3 +1,5 @@
+#pragma once
+
 struct training_data{
   float* inputs;
   float* expected_output;

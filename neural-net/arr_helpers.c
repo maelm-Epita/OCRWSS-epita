@@ -29,3 +29,11 @@ void str_arr_clear(char* arr, size_t size){
     *(arr+i)=0;
   }
 }
+
+void print_float_arr(float* arr, size_t size){
+  printf("{ ");
+  for (size_t i=0; i<size; i++){
+    printf("%f ", *(arr+i));
+  }
+  printf("}\n");
+}

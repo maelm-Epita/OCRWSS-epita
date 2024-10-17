@@ -1,3 +1,5 @@
+#pragma once
+
 float* image_to_input(char* path);
 float get_inputs_size();
 float get_outputs_size();
