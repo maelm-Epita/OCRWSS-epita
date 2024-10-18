@@ -87,7 +87,7 @@ int main(int argc, char *argv[]) {
           gauss(image);
           break;
         case SDL_SCANCODE_D:
-          dying_filter(image, 3);
+          dying_filter(image, 1);
           break;
         case SDL_SCANCODE_R:
           gaussian(image, image->w / 2, image->h / 5);
