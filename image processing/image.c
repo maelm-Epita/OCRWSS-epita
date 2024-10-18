@@ -7,9 +7,11 @@
 #include <stdlib.h>
 
 #include "image_tools.h"
-#include "image_matrix.h"
+#include "image_rotate.h"
 
 #define STEP_ANGLE 5
+#define SDL_SaveBMP(surface, file) \
+        SDL_SaveBMP_RW(surface, SDL_RWFromFile(file, "wb"), 1)
 
 double angle = 0;
 
@@ -25,7 +27,6 @@ int main(int argc, char *argv[]) {
   if (argc < 2)
     errx(EXIT_FAILURE, "use image: ./image <path to bmp");
 
-  struct image_matrix mat;
 
   SDL_Surface *image = IMG_Load(argv[1]);
   if (image == NULL)
@@ -37,7 +38,7 @@ int main(int argc, char *argv[]) {
     errx(EXIT_FAILURE, "%s", SDL_GetError());
 
   SDL_Renderer *renderer = SDL_CreateRenderer(
-      window, 1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+      window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
   if (renderer == NULL)
     errx(EXIT_FAILURE, "%s", SDL_GetError());
 
@@ -91,10 +92,10 @@ int main(int argc, char *argv[]) {
         case SDL_SCANCODE_R:
           gaussian(image, image->w / 2, image->h / 5);
           break;
-        case SDL_SCANCODE_M:
-          mat = image_to_matrix(image);
-          image = matrix_to_surface(&mat, image);
-          // print_matrix(&mat);
+        case SDL_SCANCODE_V:
+          //rotate_180(image);
+          //image = rotate_90_right(image);
+          image = rotate_90_left(image);
           break;
         default:
           break;
@@ -113,6 +114,8 @@ int main(int argc, char *argv[]) {
   SDL_FreeSurface(image);
   SDL_DestroyRenderer(renderer);
   SDL_DestroyWindow(window);
+  IMG_Quit();
   SDL_Quit();
+
   return EXIT_SUCCESS;
 }
