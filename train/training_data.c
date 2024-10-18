@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "training_data.h"
+#include "../shared/arr_helpers.h"
 
 // create the training set from the input and output arrays
 struct training_set create_training_set(float** inputs, float** outputs, size_t data_number, size_t input_number){
@@ -42,3 +43,25 @@ void print_training_set(struct training_set set){
   }
 }
 
+void shuffle_training_set(struct training_set set)
+{
+  struct training_data *array = set.data;
+  size_t size = set.data_number;
+  for (size_t i=0; i<size; i++){
+    size_t j = i + rand() / (RAND_MAX / (size - i) + 1);
+    struct training_data t = array[j];
+    array[j] = array[i];
+    array[i] = t;
+  }
+}
+
+struct minibatch_set create_minibatch_set(struct training_set set, size_t minibatch_size){
+  size_t minibatch_nb = set.data_number/minibatch_size;
+  struct minibatch_set bset = {minibatch_size, minibatch_nb};
+  shuffle_training_set(set);
+  // todo : fill the minibatches
+}
+
+void free_minibatch_set(struct minibatch_set set){
+  free(set.mini_batches);
+}

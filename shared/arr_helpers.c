@@ -1,4 +1,4 @@
-
+#include <math.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -37,3 +37,26 @@ void print_float_arr(float* arr, size_t size){
   }
   printf("}\n");
 }
+
+float* sub_arr(float* arr1, float* arr2, size_t size){
+  float* narr = calloc(size, sizeof(float));
+  for (size_t i=0; i<size; i++){
+    *(narr+i) = *(arr1+i)-*(arr2+i);
+  }
+  return narr;
+}
+float norm(float* arr, size_t size){
+  float n = 0;
+  for (size_t i=0; i<size; i++){
+    n += pow(*(arr+i),2);
+  }
+  return sqrt(n);
+}
+float av_arr(float* arr, size_t size){
+  float arr_sum = 0;
+  for (size_t i=0; i<size; i++){
+    arr_sum += *(arr+i);
+  }
+  return arr_sum/size;
+}
+

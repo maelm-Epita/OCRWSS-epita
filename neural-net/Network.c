@@ -3,8 +3,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include "math_helpers.h"
-#include "arr_helpers.h"
+#include "../shared/math_helpers.h"
+#include "../shared/arr_helpers.h"
 #include "Network.h"
 
 float output(float* inputs, float* weights, float bias, size_t inputsize){
