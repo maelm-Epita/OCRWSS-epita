@@ -42,6 +42,10 @@ int main(int argc, char *argv[]) {
   if (renderer == NULL)
     errx(EXIT_FAILURE, "%s", SDL_GetError());
 
+  double brightness = get_brightness(image);
+  double con = get_contrast(image, brightness);
+  printf("Contrast: %f\nBrightness: %f\n\n", con, brightness);
+
   int run = 1;
   while (run) {
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
@@ -63,10 +67,7 @@ int main(int argc, char *argv[]) {
           gray_level(image);
           break;
         case SDL_SCANCODE_B:
-          binary_gray_level(image);
-          break;
-        case SDL_SCANCODE_H:
-          gray_test(image);
+          black_and_white(image);
           break;
         case SDL_SCANCODE_N:
           negatif(image);

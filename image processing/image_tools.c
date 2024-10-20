@@ -12,7 +12,7 @@ void get_luminance(Uint32 pixel, SDL_PixelFormat *format, Uint8 *r, Uint8 *g,
   double lum_r = *r / 255.0;
   double lum_g = *g / 255.0;
   double lum_b = *b / 255.0;
-  double luminance = 0.2126 * lum_r + 0.7152 * lum_g + 0.0722 * lum_b;
+  double luminance = 0.299 * lum_r + 0.587 * lum_g + 0.114 * lum_b;
 
   double res;
   if (luminance <= 0.0031308)
@@ -38,7 +38,7 @@ void gray_level(SDL_Surface *surface) {
   SDL_UnlockSurface(surface);
 }
 
-void binary_gray_level(SDL_Surface *surface) {
+void black_and_white(SDL_Surface *surface) {
   Uint32 *pixels = (Uint32 *)surface->pixels;
   size_t size = surface->w * surface->h;
   SDL_LockSurface(surface);
@@ -49,24 +49,6 @@ void binary_gray_level(SDL_Surface *surface) {
     SDL_GetRGB(pixels[i], format, &r, &g, &b);
 
     n = (r + g + b) / 3 > 170 ? 255 : 0;
-
-    pixels[i] = SDL_MapRGB(format, n, n, n);
-  }
-
-  SDL_UnlockSurface(surface);
-}
-
-void gray_test(SDL_Surface *surface) {
-  Uint32 *pixels = (Uint32 *)surface->pixels;
-  size_t size = surface->w * surface->h;
-  SDL_LockSurface(surface);
-  SDL_PixelFormat *format = surface->format;
-
-  for (size_t i = 0; i < size; i++) {
-    Uint8 r, g, b, n;
-    SDL_GetRGB(pixels[i], format, &r, &g, &b);
-
-    n = (r + g + b) / 3;
 
     pixels[i] = SDL_MapRGB(format, n, n, n);
   }
@@ -129,11 +111,6 @@ void increase_brightness(SDL_Surface *surface, double n) {
     r = (Uint8)(255 * SDL_pow((double)r / 255.0, n));
     g = (Uint8)(255 * SDL_pow((double)g / 255.0, n));
     b = (Uint8)(255 * SDL_pow((double)b / 255.0, n));
-    /*
-    r = r + n > 255 ? 255 : 0;
-    g = g + n > 255 ? 255 : 0;
-    b = b + n > 255 ? 255 : 0;
-    */
 
     pixels[i] = SDL_MapRGB(format, r, g, b);
   }
@@ -145,28 +122,6 @@ void decrease_brightness(SDL_Surface *surface, double n) {
   increase_brightness(surface, 1 / n);
 }
 
-Uint32 average(SDL_Surface *surface, int i, int j, int n) {
-  const int initial_h = SDL_max(i - n, 0);
-  const int initial_w = SDL_max(j - n, 0);
-  const int final_h = SDL_min(i + n, surface->h - 1);
-  const int final_w = SDL_min(j + n, surface->w - 1);
-  const int nb_pixel = ((final_h - initial_h + 1) * (final_w - initial_w + 1));
-  const Uint32 *p = surface->pixels;
-
-  Uint32 sum_r = 0, sum_g = 0, sum_b = 0;
-  Uint8 r, g, b;
-
-  for (int x = initial_h; x <= final_h; x++)
-    for (int y = initial_w; y <= final_w; y++) {
-      SDL_GetRGB(p[x * surface->w + y], surface->format, &r, &g, &b);
-      sum_r += r;
-      sum_g += g;
-      sum_b += b;
-    }
-
-  return SDL_MapRGB(surface->format, sum_r / nb_pixel, sum_g / nb_pixel,
-                    sum_b / nb_pixel);
-}
 
 #define N 1
 #define SIGMA 1.0
@@ -233,7 +188,6 @@ void gauss(SDL_Surface *surface) {
   for (int i = 0; i < h; i++)
     for (int j = 0; j < w; j++)
       pixels[i * w + j] = gaussian(copy, i, j);
-  // pixels[i * w + j] = average(copy, i, j, 3);
 
   SDL_UnlockSurface(surface);
   SDL_UnlockSurface(copy);
@@ -300,4 +254,38 @@ void dying_filter(SDL_Surface *surface, int n) {
   SDL_UnlockSurface(surface);
   SDL_UnlockSurface(copy);
   SDL_FreeSurface(copy);
+}
+
+double get_brightness(SDL_Surface *surface) {
+  Uint32 *pixels = surface->pixels;
+  Uint8 r, g, b;
+  double total_brightness = 0.0;
+
+  SDL_LockSurface(surface);
+
+  for (int i = 0; i < surface->h; i++) {
+    SDL_GetRGB(pixels[i], surface->format, &r, &g, &b);
+    total_brightness += 0.299 * r + 0.587 * g + 0.114 * b;
+  }
+
+  SDL_UnlockSurface(surface);
+  return total_brightness / (surface->w * surface->h);
+}
+
+double get_contrast(SDL_Surface *surface, double brightness) {
+  Uint32 *pixels = (Uint32 *)surface->pixels;
+  Uint8 r, g, b;
+  double variance = 0.0;
+
+  SDL_LockSurface(surface);
+
+  for (int i = 0; i < surface->h; i++) {
+      SDL_GetRGB(pixels[i], surface->format, &r, &g, &b);
+      double intensity = 0.299 * r + 0.587 * g + 0.114 * b;
+      variance += (intensity - brightness) * (intensity - brightness);
+  }
+
+  SDL_LockSurface(surface);
+  double contrast = sqrt(variance / (surface->w * surface->h));
+  return contrast;
 }
