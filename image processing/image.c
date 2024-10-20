@@ -1,17 +1,20 @@
+#define _GNU_SOURCE
+
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_events.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_render.h>
 #include <SDL2/SDL_surface.h>
 #include <err.h>
+#include <stdio.h>
 #include <stdlib.h>
 
-#include "image_tools.h"
 #include "image_rotate.h"
+#include "image_tools.h"
 
 #define STEP_ANGLE 5
-#define SDL_SaveBMP(surface, file) \
-        SDL_SaveBMP_RW(surface, SDL_RWFromFile(file, "wb"), 1)
+#define SDL_SaveBMP(surface, file)                                             \
+  SDL_SaveBMP_RW(surface, SDL_RWFromFile(file, "wb"), 1)
 
 double angle = 0;
 
@@ -26,7 +29,6 @@ SDL_Window *create_window(char *title, int w, int h) {
 int main(int argc, char *argv[]) {
   if (argc < 2)
     errx(EXIT_FAILURE, "use image: ./image <path to bmp");
-
 
   SDL_Surface *image = IMG_Load(argv[1]);
   if (image == NULL)
@@ -94,10 +96,15 @@ int main(int argc, char *argv[]) {
           gaussian(image, image->w / 2, image->h / 5);
           break;
         case SDL_SCANCODE_V:
-          //rotate_180(image);
-          //image = rotate_90_right(image);
+          // rotate_180(image);
+          // image = rotate_90_right(image);
           image = rotate_90_left(image);
           break;
+        case SDL_SCANCODE_S:
+          //asprintf(&name, "preprocess-%s", argv[1]);
+          SDL_SaveBMP(image, "Preprocess.bmp");
+          //printf("Saved %s\n", name);
+          //free(name);
         default:
           break;
         }
