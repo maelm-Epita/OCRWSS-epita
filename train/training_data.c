@@ -58,10 +58,23 @@ void shuffle_training_set(struct training_set set)
 struct minibatch_set create_minibatch_set(struct training_set set, size_t minibatch_size){
   size_t minibatch_nb = set.data_number/minibatch_size;
   struct minibatch_set bset = {minibatch_size, minibatch_nb};
+  bset.mini_batches = calloc(minibatch_nb, sizeof(struct training_set));
   shuffle_training_set(set);
   // todo : fill the minibatches
+  for (size_t i=0; i<minibatch_nb; i++){
+    struct training_set tset = {set.input_number, minibatch_size};
+    tset.data = calloc(minibatch_size, sizeof(struct training_data));
+    for (size_t j=0; j<minibatch_size; j++){
+      *(tset.data+j) = *(set.data+(i*minibatch_size)+j);
+    }
+    *(bset.mini_batches+i) = tset;
+  }
+  return bset;
 }
 
 void free_minibatch_set(struct minibatch_set set){
+  for (size_t i=0; i<set.minibatch_number; i++){
+    free((set.mini_batches+i)->data);
+  }
   free(set.mini_batches);
 }

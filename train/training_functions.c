@@ -15,6 +15,31 @@ float Cost(struct Network net, struct training_data data){
   free(output);
   return cost;
 }
-float av_Cost(float* costs, size_t size){
-  return av_arr(costs, size);
+float av_Cost(struct Network net, struct training_set minibatch){
+  float* costs = calloc(minibatch.data_number, sizeof(float));
+  for (size_t i=0; i<minibatch.data_number; i++){
+    *(costs+i) = Cost(net, *(minibatch.data+i));
+  }
+  return av_arr(costs, minibatch.data_number);
+}
+
+float Cost_Partialderivative_weight(struct Network net, struct Neuron* neuron, size_t windex, struct training_data data);
+float Cost_Partialderivative_bias(struct Network net, struct Neuron* neuron, struct training_data data);
+float av_CPDW(struct Network net, struct Neuron* neuron, size_t windex, struct training_set minibatch);
+float av_CPDB(struct Network net, struct Neuron* neuron, struct training_set minibatch);
+
+// calculate the average of pd of cost when each w or b changes, and apply wk = wk-nAVPDC(w)
+void back_propagate(struct Network* net, struct training_set minibatch, float rate){
+  for (size_t l=0; l<net->layernb; l++){
+    struct Layer* clayer = net->layers+l;
+    for (size_t n=0; n<*(net->layersizes+l); n++){
+      struct Neuron* cneuron = clayer->neurons+n;
+      for (size_t w=0; w<cneuron->inputsize; w++){
+        float acpd = av_CPDW(*net, cneuron, w, minibatch);
+        *(cneuron->weights+w) = *(cneuron->weights+w) - rate*acpd;
+      }
+      float acpd = av_CPDB(*net, cneuron, minibatch);
+      cneuron->bias = cneuron->bias - rate*acpd;
+    }
+  }
 }
