@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 #include "training_data.h"
@@ -16,60 +17,86 @@ float Cost(struct Network net, struct training_data data){
   free(output);
   return cost;
 }
-float av_Cost(struct Network net, struct training_set minibatch){
+float* get_Costs(struct Network net, struct training_set minibatch){
   float* costs = calloc(minibatch.data_number, sizeof(float));
   for (size_t i=0; i<minibatch.data_number; i++){
     *(costs+i) = Cost(net, *(minibatch.data+i));
   }
-  return av_arr(costs, minibatch.data_number);
+  return costs;
+}
+float av_Cost(struct Network net, struct training_set minibatch){
+  return av_arr(get_Costs(net, minibatch), minibatch.data_number);
 }
 
-float Cost_Partialderivative_weight(struct Network net, struct Neuron* neuron, size_t windex, struct training_data data){
+float Cost_Partialderivative_weight(struct Network net, struct Neuron* neuron, size_t windex, struct training_data data, float cost){
   float w = *(neuron->weights+windex);
-  float reg_cost = Cost(net, data);
   *(neuron->weights+windex) = w+EPS;
   float d_cost = Cost(net, data);
   *(neuron->weights+windex) = w;
-  return (d_cost-reg_cost)/EPS;
+  return (d_cost-cost)/EPS;
 }
-float Cost_Partialderivative_bias(struct Network net, struct Neuron* neuron, struct training_data data){
+float Cost_Partialderivative_bias(struct Network net, struct Neuron* neuron, struct training_data data, float cost){
   float b = neuron->bias;
-  float reg_cost = Cost(net, data);
   neuron->bias = b+EPS;
   float d_cost = Cost(net, data);
   neuron->bias = b;
-  return (d_cost-reg_cost)/EPS;
+  return (d_cost-cost)/EPS;
 }
-float av_CPDW(struct Network net, struct Neuron* neuron, size_t windex, struct training_set minibatch){
-  float* costs = calloc(minibatch.data_number, sizeof(float));
+float av_CPDW(struct Network net, struct Neuron* neuron, size_t windex, struct training_set minibatch, float* costs){
+  float* costs_pd = calloc(minibatch.data_number, sizeof(float));
   for (size_t i=0; i<minibatch.data_number; i++){
-    *(costs+i) = Cost_Partialderivative_weight(net, neuron, windex, *(minibatch.data+i));
+    *(costs_pd+i) = Cost_Partialderivative_weight(net, neuron, windex, *(minibatch.data+i), *(costs+i));
   }
-  float av = av_arr(costs, minibatch.data_number);
-  free(costs);
+  float av = av_arr(costs_pd, minibatch.data_number);
+  free(costs_pd);
   return av;
 }
-float av_CPDB(struct Network net, struct Neuron* neuron, struct training_set minibatch){
-  float* costs = calloc(minibatch.data_number, sizeof(float));
+float av_CPDB(struct Network net, struct Neuron* neuron, struct training_set minibatch, float* costs){
+  float* costs_pd = calloc(minibatch.data_number, sizeof(float));
   for (size_t i=0; i<minibatch.data_number; i++){
-    *(costs+i) = Cost_Partialderivative_bias(net, neuron, *(minibatch.data+i));
+    *(costs_pd+i) = Cost_Partialderivative_bias(net, neuron, *(minibatch.data+i), *(costs+i));
   }
-  float av = av_arr(costs, minibatch.data_number);
-  free(costs);
+  float av = av_arr(costs_pd, minibatch.data_number);
+  free(costs_pd);
   return av;
 }
 
-void back_propagate(struct Network* net, struct training_set minibatch, float rate){
+float back_propagate(struct Network* net, struct training_set minibatch, float rate){
+  float* costs = get_Costs(*net, minibatch);
   for (size_t l=0; l<net->layernb; l++){
     struct Layer* clayer = net->layers+l;
     for (size_t n=0; n<*(net->layersizes+l); n++){
       struct Neuron* cneuron = clayer->neurons+n;
       for (size_t w=0; w<cneuron->inputsize; w++){
-        float acpd = av_CPDW(*net, cneuron, w, minibatch);
+        float acpd = av_CPDW(*net, cneuron, w, minibatch, costs);
         *(cneuron->weights+w) = *(cneuron->weights+w) - rate*acpd;
       }
-      float acpd = av_CPDB(*net, cneuron, minibatch);
+      float acpd = av_CPDB(*net, cneuron, minibatch, costs);
       cneuron->bias = cneuron->bias - rate*acpd;
     }
   }
+  return av_arr(costs, minibatch.data_number);
+}
+
+void train(struct Network* net, struct training_set set, size_t rate, size_t minibatch_size, size_t epochs){
+  printf("----------------------\n");
+  printf("TRAINING NEURAL NETWORK\n");
+  printf("----------------------\n");
+  for (size_t i=0; i<epochs; i++){
+    float av_cost = 0;
+    printf("EPOCH %lu\n",i);
+    printf("Training.....\n");
+    struct minibatch_set mini_set = create_minibatch_set(set, minibatch_size);
+    for (size_t j=0; j<mini_set.minibatch_number;j++){
+      struct training_set curr_minibatch = *(mini_set.mini_batches+j);
+      printf("Mini-batch %lu - Back propagation...\n", j);
+      av_cost += back_propagate(net, curr_minibatch, rate);
+    }
+    av_cost /= mini_set.minibatch_number;
+    printf("EPOCH %lu finished, Average cost was : %f\n", i, av_cost);
+  }
+  printf("END OF TRAINING...\n");
+  printf("---------------------\n");
+  float final_av_cost = av_Cost(*net, set);
+  printf("Final average cost of the network on all training data : %f\n", final_av_cost);
 }

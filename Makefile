@@ -4,9 +4,10 @@ SRC = \
 			main.c \
 			train/training_data_loader.c \
 			train/training_data.c \
+			train/training_functions.c \
 			neural-net/Network.c \
-			neural-net/math_helpers.c \
-			neural-net/arr_helpers.c 
+			shared/math_helpers.c \
+			shared/arr_helpers.c 
 LFLAGS = -lSDL2 -lSDL2_image -lm
 
 main: 

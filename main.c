@@ -2,17 +2,24 @@
 #include <stdio.h>
 
 #include "neural-net/Network.h"
-#include "neural-net/arr_helpers.h"
+#include "shared/arr_helpers.h"
 #include "train/training_data.h"
 #include "train/training_data_loader.h"
+#include "train/training_functions.h"
 
-int main(){
-  printf("training set\n");
+void letter_train(){
+  // defining constants
+  const size_t DATA_NB = 372038;
+  const size_t INPUT_SIZE = 28*28;
+  const size_t MINIBATCH_SIZE = 800;
+  const size_t EPOCHS = 3;
+  const double RATE = 1e-3;
+  // creating training set
+  printf("------------\n");
+  printf("Training set :\n");
   printf("------------\n");
   float **inputs;
   float **outputs;
-  const size_t data_nb = 372038;
-  const size_t input_size = 28*28;
   FILE *fptr;
   fptr = fopen("./train/training-set/uncompressed/handwritten_data_785.csv", "r");
   if (fptr == NULL){
@@ -20,29 +27,72 @@ int main(){
     exit(EXIT_FAILURE);
   }
   printf("Loading training data...\n");
-  load_training_data(fptr, &inputs, &outputs, data_nb, input_size);
+  load_training_data(fptr, &inputs, &outputs, DATA_NB, INPUT_SIZE);
   fclose(fptr);
   printf("Creating training set...\n");
-  struct training_set letter_training_set = create_training_set(inputs, outputs, data_nb, input_size);
+  struct training_set letter_training_set = create_training_set(inputs, outputs, DATA_NB, INPUT_SIZE);
   free(inputs);
   free(outputs);
+  // creating network and filling it
   printf("------------\n");
-  printf("neural nets\n");
+  printf("Neural network :\n");
   printf("------------\n");
-  printf("creating first model\n");
   size_t layersizes[3] = {200,56,26};
   struct Network net = {28*28, 3, layersizes};
-  printf("filling\n");
+  printf("Creating and filling network with random initial weights and biases\n");
   fill_network(&net);
-  printf("feed-forward\n");
-  // feedforward with the first training data of the set
-  float* out = feedforward(net, letter_training_set.data->inputs);
-  printf("res :\n");
-  print_float_arr(out, 26);
-  printf("saving\n");
+  // training the network
+  printf("--------------------\n");
+  printf("Training the network\n");
+  train(&net, letter_training_set, RATE, MINIBATCH_SIZE, EPOCHS);
+  printf("Finished training the network\n");
+  printf("--------------------\n");
+  // saving it
+  printf("Saving the model\n");
   save_network("testmodel", net);
-  printf("freeing\n");
+  // cleanup
+  printf("Freeing the heap\n");
   free_network(&net);
   free_training_set(letter_training_set);
   printf("------------\n");
+  printf("Finished\n");
+}
+
+void xor_train(){
+  const size_t DATA_NB = 4;
+  const size_t INPUT_SIZE = 2;
+  const size_t MINIBATCH_SIZE = 4;
+  const size_t EPOCHS = 100;
+  const double RATE = 1e-3;
+  float input1[2] = {0,0};
+  float output1[1] = {0};
+  float input2[2] = {0,1};
+  float output2[1] = {1};
+  float input3[2] = {1,0};
+  float output3[1] = {1};
+  float input4[2] = {1,1};
+  float output4[1] = {0};
+  float **inputs = calloc(DATA_NB, sizeof(float*));
+  *(inputs+0) = input1;
+  *(inputs+1) = input2;
+  *(inputs+2) = input3;
+  *(inputs+3) = input4;
+  float **outputs = calloc(DATA_NB, sizeof(float*));
+  *(outputs+0) = output1;
+  *(outputs+1) = output2;
+  *(outputs+2) = output3;
+  *(outputs+3) = output4;
+  struct training_set xor_set = create_training_set(inputs, outputs, DATA_NB, INPUT_SIZE);
+  free(inputs);
+  free(outputs);
+  //
+  size_t layersizes[2] = {2,1};
+  struct Network net = {2, 2, layersizes};
+  fill_network(&net);
+  //
+  train(&net, xor_set, RATE, MINIBATCH_SIZE, EPOCHS);
+}
+
+int main(){
+  xor_train();
 }
