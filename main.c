@@ -61,8 +61,8 @@ void letter_train(){
 void xor_train(){
   const size_t DATA_NB = 4;
   const size_t INPUT_SIZE = 2;
-  const size_t MINIBATCH_SIZE = 4;
-  const size_t EPOCHS = 100;
+  const size_t MINIBATCH_SIZE = 2;
+  const size_t EPOCHS = 1000*1000;
   const double RATE = 1e-3;
   float input1[2] = {0,0};
   float output1[1] = {0};
@@ -91,6 +91,9 @@ void xor_train(){
   fill_network(&net);
   //
   train(&net, xor_set, RATE, MINIBATCH_SIZE, EPOCHS);
+  //
+  free_network(&net);
+  free_training_set(xor_set);
 }
 
 int main(){

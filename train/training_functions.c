@@ -5,7 +5,7 @@
 #include "../neural-net/Network.h"
 #include "../shared/arr_helpers.h"
 
-static const float EPS = 1e-8;
+static const float EPS = 1e-3;
 
 float Cost(struct Network net, struct training_data data){
   // the output size is the size of the last layer
@@ -31,6 +31,7 @@ float av_Cost(struct Network net, struct training_set minibatch){
 float Cost_Partialderivative_weight(struct Network net, struct Neuron* neuron, size_t windex, struct training_data data, float cost){
   float w = *(neuron->weights+windex);
   *(neuron->weights+windex) = w+EPS;
+  //printf("test cpd : %f, %f\n",w, *(neuron->weights+windex));
   float d_cost = Cost(net, data);
   *(neuron->weights+windex) = w;
   return (d_cost-cost)/EPS;
@@ -61,7 +62,8 @@ float av_CPDB(struct Network net, struct Neuron* neuron, struct training_set min
   return av;
 }
 
-float back_propagate(struct Network* net, struct training_set minibatch, float rate){
+float back_propagate(struct Network* net, struct training_set minibatch, double rate){
+  //printf("test modified 1 %f\n", *(net->layers->neurons->weights));
   float* costs = get_Costs(*net, minibatch);
   for (size_t l=0; l<net->layernb; l++){
     struct Layer* clayer = net->layers+l;
@@ -69,16 +71,18 @@ float back_propagate(struct Network* net, struct training_set minibatch, float r
       struct Neuron* cneuron = clayer->neurons+n;
       for (size_t w=0; w<cneuron->inputsize; w++){
         float acpd = av_CPDW(*net, cneuron, w, minibatch, costs);
+        //printf("test acpd %f\n", acpd);
         *(cneuron->weights+w) = *(cneuron->weights+w) - rate*acpd;
       }
       float acpd = av_CPDB(*net, cneuron, minibatch, costs);
       cneuron->bias = cneuron->bias - rate*acpd;
     }
   }
+  //printf("test modified 2 %f\n", *(net->layers->neurons->weights));
   return av_arr(costs, minibatch.data_number);
 }
 
-void train(struct Network* net, struct training_set set, size_t rate, size_t minibatch_size, size_t epochs){
+void train(struct Network* net, struct training_set set, double rate, size_t minibatch_size, size_t epochs){
   printf("----------------------\n");
   printf("TRAINING NEURAL NETWORK\n");
   printf("----------------------\n");
@@ -91,9 +95,11 @@ void train(struct Network* net, struct training_set set, size_t rate, size_t min
       struct training_set curr_minibatch = *(mini_set.mini_batches+j);
       printf("Mini-batch %lu - Back propagation...\n", j);
       av_cost += back_propagate(net, curr_minibatch, rate);
+      //printf("test modified %f\n", *(net->layers->neurons->weights));
     }
     av_cost /= mini_set.minibatch_number;
     printf("EPOCH %lu finished, Average cost was : %f\n", i, av_cost);
+    free_minibatch_set(mini_set);
   }
   printf("END OF TRAINING...\n");
   printf("---------------------\n");
