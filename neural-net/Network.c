@@ -64,8 +64,8 @@ void free_network_loaded(struct Network *net){
 
 void fill_network(struct Network* network){
   srand(time(0));
-  int MIN_RAND = -10;
-  int MAX_RAND = 10;
+  int MIN_RAND = -1;
+  int MAX_RAND = 1;
   // create the layer array
   network->layers = calloc(network->layernb, sizeof(struct Layer));
   size_t layer_inputsize = network->inputsize;

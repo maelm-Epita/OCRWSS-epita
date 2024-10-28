@@ -10,5 +10,5 @@ SRC = \
 			shared/arr_helpers.c 
 LFLAGS = -lSDL2 -lSDL2_image -lm
 
-main: 
+all: 
 	${CC} ${SRC} ${CFLAGS} -o main $(LFLAGS)

@@ -62,7 +62,7 @@ void xor_train(){
   const size_t DATA_NB = 4;
   const size_t INPUT_SIZE = 2;
   const size_t MINIBATCH_SIZE = 2;
-  const size_t EPOCHS = 1000*1000;
+  const size_t EPOCHS = 1000*10;
   const double RATE = 1e-3;
   float input1[2] = {0,0};
   float output1[1] = {0};
@@ -83,7 +83,6 @@ void xor_train(){
   *(outputs+2) = output3;
   *(outputs+3) = output4;
   struct training_set xor_set = create_training_set(inputs, outputs, DATA_NB, INPUT_SIZE);
-  free(inputs);
   free(outputs);
   //
   size_t layersizes[2] = {2,1};
@@ -91,6 +90,31 @@ void xor_train(){
   fill_network(&net);
   //
   train(&net, xor_set, RATE, MINIBATCH_SIZE, EPOCHS);
+  //
+  // see everything
+  save_network("testmodelxor", net);
+  // test out
+  float* foutput1 = feedforward(net, input1);
+  float* foutput2 = feedforward(net, input2);
+  float* foutput3 = feedforward(net, input3);
+  float* foutput4 = feedforward(net, input4);
+  printf("output 1 :\n");
+  print_float_arr(input1, 2);
+  print_float_arr(foutput1, 1);
+  printf("output 2 :\n");
+  print_float_arr(input2, 2);
+  print_float_arr(foutput2, 1);
+  printf("output 3 :\n");
+  print_float_arr(input3, 2);
+  print_float_arr(foutput3, 1);
+  printf("output 4 :\n");
+  print_float_arr(input4, 2);
+  print_float_arr(foutput4, 1);
+  free(foutput1);
+  free(foutput2);
+  free(foutput3);
+  free(foutput4);
+  free(inputs);
   //
   free_network(&net);
   free_training_set(xor_set);

@@ -69,13 +69,19 @@ float back_propagate(struct Network* net, struct training_set minibatch, double 
     struct Layer* clayer = net->layers+l;
     for (size_t n=0; n<*(net->layersizes+l); n++){
       struct Neuron* cneuron = clayer->neurons+n;
+      float* new_weights = calloc(cneuron->inputsize, sizeof(float));
       for (size_t w=0; w<cneuron->inputsize; w++){
         float acpd = av_CPDW(*net, cneuron, w, minibatch, costs);
         //printf("test acpd %f\n", acpd);
-        *(cneuron->weights+w) = *(cneuron->weights+w) - rate*acpd;
+        //*(cneuron->weights+w) = *(cneuron->weights+w) - rate*acpd;
+        *(new_weights+w) = *(cneuron->weights+w) - rate*acpd;
+      }
+      for (size_t w=0; w<cneuron->inputsize; w++){
+        *(cneuron->weights+w) = *(new_weights+w);
       }
       float acpd = av_CPDB(*net, cneuron, minibatch, costs);
       cneuron->bias = cneuron->bias - rate*acpd;
+      free(new_weights);
     }
   }
   //printf("test modified 2 %f\n", *(net->layers->neurons->weights));
