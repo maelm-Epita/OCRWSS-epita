@@ -14,7 +14,7 @@
 // the latter is too large the nn will produce the opposite effect
 
 static float eps = 1e-1;
-static float rate = 1e-1;
+static float rate = 1.f;
 
 // XOR = (x OR y) AND (x NAND y)
 
@@ -45,10 +45,10 @@ typedef float sample[3];
 // the xor_train is an array of sample where we are givving the parameters in
 // the first to indexes and the result we are willing to have in the third one
 sample xor_train[] = {
-    {0, 0, 0},
-    {0, 1, 1},
-    {1, 0, 1},
-    {1, 1, 0},
+    {0, 0, 1},
+    {0, 1, 0},
+    {1, 0, 0},
+    {1, 1, 1},
 };
 
 // *train is a pointer to our xor_train
@@ -149,7 +149,7 @@ Xor sub_rate(Xor m, Xor g) {
 }
 
 int main() {
-  srand(time(0));
+  srand(0);
 
   Xor m = rand_xor();
   //print_xor(m);
@@ -159,10 +159,11 @@ int main() {
   for (size_t i = 0; i < 100000; i++) {
     Xor g = diff(m);
     m = sub_rate(m, g);
-    printf("%f\n", cost(m));
+    printf("[gen %lu] le cout est de : %f\n", i, cost(m));
     //printf("cost = %f\n", cost(m));
   }
-
+  printf("-----------------------\n");
+  print_xor(m);
   printf("-----------------------\n");
   for (size_t i = 0; i < 2; i++) {
     for (size_t j = 0; j < 2; j++) {

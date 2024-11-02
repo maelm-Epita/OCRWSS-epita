@@ -12,3 +12,7 @@ LFLAGS = -lSDL2 -lSDL2_image -lm
 
 all: 
 	${CC} ${SRC} ${CFLAGS} -o main $(LFLAGS)
+xor_debug: xor.c
+	gcc -o Xor_test -Wall -Wextra -g -fsanitize=address  xor.c -lm
+clean:
+	rm Xor_test
