@@ -3,3 +3,6 @@ xor_test: xor.c
 
 xor_debug: xor.c
 	gcc -o Xor_test -Wall -Wextra -g -fsanitize=address  xor.c -lm
+
+clean:
+	rm Xor_test
