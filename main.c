@@ -88,6 +88,9 @@ void xor_train(){
   struct Network net = {2, 3, layersizes, NULL};
   float cost = 1;
   while (cost>1e-4){
+    if (cost!=1){
+      free_network(&net);
+    }
     fill_network(&net);
     cost = train(&net, xor_set, RATE, MINIBATCH_SIZE, 1000);
   }
