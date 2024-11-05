@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <unistd.h>
 #include "training_data.h"
 #include "../neural-net/Network.h"
 #include "../shared/arr_helpers.h"
@@ -31,14 +32,16 @@ float av_Cost(struct Network net, struct training_set minibatch){
   return av_cost;
 }
 
-float av_Cost_PDW(struct Network net, struct Neuron* neuron, size_t windex, struct training_set minibatch, float av_cost){
+float av_Cost_PDW(struct Network net, struct Neuron* neuron, size_t windex, struct training_set minibatch){
+  float av_cost = av_Cost(net, minibatch);
   float w = *(neuron->weights+windex);
   *(neuron->weights+windex) = w+EPS;
   float d_av_cost = av_Cost(net, minibatch);
   *(neuron->weights+windex) = w;
   return (d_av_cost-av_cost)/EPS;
 }
-float av_Cost_PDB(struct Network net, struct Neuron* neuron, struct training_set minibatch, float av_cost){
+float av_Cost_PDB(struct Network net, struct Neuron* neuron, struct training_set minibatch){
+  float av_cost = av_Cost(net, minibatch);
   float b = neuron->bias;
   neuron->bias = b+EPS;
   float d_av_cost = av_Cost(net, minibatch);
@@ -53,26 +56,25 @@ float back_propagate(struct Network* net, struct training_set minibatch, double 
     struct Layer* clayer = net->layers+l;
     for (size_t n=0; n<*(net->layersizes+l); n++){
       struct Neuron* cneuron = clayer->neurons+n;
-      float* new_weights = calloc(cneuron->inputsize, sizeof(float));
+      //float* new_weights = calloc(cneuron->inputsize, sizeof(float));
       for (size_t w=0; w<cneuron->inputsize; w++){
-        float acpd = av_Cost_PDW(*net, cneuron, w, minibatch, av_cost);
-        //printf("test acpd %f\n", acpd);
-        //*(cneuron->weights+w) = *(cneuron->weights+w) - rate*acpd;
-        *(new_weights+w) = *(cneuron->weights+w) - rate*acpd;
+        float acpd = av_Cost_PDW(*net, cneuron, w, minibatch);
+        //*(new_weights+w) = *(cneuron->weights+w) - rate*acpd;
+        *(cneuron->weights+w) = *(cneuron->weights+w) - rate*acpd;
       }
-      for (size_t w=0; w<cneuron->inputsize; w++){
+      /*for (size_t w=0; w<cneuron->inputsize; w++){
         *(cneuron->weights+w) = *(new_weights+w);
-      }
-      float acpd = av_Cost_PDB(*net, cneuron, minibatch, av_cost);
+      }*/
+      float acpd = av_Cost_PDB(*net, cneuron, minibatch);
       cneuron->bias = cneuron->bias - rate*acpd;
-      free(new_weights);
+      //free(new_weights);
     }
   }
   //printf("test modified 2 %f\n", *(net->layers->neurons->weights));
   return av_cost;
 }
 
-void train(struct Network* net, struct training_set set, double rate, size_t minibatch_size, size_t epochs){
+float train(struct Network* net, struct training_set set, double rate, size_t minibatch_size, size_t epochs){
   printf("----------------------\n");
   printf("TRAINING NEURAL NETWORK\n");
   printf("----------------------\n");
@@ -90,9 +92,11 @@ void train(struct Network* net, struct training_set set, double rate, size_t min
     av_cost /= mini_set.minibatch_number;
     printf("EPOCH %lu finished, Average cost was : %f\n", i, av_cost);
     free_minibatch_set(mini_set);
+    //usleep(100000);
   }
   printf("END OF TRAINING...\n");
   printf("---------------------\n");
   float final_av_cost = av_Cost(*net, set);
   printf("Final average cost of the network on all training data : %f\n", final_av_cost);
+  return final_av_cost;
 }

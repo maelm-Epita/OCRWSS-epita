@@ -38,6 +38,7 @@ void free_network(struct Network *net);
 // free a network, should be called when a network which was loaded from a file is no longer needed
 // calls free_network and also frees network->layersizes which is callocd when loading
 void free_network_loaded(struct Network *net);
+char* neuron_to_str(struct Neuron neuron);
 
 // to create a new network
 // we can declare it this way
