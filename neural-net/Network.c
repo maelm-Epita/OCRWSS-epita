@@ -10,7 +10,7 @@
 float output(float* inputs, float* weights, float bias, size_t inputsize){
   float sum_weighted_inputs = 0;
   for (size_t i=0; i<inputsize; i++){
-    sum_weighted_inputs += *(inputs+i)+*(weights+i);
+    sum_weighted_inputs += *(inputs+i)**(weights+i);
   }
   return sigmoid(sum_weighted_inputs+(bias));
 }
@@ -30,6 +30,10 @@ float* feedforward(struct Network net, float* input){
     for (size_t j=0; j<layer_size; j++){
       // add its output to the output array
       *(out+j)=calculate_output(*((*(net.layers+i)).neurons+j), prev_out);
+    }
+    // free the output we just used (if it isnt the input of the network)
+    if (i>0){
+      free(prev_out);
     }
     // the output becomes the previous output thus the input of the next layer
     prev_out = out;
@@ -55,7 +59,7 @@ void free_network(struct Network *net){
     }
     free(layer->neurons);
   }
-  free((*net).layers);
+  free(net->layers);
 }
 void free_network_loaded(struct Network *net){
   free_network(net);
@@ -64,8 +68,8 @@ void free_network_loaded(struct Network *net){
 
 void fill_network(struct Network* network){
   srand(time(0));
-  int MIN_RAND = -1;
-  int MAX_RAND = 1;
+  int MIN_RAND = -10;
+  int MAX_RAND = 10;
   // create the layer array
   network->layers = calloc(network->layernb, sizeof(struct Layer));
   size_t layer_inputsize = network->inputsize;

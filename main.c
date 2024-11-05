@@ -13,7 +13,7 @@ void letter_train(){
   const size_t INPUT_SIZE = 28*28;
   const size_t MINIBATCH_SIZE = 800;
   const size_t EPOCHS = 3;
-  const double RATE = 1e-3;
+  const double RATE = 15;
   // creating training set
   printf("------------\n");
   printf("Training set :\n");
@@ -37,8 +37,8 @@ void letter_train(){
   printf("------------\n");
   printf("Neural network :\n");
   printf("------------\n");
-  size_t layersizes[3] = {200,56,26};
-  struct Network net = {28*28, 3, layersizes};
+  size_t layersizes[3] = {30,30,26};
+  struct Network net = {28*28, 3, layersizes, NULL};
   printf("Creating and filling network with random initial weights and biases\n");
   fill_network(&net);
   // training the network
@@ -62,16 +62,16 @@ void xor_train(){
   const size_t DATA_NB = 4;
   const size_t INPUT_SIZE = 2;
   const size_t MINIBATCH_SIZE = 2;
-  const size_t EPOCHS = 1000*10;
-  const double RATE = 1e-3;
+  //const size_t EPOCHS = 10000;
+  const double RATE = 15;
   float input1[2] = {0,0};
-  float output1[1] = {0};
+  float output1[1] = {1};
   float input2[2] = {0,1};
-  float output2[1] = {1};
+  float output2[1] = {0};
   float input3[2] = {1,0};
-  float output3[1] = {1};
+  float output3[1] = {0};
   float input4[2] = {1,1};
-  float output4[1] = {0};
+  float output4[1] = {1};
   float **inputs = calloc(DATA_NB, sizeof(float*));
   *(inputs+0) = input1;
   *(inputs+1) = input2;
@@ -83,14 +83,18 @@ void xor_train(){
   *(outputs+2) = output3;
   *(outputs+3) = output4;
   struct training_set xor_set = create_training_set(inputs, outputs, DATA_NB, INPUT_SIZE);
-  free(outputs);
   //
-  size_t layersizes[2] = {2,1};
-  struct Network net = {2, 2, layersizes};
-  fill_network(&net);
-  //
-  train(&net, xor_set, RATE, MINIBATCH_SIZE, EPOCHS);
-  //
+  size_t layersizes[3] = {10,2,1};
+  struct Network net = {2, 3, layersizes, NULL};
+  float cost = 1;
+  while (cost>1e-4){
+    if (cost!=1){
+      free_network(&net);
+    }
+    fill_network(&net);
+    cost = train(&net, xor_set, RATE, MINIBATCH_SIZE, 1000);
+  }
+  cost = train(&net, xor_set, RATE, MINIBATCH_SIZE, 5000);
   // see everything
   save_network("testmodelxor", net);
   // test out
@@ -100,24 +104,29 @@ void xor_train(){
   float* foutput4 = feedforward(net, input4);
   printf("output 1 :\n");
   print_float_arr(input1, 2);
+  print_float_arr(output1, 1);
   print_float_arr(foutput1, 1);
   printf("output 2 :\n");
   print_float_arr(input2, 2);
+  print_float_arr(output2, 1);
   print_float_arr(foutput2, 1);
   printf("output 3 :\n");
   print_float_arr(input3, 2);
+  print_float_arr(output3, 1);
   print_float_arr(foutput3, 1);
   printf("output 4 :\n");
   print_float_arr(input4, 2);
+  print_float_arr(output4, 1);
   print_float_arr(foutput4, 1);
   free(foutput1);
   free(foutput2);
   free(foutput3);
   free(foutput4);
   free(inputs);
+  free(outputs);
   //
+  free(xor_set.data);
   free_network(&net);
-  free_training_set(xor_set);
 }
 
 int main(){
