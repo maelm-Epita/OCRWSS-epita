@@ -38,7 +38,7 @@ void letter_train(){
   printf("Neural network :\n");
   printf("------------\n");
   size_t layersizes[3] = {200,56,26};
-  struct Network net = {28*28, 3, layersizes};
+  struct Network net = {28*28, 3, layersizes, NULL};
   printf("Creating and filling network with random initial weights and biases\n");
   fill_network(&net);
   // training the network
@@ -63,7 +63,7 @@ void xor_train(){
   const size_t INPUT_SIZE = 2;
   const size_t MINIBATCH_SIZE = 2;
   const size_t EPOCHS = 1000*10;
-  const double RATE = 1e-3;
+  const double RATE = 1;
   float input1[2] = {0,0};
   float output1[1] = {0};
   float input2[2] = {0,1};
@@ -86,7 +86,7 @@ void xor_train(){
   free(outputs);
   //
   size_t layersizes[2] = {2,1};
-  struct Network net = {2, 2, layersizes};
+  struct Network net = {2, 2, layersizes, NULL};
   fill_network(&net);
   //
   train(&net, xor_set, RATE, MINIBATCH_SIZE, EPOCHS);
@@ -116,8 +116,8 @@ void xor_train(){
   free(foutput4);
   free(inputs);
   //
+  free(xor_set.data);
   free_network(&net);
-  free_training_set(xor_set);
 }
 
 int main(){

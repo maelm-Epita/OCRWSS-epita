@@ -31,6 +31,10 @@ float* feedforward(struct Network net, float* input){
       // add its output to the output array
       *(out+j)=calculate_output(*((*(net.layers+i)).neurons+j), prev_out);
     }
+    // free the output we just used (if it isnt the input of the network)
+    if (i>0){
+      free(prev_out);
+    }
     // the output becomes the previous output thus the input of the next layer
     prev_out = out;
   }

@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -Wall -Wextra -O3 -Wvla -fsanitize=address -g
+CFLAGS = -Wall -Wextra -Werror -O3 -Wvla -fsanitize=address -g
 SRC = \
 			main.c \
 			train/training_data_loader.c \

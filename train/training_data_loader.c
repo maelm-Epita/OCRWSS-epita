@@ -117,7 +117,7 @@ void load_training_data(FILE *file, float** *inputs_p, float** *outputs_p, size_
       float* output = snum_to_output(str_to_size(strtok(line, ",")));
       // get the remaining input_size columns which are the pixels and convert them to a number then from 0-255 to 0-1
       float* input = calloc(input_size, sizeof(float));
-      for (int i = 0; i<input_size; i++){
+      for (size_t i = 0; i<input_size; i++){
         
         *(input+i) = atof(strtok(NULL, ","))/255;
       }
