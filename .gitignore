@@ -42,3 +42,4 @@ dkms.conf
 # ignore uncompressed training data DO NOT REMOVE
 uncompressed/
 *.model
+*.zip
