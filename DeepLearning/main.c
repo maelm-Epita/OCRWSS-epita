@@ -58,6 +58,54 @@ void letter_train(){
   printf("Finished\n");
 }
 
+void letter_train_existing(){
+  // defining constants
+  const size_t DATA_NB = 372038;
+  const size_t INPUT_SIZE = 28*28;
+  const size_t MINIBATCH_SIZE = 50;
+  const size_t EPOCHS = 3;
+  const double RATE = 15;
+  // creating training set
+  printf("------------\n");
+  printf("Training set :\n");
+  printf("------------\n");
+  float **inputs;
+  float **outputs;
+  FILE *fptr;
+  fptr = fopen("./training-set/huge_data.csv", "r");
+  if (fptr == NULL){
+    printf("File could not be opened");
+    exit(EXIT_FAILURE);
+  }
+  printf("Loading training data...\n");
+  load_training_data(fptr, &inputs, &outputs, DATA_NB, INPUT_SIZE);
+  fclose(fptr);
+  printf("Creating training set...\n");
+  struct training_set letter_training_set = create_training_set(inputs, outputs, DATA_NB, INPUT_SIZE);
+  free(inputs);
+  free(outputs);
+  // creating network and filling it
+  printf("------------\n");
+  printf("Neural network :\n");
+  printf("------------\n");
+  struct Network net = load_network("./letter_model.model");
+  // training the network
+  printf("--------------------\n");
+  printf("Training the network\n");
+  train(&net, letter_training_set, RATE, MINIBATCH_SIZE, EPOCHS);
+  printf("Finished training the network\n");
+  printf("--------------------\n");
+  // saving it
+  printf("Saving the model\n");
+  save_network("testmodel", net);
+  // cleanup
+  printf("Freeing the heap\n");
+  free_network(&net);
+  free_training_set(letter_training_set);
+  printf("------------\n");
+  printf("Finished\n");
+}
+
 void xor_train(){
   const size_t DATA_NB = 4;
   const size_t INPUT_SIZE = 2;
@@ -130,5 +178,5 @@ void xor_train(){
 }
 
 int main(){
-  xor_train();
+  letter_train();
 }
