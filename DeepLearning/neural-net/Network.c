@@ -45,7 +45,11 @@ float* feedforward(struct Network net, float* input){
 char* neuron_to_str(struct Neuron neur){
   char* wstr = float_arr_to_str(neur.weights, neur.inputsize);
   char* str = NULL;
-  asprintf(&str, "%s %f", wstr, neur.bias);
+  size_t b = asprintf(&str, "%s %f", wstr, neur.bias);
+  if (b<1){
+    printf("asprintf failed");
+    exit(EXIT_FAILURE);
+  }
   free(wstr);
   return str;
 }
@@ -96,7 +100,11 @@ void fill_network(struct Network* network){
 void save_network(char *name, struct Network net){
   // create file / open file
   char* modelname = NULL;
-  asprintf(&modelname, "./%s.model", name);
+  size_t b = asprintf(&modelname, "./%s.model", name);
+  if (b<1){
+    printf("asprintf failed");
+    exit(EXIT_FAILURE);
+  }
   FILE *fptr = fopen(modelname, "w");
   free(modelname);
   // start writing data

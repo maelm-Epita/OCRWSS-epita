@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -Wall -Wextra -Werror -O3 -Wvla -fsanitize=address -g
+CFLAGS = -Wall -Wextra -Werror -O3 -Wvla -fsanitize=address -g -D__GNU_SOURCE
 SRC = \
 			main.c \
 			train/training_data_loader.c \
@@ -8,7 +8,7 @@ SRC = \
 			neural-net/Network.c \
 			shared/math_helpers.c \
 			shared/arr_helpers.c 
-LFLAGS = -lSDL2 -lSDL2_image -lm
+LFLAGS = -lSDL2 -lm
 
 all: 
 	${CC} ${SRC} ${CFLAGS} -o main $(LFLAGS)
