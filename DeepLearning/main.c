@@ -84,8 +84,8 @@ void xor_train(){
   *(outputs+3) = output4;
   struct training_set xor_set = create_training_set(inputs, outputs, DATA_NB, INPUT_SIZE);
   //
-  size_t layersizes[3] = {100,8,1};
-  struct Network net = {2, 3, layersizes, NULL};
+  size_t layersizes[2] = {2,1};
+  struct Network net = {2, 2, layersizes, NULL};
   float cost = 1;
   while (cost>1e-4){
     if (cost!=1){
@@ -94,7 +94,7 @@ void xor_train(){
     fill_network(&net);
     cost = train(&net, xor_set, RATE, MINIBATCH_SIZE, 1000);
   }
-  cost = train(&net, xor_set, RATE, MINIBATCH_SIZE, 5000);
+  cost = train(&net, xor_set, RATE, MINIBATCH_SIZE, 1000);
   // see everything
   save_network("testmodelxor", net);
   // test out

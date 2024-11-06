@@ -8,7 +8,7 @@ SRC = \
 			neural-net/Network.c \
 			shared/math_helpers.c \
 			shared/arr_helpers.c 
-LFLAGS = -lSDL2 -lSDL2_image -lm
+LFLAGS = -lSDL2 -lm
 
 all: 
 	${CC} ${SRC} ${CFLAGS} -o main $(LFLAGS)
