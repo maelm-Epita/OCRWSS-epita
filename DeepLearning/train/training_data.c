@@ -56,7 +56,7 @@ void shuffle_training_set(struct training_set set)
 }
 
 struct minibatch_set create_minibatch_set(struct training_set set, size_t minibatch_size){
-  printf("%lu\n", minibatch_size);
+  printf("Creating mini-batches of size %lu\n", minibatch_size);
   size_t minibatch_nb = set.data_number/minibatch_size;
   struct minibatch_set bset = {minibatch_size, minibatch_nb, NULL};
   bset.mini_batches = calloc(minibatch_nb, sizeof(struct training_set));
