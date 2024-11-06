@@ -86,8 +86,11 @@ float train(struct Network* net, struct training_set set, double rate, size_t mi
     for (size_t j=0; j<mini_set.minibatch_number;j++){
       struct training_set curr_minibatch = *(mini_set.mini_batches+j);
       printf("Mini-batch %lu - Back propagation...\n", j);
-      av_cost += back_propagate(net, curr_minibatch, rate);
-      //printf("test modified %f\n", *(net->layers->neurons->weights));
+      float cost = back_propagate(net, curr_minibatch, rate);
+      av_cost += cost;
+      printf("Mini batch cost : %f\n", cost);
+      printf("Saving network...\n");
+      save_network("letter_model", *net);
     }
     av_cost /= mini_set.minibatch_number;
     printf("EPOCH %lu finished, Average cost was : %f\n", i, av_cost);

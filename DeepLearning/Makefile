@@ -12,3 +12,6 @@ LFLAGS = -lSDL2 -lSDL2_image -lm
 
 all: 
 	${CC} ${SRC} ${CFLAGS} -o main $(LFLAGS)
+.PHONY: clean
+clean:
+	rm main

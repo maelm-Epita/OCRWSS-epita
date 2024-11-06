@@ -11,7 +11,7 @@ void letter_train(){
   // defining constants
   const size_t DATA_NB = 372038;
   const size_t INPUT_SIZE = 28*28;
-  const size_t MINIBATCH_SIZE = 800;
+  const size_t MINIBATCH_SIZE = 50;
   const size_t EPOCHS = 3;
   const double RATE = 15;
   // creating training set
@@ -21,7 +21,7 @@ void letter_train(){
   float **inputs;
   float **outputs;
   FILE *fptr;
-  fptr = fopen("./train/training-set/uncompressed/handwritten_data_785.csv", "r");
+  fptr = fopen("./training-set/huge_data.csv", "r");
   if (fptr == NULL){
     printf("File could not be opened");
     exit(EXIT_FAILURE);
@@ -37,8 +37,8 @@ void letter_train(){
   printf("------------\n");
   printf("Neural network :\n");
   printf("------------\n");
-  size_t layersizes[3] = {30,30,26};
-  struct Network net = {28*28, 3, layersizes, NULL};
+  size_t layersizes[2] = {26,26};
+  struct Network net = {28*28, 2, layersizes, NULL};
   printf("Creating and filling network with random initial weights and biases\n");
   fill_network(&net);
   // training the network
@@ -84,7 +84,7 @@ void xor_train(){
   *(outputs+3) = output4;
   struct training_set xor_set = create_training_set(inputs, outputs, DATA_NB, INPUT_SIZE);
   //
-  size_t layersizes[3] = {10,2,1};
+  size_t layersizes[3] = {100,8,1};
   struct Network net = {2, 3, layersizes, NULL};
   float cost = 1;
   while (cost>1e-4){
@@ -130,5 +130,5 @@ void xor_train(){
 }
 
 int main(){
-  xor_train();
+  letter_train();
 }
