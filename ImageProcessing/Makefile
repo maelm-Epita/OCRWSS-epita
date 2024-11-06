@@ -1,5 +1,5 @@
 CC := gcc
-CFLAGS := -std=c99 -Wextra -Wall -pedantic -Werror -Wvla
+CFLAGS := -std=c99 -Wextra -Wall -Werror -Wvla
 LDFLAGS := -lSDL2_image -lSDL2 -lm
 SRC := image.c image_tools.c image_matrix.c image_rotate.c
 OBJ := $(SRC:.c=.o)

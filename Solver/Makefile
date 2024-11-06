@@ -1,5 +1,5 @@
 CC := clang
-CFLAGS := -Wextra -Wall -pedantic -Wvla -O3
+CFLAGS := -Wextra -Wall -Wvla -O3
 SRC := multi_solver.c grid.c tree_words.c list_word.c
 OBJ := $(SRC:.c=.o)
 BIN := multi_solver
