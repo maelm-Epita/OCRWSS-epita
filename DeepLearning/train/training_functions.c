@@ -78,7 +78,7 @@ float train(struct Network* net, struct training_set set, double rate, size_t mi
   printf("----------------------\n");
   printf("TRAINING NEURAL NETWORK\n");
   printf("----------------------\n");
-  for (size_t i=0; i<epochs; i++){
+  for (size_t i=0; i<=epochs; i++){
     float av_cost = 0;
     printf("EPOCH %lu\n",i);
     printf("Training.....\n");

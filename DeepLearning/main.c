@@ -84,8 +84,8 @@ void xor_train(){
   *(outputs+3) = output4;
   struct training_set xor_set = create_training_set(inputs, outputs, DATA_NB, INPUT_SIZE);
   //
-  size_t layersizes[3] = {10,2,1};
-  struct Network net = {2, 3, layersizes, NULL};
+  size_t layersizes[2] = {2,1};
+  struct Network net = {2, 2, layersizes, NULL};
   float cost = 1;
   while (cost>1e-4){
     if (cost!=1){
