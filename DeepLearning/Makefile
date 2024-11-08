@@ -1,5 +1,6 @@
-CC = gcc
-CFLAGS = -Wall -Wextra -Werror -O3 -Wvla -fsanitize=address -g -D__GNU_SOURCE
+CC = clang
+CFLAGS = -Wall -Wextra -Werror -Wvla -fsanitize=address -g -D_GNU_SOURCE
+SPEED := -O3 -Ofast -flto -funroll-loops -fstrict-aliasing -ftree-vectorize -fomit-frame-pointer -march=native -mtune=native
 SRC = \
 			main.c \
 			train/training_data_loader.c \
@@ -11,7 +12,7 @@ SRC = \
 LFLAGS = -lSDL2 -lm
 
 all: 
-	${CC} ${SRC} ${CFLAGS} -o main $(LFLAGS)
+	${CC} ${SRC} ${CFLAGS} ${SPEED} -o main $(LFLAGS)
 .PHONY: clean
 clean:
 	rm main

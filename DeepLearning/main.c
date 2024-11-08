@@ -7,13 +7,14 @@
 #include "train/training_data_loader.h"
 #include "train/training_functions.h"
 
+// defining constants
+#define DATA_NB 372038
+#define INPUT_SIZE 28*28
+#define MINIBATCH_SIZE 50
+#define EPOCHS 3
+#define RATE 25
+
 void letter_train(){
-  // defining constants
-  const size_t DATA_NB = 372038;
-  const size_t INPUT_SIZE = 28*28;
-  const size_t MINIBATCH_SIZE = 50;
-  const size_t EPOCHS = 3;
-  const double RATE = 15;
   // creating training set
   printf("------------\n");
   printf("Training set :\n");
@@ -21,7 +22,7 @@ void letter_train(){
   float **inputs;
   float **outputs;
   FILE *fptr;
-  fptr = fopen("./training-set/huge_data.csv", "r");
+  fptr = fopen("./datas.csv", "r");
   if (fptr == NULL){
     printf("File could not be opened");
     exit(EXIT_FAILURE);
@@ -37,8 +38,8 @@ void letter_train(){
   printf("------------\n");
   printf("Neural network :\n");
   printf("------------\n");
-  size_t layersizes[2] = {26,26};
-  struct Network net = {28*28, 2, layersizes, NULL};
+  size_t layersizes[3] = {32,64,26};
+  struct Network net = {28*28, 3, layersizes, NULL};
   printf("Creating and filling network with random initial weights and biases\n");
   fill_network(&net);
   // training the network
@@ -59,12 +60,6 @@ void letter_train(){
 }
 
 void letter_train_existing(){
-  // defining constants
-  const size_t DATA_NB = 372038;
-  const size_t INPUT_SIZE = 28*28;
-  const size_t MINIBATCH_SIZE = 50;
-  const size_t EPOCHS = 3;
-  const double RATE = 15;
   // creating training set
   printf("------------\n");
   printf("Training set :\n");
@@ -72,7 +67,7 @@ void letter_train_existing(){
   float **inputs;
   float **outputs;
   FILE *fptr;
-  fptr = fopen("./training-set/huge_data.csv", "r");
+  fptr = fopen("./datas.csv", "r");
   if (fptr == NULL){
     printf("File could not be opened");
     exit(EXIT_FAILURE);
@@ -105,7 +100,7 @@ void letter_train_existing(){
   printf("------------\n");
   printf("Finished\n");
 }
-
+/*
 void xor_train(){
   const size_t DATA_NB = 4;
   const size_t INPUT_SIZE = 2;
@@ -176,7 +171,7 @@ void xor_train(){
   free(xor_set.data);
   free_network(&net);
 }
-
+*/
 int main(){
-  xor_train();
+  letter_train_existing();
 }
