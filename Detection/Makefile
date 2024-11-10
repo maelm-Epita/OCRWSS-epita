@@ -1,7 +1,7 @@
 CC := gcc
-CFLAGS := -std=c99 -Wextra -Wall -pedantic -Werror -Wvla
-LDFLAGS := -lSDL2_image -lSDL2 -lm
-SRC := detection.c
+CFLAGS := -Wextra -Wall -Werror -Wvla  -D_USE_MATH_DEFINES
+LDFLAGS := -lSDL2_image -lSDL2 -lm  -D_USE_MATH_DEFINES
+SRC := detection.c hough.c
 OBJ := $(SRC:.c=.o)
 BIN := detection
 

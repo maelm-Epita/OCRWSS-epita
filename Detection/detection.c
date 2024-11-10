@@ -7,6 +7,7 @@
 #include <sys/types.h>
 
 #include "detection.h"
+#include "hough.h"
 
 void lines(SDL_Surface *surface, block *block) {
   int w = surface->w;
