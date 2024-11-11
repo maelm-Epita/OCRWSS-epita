@@ -67,7 +67,7 @@ void letter_train_existing(){
   float **inputs;
   float **outputs;
   FILE *fptr;
-  fptr = fopen("./datas.csv", "r");
+  fptr = fopen("./training-set/huge_data.csv", "r");
   if (fptr == NULL){
     printf("File could not be opened");
     exit(EXIT_FAILURE);
