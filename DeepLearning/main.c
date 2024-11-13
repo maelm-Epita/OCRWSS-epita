@@ -1,5 +1,5 @@
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "neural-net/Network.h"
 #include "shared/arr_helpers.h"
@@ -9,21 +9,21 @@
 
 // defining constants
 #define DATA_NB 372038
-#define INPUT_SIZE 28*28
+#define INPUT_SIZE 28 * 28
 #define MINIBATCH_SIZE 50
 #define EPOCHS 3
-#define RATE 25
+#define RATE 0
 
-void letter_train(){
+void letter_train() {
   // creating training set
   printf("------------\n");
   printf("Training set :\n");
   printf("------------\n");
-  float **inputs;
-  float **outputs;
+  float **inputs = NULL;
+  float **outputs = NULL;
   FILE *fptr;
   fptr = fopen("./datas.csv", "r");
-  if (fptr == NULL){
+  if (fptr == NULL) {
     printf("File could not be opened");
     exit(EXIT_FAILURE);
   }
@@ -31,16 +31,18 @@ void letter_train(){
   load_training_data(fptr, &inputs, &outputs, DATA_NB, INPUT_SIZE);
   fclose(fptr);
   printf("Creating training set...\n");
-  struct training_set letter_training_set = create_training_set(inputs, outputs, DATA_NB, INPUT_SIZE);
+  struct training_set letter_training_set =
+      create_training_set(inputs, outputs, DATA_NB, INPUT_SIZE);
   free(inputs);
   free(outputs);
   // creating network and filling it
   printf("------------\n");
   printf("Neural network :\n");
   printf("------------\n");
-  size_t layersizes[3] = {32,64,26};
-  struct Network net = {28*28, 3, layersizes, NULL};
-  printf("Creating and filling network with random initial weights and biases\n");
+  size_t layersizes[4] = {32, 64, 32, 26};
+  struct Network net = {28 * 28, 4, layersizes, NULL};
+  printf(
+      "Creating and filling network with random initial weights and biases\n");
   fill_network(&net);
   // training the network
   printf("--------------------\n");
@@ -59,7 +61,7 @@ void letter_train(){
   printf("Finished\n");
 }
 
-void letter_train_existing(){
+void letter_train_existing() {
   // creating training set
   printf("------------\n");
   printf("Training set :\n");
@@ -67,8 +69,8 @@ void letter_train_existing(){
   float **inputs;
   float **outputs;
   FILE *fptr;
-  fptr = fopen("./training-set/huge_data.csv", "r");
-  if (fptr == NULL){
+  fptr = fopen("datas.csv", "r");
+  if (fptr == NULL) {
     printf("File could not be opened");
     exit(EXIT_FAILURE);
   }
@@ -76,7 +78,8 @@ void letter_train_existing(){
   load_training_data(fptr, &inputs, &outputs, DATA_NB, INPUT_SIZE);
   fclose(fptr);
   printf("Creating training set...\n");
-  struct training_set letter_training_set = create_training_set(inputs, outputs, DATA_NB, INPUT_SIZE);
+  struct training_set letter_training_set =
+      create_training_set(inputs, outputs, DATA_NB, INPUT_SIZE);
   free(inputs);
   free(outputs);
   // creating network and filling it
@@ -125,7 +128,8 @@ void xor_train(){
   *(outputs+1) = output2;
   *(outputs+2) = output3;
   *(outputs+3) = output4;
-  struct training_set xor_set = create_training_set(inputs, outputs, DATA_NB, INPUT_SIZE);
+  struct training_set xor_set = create_training_set(inputs, outputs, DATA_NB,
+INPUT_SIZE);
   //
   size_t layersizes[2] = {2,1};
   struct Network net = {2, 2, layersizes, NULL};
@@ -172,6 +176,4 @@ void xor_train(){
   free_network(&net);
 }
 */
-int main(){
-  letter_train_existing();
-}
+int main() { letter_train_existing(); }
