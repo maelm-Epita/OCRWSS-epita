@@ -4,6 +4,8 @@
 #include <unistd.h>
 #include "training_data_loader.h"
 
+#define OUTPUT_SIZE 26
+
 // helpers
 size_t str_to_size(char* str){
   size_t s = 0;
@@ -14,17 +16,8 @@ size_t str_to_size(char* str){
   return s;
 }
 
-// property ish
-size_t get_outputs_size(){
-  return 26;
-}
-size_t get_inputs_size(){
-  return 784;
-}
-
-
 float* snum_to_output(size_t n){
-  float* output=calloc(get_outputs_size(), sizeof(float));
+  float* output=calloc(OUTPUT_SIZE, sizeof(float));
   if (output==NULL){
     printf("could not create output array");
     exit(EXIT_FAILURE);
