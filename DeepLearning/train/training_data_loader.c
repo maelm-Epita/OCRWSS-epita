@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include "training_data_loader.h"
 
 // helpers
 size_t str_to_size(char* str){

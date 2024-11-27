@@ -1,6 +1,7 @@
 #include "../neural-net/Network.h"
 #include "../shared/arr_helpers.h"
 #include "training_data.h"
+#include "training_functions.h"
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>

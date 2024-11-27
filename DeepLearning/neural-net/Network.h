@@ -1,4 +1,5 @@
 #pragma once
+#include <stddef.h>
 
 struct Neuron{
   size_t inputsize;

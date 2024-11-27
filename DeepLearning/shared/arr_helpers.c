@@ -2,6 +2,7 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include "arr_helpers.h"
 
 char* sze_arr_to_str(size_t* arr, size_t size){
   char* str = calloc(9*size, sizeof(char));

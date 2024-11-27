@@ -1,4 +1,5 @@
 #pragma once
+#include <stddef.h>
 
 struct training_data{
   float* inputs;

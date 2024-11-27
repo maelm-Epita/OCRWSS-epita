@@ -1,4 +1,5 @@
 #pragma once
+#include <stddef.h>
 
 float sigmoid(float z);
 // random float in range
