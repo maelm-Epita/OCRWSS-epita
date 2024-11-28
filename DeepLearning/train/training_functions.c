@@ -53,7 +53,7 @@ float av_Cost_PDB(struct Network net, struct Neuron *neuron,
 }
 
 float back_propagate(struct Network *net, struct training_set minibatch,
-                     double rate) {
+                     float rate) {
   float av_cost = av_Cost(*net, minibatch);
   for (size_t l = 0; l < net->layernb; l++) {
     struct Layer *clayer = net->layers + l;
