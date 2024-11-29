@@ -11,12 +11,18 @@
 #include <err.h>
 
 // defining constants
-#define DATA_NB 372038
 #define INPUT_SIZE 28 * 28
+#define LAYER_NUMBER 4
+#define DATA_NB 372038
 #define MINIBATCH_SIZE 50
-#define EPOCHS 3
+#define EPOCHS 1
 #define RATE 5
-#define ARBITRARY_MIN_INITIALIZER 100
+#define BACKPROP_NUMBER 1
+#define MODEL_NAME "./models/letter.model"
+// fork specific
+#define NETWORK_NUMBER 8
+// thread specific
+#define THREAD_NUMBER 8
 
 void letter_train() {
   // creating training set
@@ -51,7 +57,7 @@ void letter_train() {
   // training the network
   printf("--------------------\n");
   printf("Training the network\n");
-  train(&net, letter_training_set, RATE, MINIBATCH_SIZE, EPOCHS);
+  //train(&net, letter_training_set, RATE, MINIBATCH_SIZE, EPOCHS);
   printf("Finished training the network\n");
   printf("--------------------\n");
   // saving it
@@ -65,8 +71,8 @@ void letter_train() {
   printf("Finished\n");
 }
 
-void letter_train_fork() {
-  const size_t NB_CHILDREN = 2;
+void _letter_train_fork() {
+  const size_t NB_CHILDREN = 8;
   // pipes
   // costfds is an array of pipes, each child has its own pipe
   // they will be used once to write the cost of each child's nn
@@ -81,7 +87,7 @@ void letter_train_fork() {
     err(EXIT_FAILURE, "pipes failed");
   }
   // var of our nn
-  const size_t REPETITIONS = 1;
+  const size_t REPETITIONS = 10;
   size_t layersizes[3] = {32, 64, 26};
   // creating training set
   printf("------------\n");
@@ -122,6 +128,7 @@ void letter_train_fork() {
     // child code
     else if (id == 0) {
       printf("in child %lu\n", i);
+      int pid = getpid();
       // close unused pipe ends
       close(costfds[i][0]); // read close
       close(resfd[1]); // write close
@@ -129,12 +136,12 @@ void letter_train_fork() {
       struct Network net = {28 * 28, 3, layersizes, NULL};
       fill_network(&net);
       for (size_t j = 0; j < REPETITIONS; j++) {
-        train_fork(&net, *(mini_set.mini_batches + j), RATE);
+        printf("Child %lu, pid %d, repetition %lu...\n", i, pid, j);
+        _train_fork(&net, *(mini_set.mini_batches + j), RATE);
       }
       float cost = Cost(net, *letter_training_set.data);
       printf("trained child %lu, cost is %.6f\n", i, cost);
       // sending results to father thread
-      int pid = getpid();
       // these two calls should run right after one another, 
       // if another pipe interrupts, it would mess the entire process
       printf("writing cost of child : %f\n", cost);
@@ -180,7 +187,7 @@ void letter_train_fork() {
   // reading from each child's write pipe to know each pid and cost in order
   // to find the minimum cost's child pid
   // we do not need to worry about timing the reads because read will block execution until it receives data
-  float min_cost = ARBITRARY_MIN_INITIALIZER;
+  float min_cost = 1;
   int min_pid;
   float temp_cost;
   int temp_pid;
@@ -239,7 +246,7 @@ void letter_train_existing() {
   float **inputs;
   float **outputs;
   FILE *fptr;
-  fptr = fopen("./datas.csv", "r");
+  fptr = fopen("./training-set/huge_data.csv", "r");
   if (fptr == NULL) {
     printf("File could not be opened");
     exit(EXIT_FAILURE);
@@ -256,11 +263,11 @@ void letter_train_existing() {
   printf("------------\n");
   printf("Neural network :\n");
   printf("------------\n");
-  struct Network net = load_network("./letter_model.model");
+  struct Network net = load_network("./models/letter_model.model");
   // training the network
   printf("--------------------\n");
   printf("Training the network\n");
-  train(&net, letter_training_set, RATE, MINIBATCH_SIZE, EPOCHS);
+  //train(&net, letter_training_set, RATE, MINIBATCH_SIZE, EPOCHS, BACKPROP_NUMBER, NETWORK_NUMBER, MODEL_NAME);
   printf("Finished training the network\n");
   printf("--------------------\n");
   // saving it
@@ -346,4 +353,46 @@ INPUT_SIZE);
   free_network(&net);
 }
 */
+
+void letter_train_fork(){
+  // creating training set
+  printf("------------\n");
+  printf("Training set :\n");
+  printf("------------\n");
+  float **inputs;
+  float **outputs;
+  FILE *fptr;
+  fptr = fopen("./training-set/huge_data.csv", "r");
+  if (fptr == NULL) {
+    printf("File could not be opened\n");
+    exit(EXIT_FAILURE);
+  }
+  printf("Loading training data...\n");
+  load_training_data(fptr, &inputs, &outputs, DATA_NB, INPUT_SIZE);
+  fclose(fptr);
+  printf("Creating training set...\n");
+  struct training_set letter_training_set =
+      create_training_set(inputs, outputs, DATA_NB, INPUT_SIZE);
+  free(inputs);
+  free(outputs);
+  // creating model network and filling it
+  printf("------------\n");
+  printf("Neural network :\n");
+  size_t layersizes[LAYER_NUMBER] = {35, 64, 32, 26};
+  struct Network net = {INPUT_SIZE, 4, layersizes, NULL};
+  // training the network
+  printf("Training the networks\n");
+  printf("------------\n");
+  train_fork(net, letter_training_set, RATE, MINIBATCH_SIZE, EPOCHS, BACKPROP_NUMBER, NETWORK_NUMBER, MODEL_NAME);
+  printf("------------\n");
+  printf("Finished training the network\n");
+  printf("--------------------\n");
+  // saving it
+  // cleanup
+  printf("-> Freeing the heap\n");
+  free_network(&net);
+  free_training_set(letter_training_set);
+  printf("-> Finished\n");
+}
+
 int main() { letter_train_fork(); }
