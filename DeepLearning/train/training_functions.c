@@ -30,73 +30,68 @@ float *get_Costs(struct Network net, struct training_set minibatch) {
   }
   return costs;
 }
-float av_Cost(struct Network net, struct training_set minibatch) {
-  float *costs = get_Costs(net, minibatch);
-  float av_cost = av_arr(costs, minibatch.data_number);
-  free(costs);
+float av_Cost(struct Network net, struct training_set minibatch, size_t thread_nb) {
+  float av_cost = -1;
+  if (thread_nb <= 1){
+    float *costs = get_Costs(net, minibatch);
+    av_cost = av_arr(costs, minibatch.data_number);
+    free(costs);
+  }
+  else{
+    float sum = 0;
+    int e;
+    struct thread_data *th_data_arr = create_thread_data_array(thread_nb, &minibatch, &net);
+    for (size_t t=0; t<thread_nb; t++){
+      pthread_t thr;
+      e = pthread_create(&thr, NULL, worker, th_data_arr+t);
+      if (e!=0){
+        errx(EXIT_FAILURE, "Failed to create thread %lu\n", t);
+      }
+      (th_data_arr+t)->sys_id = thr;
+    }
+    for (size_t t=0; t<thread_nb; t++){
+      pthread_join((th_data_arr+t)->sys_id, NULL);
+      sum += (th_data_arr+t)->sum;
+    }
+    av_cost = sum/minibatch.data_number;
+  }
   return av_cost;
 }
 
 float av_Cost_PDW(struct Network net, struct Neuron *neuron, size_t windex,
-                  struct training_set minibatch) {
-  float av_cost = av_Cost(net, minibatch);
+                  struct training_set minibatch, size_t thread_nb) {
+  float av_cost = av_Cost(net, minibatch, thread_nb);
   float w = *(neuron->weights + windex);
   *(neuron->weights + windex) = w + EPS;
-  float d_av_cost = av_Cost(net, minibatch);
+  float d_av_cost = av_Cost(net, minibatch, thread_nb);
   *(neuron->weights + windex) = w;
   return (d_av_cost - av_cost) / EPS;
 }
 float av_Cost_PDB(struct Network net, struct Neuron *neuron,
-                  struct training_set minibatch) {
-  float av_cost = av_Cost(net, minibatch);
+                  struct training_set minibatch, size_t thread_nb) {
+  float av_cost = av_Cost(net, minibatch, thread_nb);
   float b = neuron->bias;
   neuron->bias = b + EPS;
-  float d_av_cost = av_Cost(net, minibatch);
+  float d_av_cost = av_Cost(net, minibatch, thread_nb);
   neuron->bias = b;
   return (d_av_cost - av_cost) / EPS;
 }
 
 float back_propagate(struct Network *net, struct training_set minibatch,
-                     float rate) {
+                     float rate, size_t thread_nb) {
   for (size_t l = 0; l < net->layernb; l++) {
     struct Layer *clayer = net->layers + l;
     for (size_t n = 0; n < *(net->layersizes + l); n++) {
       struct Neuron *cneuron = clayer->neurons + n;
       for (size_t w = 0; w < cneuron->inputsize; w++) {
-        float acpd = av_Cost_PDW(*net, cneuron, w, minibatch);
+        float acpd = av_Cost_PDW(*net, cneuron, w, minibatch, thread_nb);
         *(cneuron->weights + w) = *(cneuron->weights + w) - rate * acpd;
       }
-      float acpd = av_Cost_PDB(*net, cneuron, minibatch);
+      float acpd = av_Cost_PDB(*net, cneuron, minibatch, thread_nb);
       cneuron->bias = cneuron->bias - rate * acpd;
     }
   }
-  float av_cost = av_Cost(*net, minibatch);
-  return av_cost;
-}
-
-float back_propagate_threading(struct Network* net, struct training_set minibatch, float rate, size_t thread_nb){
-  for (size_t l = 0; l < net->layernb; l++){
-    struct Layer *clayer = net->layers + l;
-    for (size_t n = 0; n < *(net->layersizes + l); n++){
-      struct Neuron *cneuron = clayer->neurons + n;
-      struct thread_data* th_d = create_thread_data_array(thread_nb, cneuron->inputsize, rate, &minibatch, net, cneuron);
-      int e;
-      // create all threads
-      for (size_t t = 0; t < thread_nb; t++){
-        pthread_t thr;
-        e = pthread_create(&thr, NULL, worker, th_d+t);
-        (th_d+t)->sys_id = thr;
-        if (e!=0){
-          errx(EXIT_FAILURE, "Failed to create thread number %lu for neuron %lu in layer %lu\n", t, n, l);
-        }
-      }
-      // wait for all threads before moving on to next neuron
-      for (size_t t = 0; t < thread_nb; t++){
-        pthread_join((th_d+t)->sys_id, NULL);
-      }
-    }
-  }
-  float av_cost = av_Cost(*net, minibatch);
+  float av_cost = av_Cost(*net, minibatch, thread_nb);
   return av_cost;
 }
 
@@ -109,6 +104,7 @@ float train(struct Network *net, struct training_set set, double rate,
     printf("----------------------\n");
   }
   size_t it = backprop_nb;
+  clock_t start, end;
   for (size_t i = 0; i <= epochs; i++) {
     float av_cost = 0;
     if (print_b){
@@ -122,14 +118,12 @@ float train(struct Network *net, struct training_set set, double rate,
         printf("Mini-batch %lu - Back propagation...\n", j);
       }
       float cost;
-      if (thread_nb <= 1){
-        cost = back_propagate(net, curr_minibatch, rate);
-      }
-      else{
-        cost = back_propagate_threading(net, curr_minibatch, rate, thread_nb);
-      }
+      start = clock();
+      cost = back_propagate(net, curr_minibatch, rate, thread_nb);
       av_cost += cost;
+      end = clock();
       if (print_b){
+        printf("Mini batch took : %f seconds\n", (double)(end-start)/CLOCKS_PER_SEC);  
         printf("Mini batch cost : %f\n", cost);
         printf("Saving network...\n");
       }
@@ -146,7 +140,7 @@ float train(struct Network *net, struct training_set set, double rate,
     printf("END OF TRAINING...\n");
     printf("---------------------\n");
   }
-  float final_av_cost = av_Cost(*net, set);
+  float final_av_cost = av_Cost(*net, set, thread_nb);
   if (print_b){
     printf("Final average cost of the network on all training data : %f\n",
            final_av_cost);

@@ -16,15 +16,15 @@
 #define LAYER_NUMBER 4
 #define LAYER_SIZES {32, 64, 32, 26}
 #define DATA_NB 372038
-#define MINIBATCH_SIZE 50
+#define MINIBATCH_SIZE 100
 #define EPOCHS 10
-#define RATE 5
+#define RATE 1
 #define BACKPROP_NUMBER -1
 #define DEFAULT_SAVE_PATH "./models/letter.model"
 // fork specific
 #define NETWORK_NUMBER 8
 // thread specific
-#define THREAD_NUMBER 8
+#define THREAD_NUMBER 5
 
 void letter_train(struct training_set set, char* save_path) {
   printf(" -- letter_train - save path: %s -- \n", save_path);
@@ -61,7 +61,7 @@ void letter_train_existing(struct training_set set, char* model_path, char* save
   printf("------------\n");
   printf("Neural network :\n");
   printf("------------\n");
-  struct Network net = load_network("./models/letter_model.model");
+  struct Network net = load_network(model_path);
   // training the network
   printf("--------------------\n");
   printf("Training the network\n");
