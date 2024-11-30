@@ -2,6 +2,7 @@
 #include "../shared/arr_helpers.h"
 #include "training_data.h"
 #include "training_functions.h"
+#include "../threading/threading.h"
 #include <err.h>
 #include <math.h>
 #include <stdio.h>
@@ -57,7 +58,6 @@ float av_Cost_PDB(struct Network net, struct Neuron *neuron,
 
 float back_propagate(struct Network *net, struct training_set minibatch,
                      float rate) {
-  float av_cost = av_Cost(*net, minibatch);
   for (size_t l = 0; l < net->layernb; l++) {
     struct Layer *clayer = net->layers + l;
     for (size_t n = 0; n < *(net->layersizes + l); n++) {
@@ -70,12 +70,39 @@ float back_propagate(struct Network *net, struct training_set minibatch,
       cneuron->bias = cneuron->bias - rate * acpd;
     }
   }
+  float av_cost = av_Cost(*net, minibatch);
+  return av_cost;
+}
+
+float back_propagate_threading(struct Network* net, struct training_set minibatch, float rate, size_t thread_nb){
+  for (size_t l = 0; l < net->layernb; l++){
+    struct Layer *clayer = net->layers + l;
+    for (size_t n = 0; n < *(net->layersizes + l); n++){
+      struct Neuron *cneuron = clayer->neurons + n;
+      struct thread_data* th_d = create_thread_data_array(thread_nb, cneuron->inputsize, rate, &minibatch, net, cneuron);
+      int e;
+      // create all threads
+      for (size_t t = 0; t < thread_nb; t++){
+        pthread_t thr;
+        e = pthread_create(&thr, NULL, worker, th_d+t);
+        (th_d+t)->sys_id = thr;
+        if (e!=0){
+          errx(EXIT_FAILURE, "Failed to create thread number %lu for neuron %lu in layer %lu\n", t, n, l);
+        }
+      }
+      // wait for all threads before moving on to next neuron
+      for (size_t t = 0; t < thread_nb; t++){
+        pthread_join((th_d+t)->sys_id, NULL);
+      }
+    }
+  }
+  float av_cost = av_Cost(*net, minibatch);
   return av_cost;
 }
 
 float train(struct Network *net, struct training_set set, double rate,
             size_t minibatch_size, size_t epochs, char* model_name,
-            size_t backprop_nb, char print_b) {
+            int backprop_nb, size_t thread_nb, char print_b) {
   if (print_b){
     printf("----------------------\n");
     printf("TRAINING NEURAL NETWORK\n");
@@ -94,7 +121,13 @@ float train(struct Network *net, struct training_set set, double rate,
       if (print_b){
         printf("Mini-batch %lu - Back propagation...\n", j);
       }
-      float cost = back_propagate(net, curr_minibatch, rate);
+      float cost;
+      if (thread_nb <= 1){
+        cost = back_propagate(net, curr_minibatch, rate);
+      }
+      else{
+        cost = back_propagate_threading(net, curr_minibatch, rate, thread_nb);
+      }
       av_cost += cost;
       if (print_b){
         printf("Mini batch cost : %f\n", cost);
@@ -121,15 +154,9 @@ float train(struct Network *net, struct training_set set, double rate,
   return final_av_cost;
 }
 
-float _train_fork(struct Network *net, struct training_set curr_minibatch,
-                 double rate) {
-  float cost = back_propagate(net, curr_minibatch, rate);
-  return cost;
-}
-
 float train_fork(struct Network base_net, struct training_set set, double rate, 
                  size_t minibatch_size, size_t epochs, size_t backprop_nb, 
-                 size_t nb_children, char* model_name){
+                 size_t nb_children, size_t thread_nb, char* model_name){
   // allocate for cost pipes and pipe res pipe
   int (*costfds)[2] = calloc(nb_children, sizeof(int[2]));
   int resfd[2];
@@ -159,7 +186,7 @@ float train_fork(struct Network base_net, struct training_set set, double rate,
       struct Network net = {base_net.inputsize, base_net.layernb, base_net.layersizes, NULL};
       fill_network(&net);
       // train net of the child 
-      float cost = train(&net, set, rate, minibatch_size, epochs, model_name, backprop_nb, 0);
+      float cost = train(&net, set, rate, minibatch_size, epochs, model_name, backprop_nb, thread_nb, 0);
       printf("Finished training child %lu: Cost is %.6f, Pid is %d\n", i, cost, pid);
       // sending results to father thread
       if (write(costfds[i][1], &cost, sizeof(cost)) < (long)sizeof(cost)){

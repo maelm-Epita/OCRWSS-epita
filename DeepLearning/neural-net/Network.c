@@ -106,7 +106,7 @@ void fill_network(struct Network *network) {
 void save_network(char *name, struct Network net) {
   // create file / open file
   char *modelname = NULL;
-  size_t b = asprintf(&modelname, "./%s.model", name);
+  size_t b = asprintf(&modelname, "./%s", name);
   if (b < 1) {
     printf("asprintf failed");
     exit(EXIT_FAILURE);

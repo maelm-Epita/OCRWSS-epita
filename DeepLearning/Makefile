@@ -9,10 +9,11 @@ SRC = \
 			train/training_data.c \
 			train/training_functions.c \
 			neural-net/Network.c \
+			threading/threading.c \
 			shared/math_helpers.c \
 			shared/arr_helpers.c 
 
-OBJ = main.o training_data_loader.o training_data.o training_functions.o Network.o math_helpers.o arr_helpers.o
+OBJ = main.o training_data_loader.o training_data.o training_functions.o Network.o threading.o math_helpers.o arr_helpers.o
 BIN = main
 
 
