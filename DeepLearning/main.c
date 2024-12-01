@@ -121,6 +121,11 @@ void test_dataset(struct training_set set){
   }
 }
 
+void test_image(char* path){
+  float *i = image_to_input(path);
+  input_to_image(i);
+}
+
 int main(int argc, char* argv[]) {
   // handling arguments
   char* opt = NULL;
@@ -183,6 +188,15 @@ int main(int argc, char* argv[]) {
         errx(EXIT_FAILURE, "Too many arguments\n");
       }
     }
+    else if (strcmp(opt, "--test-image") == 0){
+      if (argc != 3){
+        errx(EXIT_FAILURE, "Incorrect usage of option -u\n\
+             Should be \"--test-image {IMAGE_PATH}\"\n");
+      }
+      else{
+        image_path = *(argv+2);
+      }
+    }
     else{
       errx(EXIT_FAILURE, "Unknown argument \"%s\"\n", opt);
     }
@@ -190,6 +204,9 @@ int main(int argc, char* argv[]) {
   if (opt != NULL && strcmp(opt, "-u") == 0){
     use_model(existing_path, image_path);
     exit(EXIT_SUCCESS);
+  }
+  else if (opt != NULL && strcmp(opt, "--test-image") == 0){
+    test_image(image_path);
   }
 
   // creating training set
