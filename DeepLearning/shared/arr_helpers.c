@@ -61,3 +61,23 @@ float av_arr(float* arr, size_t size){
   return arr_sum/size;
 }
 
+void free_float_matrix(float **matrix, size_t size){
+  for (size_t i=0; i<size; i++){
+    free(*(matrix+i));
+  }
+  free(matrix);
+}
+
+void average_matrix(float **in_matrix, float* out_vect, size_t i_max, size_t j_max){
+  // j = weight
+  for (size_t j=0; j<j_max; j++){
+    float av=0;
+    // i = minibatch 
+    for (size_t i=0; i<i_max; i++){
+      av+=in_matrix[i][j];
+    }
+    av/=i_max;
+    *(out_vect+j)=av;
+  }
+}
+

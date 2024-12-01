@@ -9,3 +9,5 @@ float* sub_arr(float* arr1, float* arr2, size_t size);
 float norm(float* arr, size_t size);
 float av_arr(float* arr, size_t size);
 void shuffle_arr(float *array, size_t n);
+void free_float_matrix(float **matrix, size_t size);
+void average_matrix(float **in_matrix, float* out_vecto, size_t i_max, size_t j_max);

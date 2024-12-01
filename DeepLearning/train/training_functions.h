@@ -12,7 +12,7 @@ float Cost_Partialderivative_bias(struct Network net, struct Neuron* neuron, str
 float av_Cost_PDW(struct Network net, struct Neuron *neuron, size_t windex, struct training_set minibatch, size_t thread_nb);
 float av_Cost_PDB(struct Network net, struct Neuron *neuron,struct training_set minibatch, size_t thread_nb);
 // calculate the average of pd of cost when each w or b changes, and apply wk = wk-nAVPDC(w)  or b = b-nAVPDC(b)
-float back_propagate(struct Network* net, struct training_set minibatch, float rate, size_t thread_nb);
+void back_propagate(struct Network *net, struct training_data data, float* d_grad_w, float* d_grad_b);
 // backprop_nb < 0; do enough backpropagations to go through the entire minibatch for each epoch
 // backprop_nb >= 0; do the asked number of backpropagations per epoch
 // print_b > 0; print messages

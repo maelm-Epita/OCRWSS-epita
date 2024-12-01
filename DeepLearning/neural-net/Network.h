@@ -32,7 +32,8 @@ void save_network(char *modelname, struct Network net);
 // loads network from a file formatted in the same way as the save function
 struct Network load_network(char *path);
 // calculates the output of the network based on the input
-float* feedforward(struct Network net, float* input);
+// the z matrix and a matrix will get filled out if the pointers are not null
+float* feedforward(struct Network net, float* input, float** z_mat, float** a_mat);
 // free a network, should be called when a network which was hand created and filled is no longer needed
 // if you created the layersizes array on the stack
 void free_network(struct Network *net); 

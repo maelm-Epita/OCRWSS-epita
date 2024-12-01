@@ -3,6 +3,7 @@
 #include "training_data.h"
 #include "training_functions.h"
 #include "../threading/threading.h"
+#include "../shared/math_helpers.h"
 #include <err.h>
 #include <math.h>
 #include <stdio.h>
@@ -16,13 +17,21 @@
 float Cost(struct Network net, struct training_data data) {
   // the output size is the size of the last layer
   size_t outputsize = *(net.layersizes + net.layernb - 1);
-  float *output = feedforward(net, data.inputs);
-  float *diff = sub_arr(output, data.expected_output, outputsize);
-  float cost = pow(norm(diff, outputsize), 2) / 2;
-  free(diff);
+  float *output = feedforward(net, data.inputs, NULL, NULL);
+  float sub;
+  float cost = 0;
+  for (size_t i=0; i<outputsize; i++){
+    sub = *(output+i) - *(data.expected_output+i);
+    cost+=pow(sub, 2);
+  }
   free(output);
   return cost;
 }
+
+float pd_Cost_of_activation(float activation, float expected){
+  return 2 * (activation-expected);
+}
+
 float *get_Costs(struct Network net, struct training_set minibatch) {
   float *costs = calloc(minibatch.data_number, sizeof(float));
   for (size_t i = 0; i < minibatch.data_number; i++) {
@@ -77,22 +86,96 @@ float av_Cost_PDB(struct Network net, struct Neuron *neuron,
   return (d_av_cost - av_cost) / EPS;
 }
 
-float back_propagate(struct Network *net, struct training_set minibatch,
-                     float rate, size_t thread_nb) {
-  for (size_t l = 0; l < net->layernb; l++) {
-    struct Layer *clayer = net->layers + l;
-    for (size_t n = 0; n < *(net->layersizes + l); n++) {
-      struct Neuron *cneuron = clayer->neurons + n;
-      for (size_t w = 0; w < cneuron->inputsize; w++) {
-        float acpd = av_Cost_PDW(*net, cneuron, w, minibatch, thread_nb);
-        *(cneuron->weights + w) = *(cneuron->weights + w) - rate * acpd;
+void back_propagate(struct Network *net, struct training_data data, float* d_grad_w, float* d_grad_b){
+  // INITIALIZE the z matrix and the a matrix
+  // z = w*i+b
+  // a = activation(z)
+  // index_b will help us write to the grad vector of biases
+  // index_w will help us write to the grad vector of weights
+  float** z_mat = calloc(net->layernb, sizeof(float*));
+  float** a_mat = calloc(net->layernb, sizeof(float*));
+  size_t index_b = 0;
+  size_t index_w = 0;
+  // FORWARD pass through the network, filling our matrixes
+  feedforward(*net, data.inputs, z_mat, a_mat);
+  // BACKPROP
+  float* NextLayer_pd_Cost_Act;
+  for (size_t l=net->layernb-1; l>=0; l--){
+    size_t layersize = *(net->layersizes+l);
+    // Grab the partial derivative of the cost with respect to the activation of each neuron
+    // => how much does the cost change as the activation (output) of each specific neuron changes
+    float* pd_Cost_Act = calloc(layersize, sizeof(float));
+    // If we are on the last layer, the formula is specially defined as the derivative of our cost function in relation to weights only
+    if (l==net->layernb-1){
+      for (size_t n=0; n<layersize; n++){
+        *(pd_Cost_Act+n) = pd_Cost_of_activation(a_mat[l][n], *(data.expected_output+n));
       }
-      float acpd = av_Cost_PDB(*net, cneuron, minibatch, thread_nb);
-      cneuron->bias = cneuron->bias - rate * acpd;
     }
+    // Otherwise, it is defined recursively in relation to the next layer after
+    else{
+      for (size_t n=0; n<layersize; n++){
+        float pdn = 0;
+        // Sum impact of the change in activation of the neuron over all the neurons in the next layer
+        for (size_t k=0; k<*(net->layersizes+l+1); k++){
+          // the weight linking the activation of neuron n of this layer to the neuron k of the next layer
+          // => the nth weight of the kth neuron of the l+1th layer
+          float w_k_j = *(((net->layers+l+1)->neurons+k)->weights+n);
+          // Hard to understand formula
+          pdn += w_k_j * sigmoid_derivative(z_mat[l+1][n]) * NextLayer_pd_Cost_Act[k];
+        }
+        *(pd_Cost_Act+n) = pdn;
+      }
+    }
+    // Now that we have the partial derivative of the cost with respect to the activation of each neuron in the layer
+    // We can compute the partial derivative of the cost with respect to each weight or bias in the layer
+    // Meaning we have the grad for a single layer
+    for (size_t n=0; n<layersize; n++){
+      float sig_d_z_l_n = sigmoid_derivative(z_mat[l][n]);
+      *(d_grad_b+index_b) = sig_d_z_l_n * pd_Cost_Act[n];
+      index_b++;
+      for (size_t k=0; k<*(net->layersizes+l-1); k++){
+        *(d_grad_w+index_w) = a_mat[l-1][k] * sig_d_z_l_n * pd_Cost_Act[n];
+        index_w++;
+      }
+    }
+
+    // We can discard the previously calculated pd_cost_act we do not need anymore
+    if (NextLayer_pd_Cost_Act != NULL){
+      free(NextLayer_pd_Cost_Act);
+    }
+    // We go to the previous layer thus currentlayer pdcostact becomes nextlayer pdcostact
+    NextLayer_pd_Cost_Act = pd_Cost_Act;
   }
-  float av_cost = av_Cost(*net, minibatch, thread_nb);
-  return av_cost;
+  // CLEAN up
+  free(NextLayer_pd_Cost_Act);
+  free_float_matrix(z_mat, net->layernb);
+  free_float_matrix(a_mat, net->layernb);
+}
+
+void back_propagate_minibatch(struct Network *net, struct training_set minibatch, float* grad_w, float* grad_b, size_t total_weight_nb, size_t total_bias_nb){
+  // Initialize matrix of all our gradients of weights and matrix of all gradients of biases
+  // for single training datas; given by back_propagate
+  float** d_grad_ws = calloc(minibatch.data_number, sizeof(float));
+  float** d_grad_bs = calloc(minibatch.data_number, sizeof(float));
+  // Fill the matrixes
+  for (size_t i=0; i<minibatch.data_number; i++){
+    float* d_grad_w = calloc(total_weight_nb, sizeof(float));
+    float* d_grad_b = calloc(total_bias_nb, sizeof(float));
+    back_propagate(net, *(minibatch.data+i), d_grad_w, d_grad_b);
+    *(d_grad_ws+i) = d_grad_w;
+    *(d_grad_bs+i) = d_grad_b;
+  }
+  // Find the average of each weight change and bias change (average gradient) over the minibatch
+  average_matrix(d_grad_ws, grad_w, minibatch.data_number, total_weight_nb);
+  average_matrix(d_grad_bs, grad_b, minibatch.data_number, total_bias_nb);
+  // Clean up
+  free_float_matrix(d_grad_ws, minibatch.data_number);
+  free_float_matrix(d_grad_bs, minibatch.data_number);
+}
+
+// total weight nb = l1*l2 + l2*l3 + .... 
+// total bias nb = l1+l2+l3+ ....
+void update_minibatch(struct Network *net, struct training_set minibatch, size_t total_weight_nb, size_t total_bias_nb){
 }
 
 float train(struct Network *net, struct training_set set, double rate,

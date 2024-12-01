@@ -15,36 +15,64 @@
 #define MIN_RAND -1/sqrt(30)
 #define MAX_RAND 1/sqrt(30)
 
-float output(float *inputs, float *weights, float bias, size_t inputsize) {
+
+float get_z(float *inputs, float *weights, float bias, size_t inputsize){
   float sum_weighted_inputs = 0;
-  for (size_t i = 0; i < inputsize; i++)
+  for (size_t i = 0; i < inputsize; i++){
     sum_weighted_inputs += inputs[i] * weights[i];
-  return sigmoid(sum_weighted_inputs + (bias));
+  }
+  return sum_weighted_inputs + bias;
 }
 
-float calculate_output(struct Neuron neuron, float *inputs) {
-  return output(inputs, neuron.weights, neuron.bias, neuron.inputsize);
+float activation(float z){
+  return sigmoid(z);
 }
 
-float *feedforward(struct Network net, float *input) {
+float calculate_output(struct Neuron neuron, float* inputs){
+  return activation(get_z(inputs, neuron.weights, neuron.bias, neuron.inputsize));
+}
+
+float *feedforward(struct Network net, float *input, float** z_mat, float** a_mat) {
   float *prev_out = input;
-  // foreach layer
-  for (size_t i = 0; i < (net.layernb); i++) {
-    size_t layer_size = *(net.layersizes + i);
-    // create the output array
-    float *out = calloc(layer_size, sizeof(float));
-    // foreach neuron in the layer
-    for (size_t j = 0; j < layer_size; j++) {
-      // add its output to the output array
-      *(out + j) =
-          calculate_output(*((*(net.layers + i)).neurons + j), prev_out);
+  // if we provided z mat and a mat pointers, we are doing the forward pass in the backprop
+  if (z_mat != NULL && a_mat != NULL){
+    for (size_t l=0; l<net.layernb; l++){
+      size_t layer_size = *(net.layersizes+l);
+      float *zs = calloc(layer_size, sizeof(float));
+      float *activations = calloc(layer_size, sizeof(float));
+      for (size_t n=0; n<layer_size; n++){
+        struct Neuron neuron = *((net.layers+l)->neurons+n);
+        float z = get_z(input, neuron.weights, neuron.bias, neuron.inputsize);
+        *(zs+n) = z;
+        *(activations+n) = activation(z);
+      }
+      if (l>0){
+        free(prev_out);
+      }
+      prev_out = activations;
+      *(z_mat+l) = zs;
+      *(a_mat+l) = activations;
     }
-    // free the output we just used (if it isnt the input of the network)
-    if (i > 0)
-      free(prev_out);
+  }
+  // if we did not provide the matrixes, we are simply calculating the output
+  else{
+    for (size_t i = 0; i < (net.layernb); i++) {
+      size_t layer_size = *(net.layersizes + i);
+      // create the output array
+      float *out = calloc(layer_size, sizeof(float));
+      // foreach neuron in the layer
+      for (size_t j = 0; j < layer_size; j++) {
+        // add its output to the output array
+        *(out + j) =
+          calculate_output(*((*(net.layers + i)).neurons + j), prev_out);
+      }
+      // free the output we just used (if it isnt the input of the network)
+      if (i > 0)
+        free(prev_out);
 
-    // the output becomes the previous output thus the input of the next layer
-    prev_out = out;
+      // the output becomes the previous output thus the input of the next layer
+      prev_out = out;
+    }
   }
   // the last layer's output is the network's output
   return prev_out;

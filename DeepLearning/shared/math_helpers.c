@@ -8,6 +8,10 @@ float sigmoid(float z){
   return 1/(1+exp(-z));
 }
 
+float sigmoid_derivative(float z){
+  return sigmoid(z)*(1-sigmoid(z));
+}
+
 float float_rand( float min, float max )
 {
   float x = (float)rand()/(float)RAND_MAX;

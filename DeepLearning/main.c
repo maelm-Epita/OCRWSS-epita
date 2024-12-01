@@ -19,7 +19,7 @@
 #define DATA_NB 372038
 #define MINIBATCH_SIZE 75
 #define EPOCHS 10
-#define RATE 1e-3
+#define RATE 3
 #define BACKPROP_NUMBER -1
 #define DEFAULT_SAVE_PATH "./models/letter.model"
 // fork specific
