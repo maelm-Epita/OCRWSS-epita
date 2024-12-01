@@ -1,4 +1,5 @@
 #include "neural-net/Network.h"
+#include "neural-net/network_functions.h"
 #include "shared/arr_helpers.h"
 #include "train/training_data.h"
 #include "train/training_data_loader.h"
@@ -13,18 +14,18 @@
 
 // defining constants
 #define INPUT_SIZE 28 * 28
-#define LAYER_NUMBER 4
-#define LAYER_SIZES {32, 64, 32, 26}
+#define LAYER_NUMBER 3
+#define LAYER_SIZES {32, 32, 26}
 #define DATA_NB 372038
-#define MINIBATCH_SIZE 100
+#define MINIBATCH_SIZE 75
 #define EPOCHS 10
-#define RATE 1
+#define RATE 1e-3
 #define BACKPROP_NUMBER -1
 #define DEFAULT_SAVE_PATH "./models/letter.model"
 // fork specific
 #define NETWORK_NUMBER 8
 // thread specific
-#define THREAD_NUMBER 5
+#define THREAD_NUMBER 1
 
 void letter_train(struct training_set set, char* save_path) {
   printf(" -- letter_train - save path: %s -- \n", save_path);
@@ -102,12 +103,31 @@ void letter_train_fork(struct training_set set, char* save_path){
   printf("-> Finished\n");
 }
 
+void use_model(char* model_path, char* image_path){
+  struct Network net = load_network(model_path);
+  float* input = image_to_input(image_path);
+  float* res = feedforward(net, input);
+  print_float_arr(res, 26);
+  printf("Network's prediction : %c\n", output_to_prediction(res));
+}
+
+void test_dataset(struct training_set set){
+  long i;
+  while (1){
+    i = rand() % set.data_number;
+    printf("%lu - Expected guess : %c\n", i, output_to_prediction((set.data+i)->expected_output));
+    print_float_arr((set.data+i)->expected_output, 26);
+    input_to_image((set.data+i)->inputs);
+  }
+}
+
 int main(int argc, char* argv[]) {
   // handling arguments
   char* opt = NULL;
   char* existing_path = NULL;
   char* save_opt = NULL;
   char* save_path = NULL;
+  char* image_path = NULL;
   if (argc > 1){
     opt = *(argv+1);
     if (strcmp(opt, "-e") == 0){
@@ -150,9 +170,26 @@ int main(int argc, char* argv[]) {
       }
       save_path = *(argv+2);
     }
+    else if (strcmp(opt, "-u") == 0){
+      if (argc != 4){
+        errx(EXIT_FAILURE, "Incorrect usage of option -u\n\
+             Should be \"-u {MODEL_NAME} {IMAGE_PATH}\"\n");
+      }
+      existing_path = *(argv+2);
+      image_path = *(argv+3);
+    }
+    else if (strcmp(opt, "-t") == 0){
+      if (argc != 2){
+        errx(EXIT_FAILURE, "Too many arguments\n");
+      }
+    }
     else{
       errx(EXIT_FAILURE, "Unknown argument \"%s\"\n", opt);
     }
+  }
+  if (opt != NULL && strcmp(opt, "-u") == 0){
+    use_model(existing_path, image_path);
+    exit(EXIT_SUCCESS);
   }
 
   // creating training set
@@ -199,5 +236,8 @@ int main(int argc, char* argv[]) {
     else{
       letter_train_existing(letter_training_set, existing_path, save_path);
     }
+  }
+  else if (strcmp(opt, "-t") == 0){
+    test_dataset(letter_training_set);
   }
 }

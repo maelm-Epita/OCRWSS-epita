@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-
+#include <math.h>
 #include "../shared/arr_helpers.h"
 #include "../shared/math_helpers.h"
 #include "Network.h"
@@ -12,8 +12,8 @@
 // arbitrary size to calloc with, we assume that no single float/size_t data
 // will be more than 20 chars
 #define CALLOC_MAX_DATA_SIZE 20
-#define MIN_RAND -10
-#define MAX_RAND 10
+#define MIN_RAND -1/sqrt(30)
+#define MAX_RAND 1/sqrt(30)
 
 float output(float *inputs, float *weights, float bias, size_t inputsize) {
   float sum_weighted_inputs = 0;
