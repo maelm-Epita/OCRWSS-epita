@@ -20,6 +20,9 @@ struct Network{
 
 // calculates output of a neuron for the given input
 float calculate_output(struct Neuron Neuron, float* inputs);
+// total weight nb = l1*l2 + l2*l3 + .... 
+// total bias nb = l1+l2+l3+ ....
+void calc_weight_bias_amount(struct Network net, size_t* weight_total, size_t* bias_total);
 // sets all network variables and fills weights and biases with random initial values
 void fill_network(struct Network *Network); 
 // saves a neural network in a .model file with the following structure

@@ -17,9 +17,9 @@
 #define LAYER_NUMBER 3
 #define LAYER_SIZES {32, 32, 26}
 #define DATA_NB 372038
-#define MINIBATCH_SIZE 75
+#define MINIBATCH_SIZE 2000
 #define EPOCHS 10
-#define RATE 3
+#define RATE 1e-2
 #define BACKPROP_NUMBER -1
 #define DEFAULT_SAVE_PATH "./models/letter.model"
 // fork specific
@@ -106,7 +106,7 @@ void letter_train_fork(struct training_set set, char* save_path){
 void use_model(char* model_path, char* image_path){
   struct Network net = load_network(model_path);
   float* input = image_to_input(image_path);
-  float* res = feedforward(net, input);
+  float* res = feedforward(net, input, NULL, NULL);
   print_float_arr(res, 26);
   printf("Network's prediction : %c\n", output_to_prediction(res));
 }

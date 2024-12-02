@@ -32,6 +32,20 @@ float calculate_output(struct Neuron neuron, float* inputs){
   return activation(get_z(inputs, neuron.weights, neuron.bias, neuron.inputsize));
 }
 
+void calc_weight_bias_amount(struct Network net, size_t* weight_total, size_t* bias_total){
+  size_t w_t = 0;
+  size_t b_t = 0;
+  for (size_t l=0; l<net.layernb; l++){
+    // There are inputsize weights for each neuron so inputsize*layersize
+    w_t += ((net.layers+l)->neurons)->inputsize * *(net.layersizes+l);
+    // There is one bias for each neuron in the layer
+    b_t += *(net.layersizes+l);
+  }
+  *weight_total = w_t;
+  *bias_total = b_t;
+
+}
+
 float *feedforward(struct Network net, float *input, float** z_mat, float** a_mat) {
   float *prev_out = input;
   // if we provided z mat and a mat pointers, we are doing the forward pass in the backprop
@@ -45,9 +59,6 @@ float *feedforward(struct Network net, float *input, float** z_mat, float** a_ma
         float z = get_z(input, neuron.weights, neuron.bias, neuron.inputsize);
         *(zs+n) = z;
         *(activations+n) = activation(z);
-      }
-      if (l>0){
-        free(prev_out);
       }
       prev_out = activations;
       *(z_mat+l) = zs;

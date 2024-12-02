@@ -9,7 +9,7 @@ struct training_set create_training_set(float** inputs, float** outputs, size_t 
   // create dataset array
   struct training_data* data = calloc(data_number, sizeof(struct training_data));
   for (size_t i =0; i<data_number; i++){
-    struct training_data d = {*(inputs+i), *(outputs+i)};
+    struct training_data d = {input_number, *(inputs+i), *(outputs+i)};
     *(data+i) = d;
   }
   // create the final training set

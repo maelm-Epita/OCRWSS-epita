@@ -99,14 +99,14 @@ void back_propagate(struct Network *net, struct training_data data, float* d_gra
   // FORWARD pass through the network, filling our matrixes
   feedforward(*net, data.inputs, z_mat, a_mat);
   // BACKPROP
-  float* NextLayer_pd_Cost_Act;
-  for (size_t l=net->layernb-1; l>=0; l--){
+  float* NextLayer_pd_Cost_Act = NULL;
+  for (int l=net->layernb-1; l>=0; l--){
     size_t layersize = *(net->layersizes+l);
     // Grab the partial derivative of the cost with respect to the activation of each neuron
     // => how much does the cost change as the activation (output) of each specific neuron changes
     float* pd_Cost_Act = calloc(layersize, sizeof(float));
     // If we are on the last layer, the formula is specially defined as the derivative of our cost function in relation to weights only
-    if (l==net->layernb-1){
+    if ((size_t)l==net->layernb-1){
       for (size_t n=0; n<layersize; n++){
         *(pd_Cost_Act+n) = pd_Cost_of_activation(a_mat[l][n], *(data.expected_output+n));
       }
@@ -121,7 +121,7 @@ void back_propagate(struct Network *net, struct training_data data, float* d_gra
           // => the nth weight of the kth neuron of the l+1th layer
           float w_k_j = *(((net->layers+l+1)->neurons+k)->weights+n);
           // Hard to understand formula
-          pdn += w_k_j * sigmoid_derivative(z_mat[l+1][n]) * NextLayer_pd_Cost_Act[k];
+          pdn += w_k_j * sigmoid_derivative(z_mat[l+1][k]) * NextLayer_pd_Cost_Act[k];
         }
         *(pd_Cost_Act+n) = pdn;
       }
@@ -133,9 +133,19 @@ void back_propagate(struct Network *net, struct training_data data, float* d_gra
       float sig_d_z_l_n = sigmoid_derivative(z_mat[l][n]);
       *(d_grad_b+index_b) = sig_d_z_l_n * pd_Cost_Act[n];
       index_b++;
-      for (size_t k=0; k<*(net->layersizes+l-1); k++){
-        *(d_grad_w+index_w) = a_mat[l-1][k] * sig_d_z_l_n * pd_Cost_Act[n];
-        index_w++;
+      // For this term, we use the previous layer's activation
+      // If we are on the first layer, this will be the input of the network
+      if (l==0){
+        for (size_t k=0; k<data.input_number; k++){
+          *(d_grad_w+index_w) = data.inputs[k] * sig_d_z_l_n * pd_Cost_Act[n];
+          index_w++;
+        }
+      }
+      else{
+        for (size_t k=0; k<*(net->layersizes+l-1); k++){
+          *(d_grad_w+index_w) = a_mat[l-1][k] * sig_d_z_l_n * pd_Cost_Act[n];
+          index_w++;
+        }
       }
     }
 
@@ -155,8 +165,8 @@ void back_propagate(struct Network *net, struct training_data data, float* d_gra
 void back_propagate_minibatch(struct Network *net, struct training_set minibatch, float* grad_w, float* grad_b, size_t total_weight_nb, size_t total_bias_nb){
   // Initialize matrix of all our gradients of weights and matrix of all gradients of biases
   // for single training datas; given by back_propagate
-  float** d_grad_ws = calloc(minibatch.data_number, sizeof(float));
-  float** d_grad_bs = calloc(minibatch.data_number, sizeof(float));
+  float** d_grad_ws = calloc(minibatch.data_number, sizeof(float*));
+  float** d_grad_bs = calloc(minibatch.data_number, sizeof(float*));
   // Fill the matrixes
   for (size_t i=0; i<minibatch.data_number; i++){
     float* d_grad_w = calloc(total_weight_nb, sizeof(float));
@@ -173,9 +183,26 @@ void back_propagate_minibatch(struct Network *net, struct training_set minibatch
   free_float_matrix(d_grad_bs, minibatch.data_number);
 }
 
-// total weight nb = l1*l2 + l2*l3 + .... 
-// total bias nb = l1+l2+l3+ ....
-void update_minibatch(struct Network *net, struct training_set minibatch, size_t total_weight_nb, size_t total_bias_nb){
+void update_minibatch(struct Network *net, struct training_set minibatch, float rate, size_t total_weight_nb, size_t total_bias_nb){
+  float* grad_w = calloc(total_weight_nb, sizeof(float));
+  float* grad_b = calloc(total_bias_nb, sizeof(float));
+  size_t index_w = 0;
+  size_t index_b = 0;
+  back_propagate_minibatch(net, minibatch, grad_w, grad_b, total_weight_nb, total_bias_nb);
+  for (int l=net->layernb-1; l>=0; l--){
+    size_t layersize = *(net->layersizes+l);
+    // apply gradient for neuron
+    for (size_t n=0; n<layersize; n++){
+      struct Neuron *neuron = ((net->layers+l)->neurons+n);
+      for (size_t w=0; w<neuron->inputsize; w++){
+        *(neuron->weights+w) -= rate*grad_w[index_w];
+        index_w++;
+      }
+      neuron->bias -= rate*grad_b[index_b];
+    }
+  }
+  free(grad_w);
+  free(grad_b);
 }
 
 float train(struct Network *net, struct training_set set, double rate,
@@ -186,34 +213,39 @@ float train(struct Network *net, struct training_set set, double rate,
     printf("TRAINING NEURAL NETWORK\n");
     printf("----------------------\n");
   }
+  // INITIALIZE USEFUL VARIABLES FOR THE ENTIRE TRAINING
   size_t it = backprop_nb;
   clock_t start, end;
+  size_t total_weight_nb;
+  size_t total_bias_nb;
+  calc_weight_bias_amount(*net, &total_weight_nb, &total_bias_nb);
+  // EACH EPOCH 
   for (size_t i = 0; i <= epochs; i++) {
     float av_cost = 0;
     if (print_b){
       printf("EPOCH %lu\n", i);
       printf("Training.....\n");
     }
+    // CREATE THE MINIBATCH SET
     struct minibatch_set mini_set = create_minibatch_set(set, minibatch_size);
+    // GO THROUGH THE ENTIRE SET DOING 1 BACKPROP PER BATCH
     for (size_t j = 0; j < mini_set.minibatch_number && it != 0; j++) {
       struct training_set curr_minibatch = *(mini_set.mini_batches + j);
       if (print_b){
         printf("Mini-batch %lu - Back propagation...\n", j);
       }
-      float cost;
       start = clock();
-      cost = back_propagate(net, curr_minibatch, rate, thread_nb);
-      av_cost += cost;
+      update_minibatch(net, curr_minibatch, rate, total_weight_nb, total_bias_nb);
+      float cost = Cost(*net, *(curr_minibatch.data));
       end = clock();
       if (print_b){
         printf("Mini batch took : %f seconds\n", (double)(end-start)/CLOCKS_PER_SEC);  
-        printf("Mini batch cost : %f\n", cost);
+        printf("Current cost of network over a random training example of the batch: %f\n", cost);
         printf("Saving network...\n");
       }
       save_network(model_name, *net);
       it--;
     }
-    av_cost /= mini_set.minibatch_number;
     if (print_b){
       printf("EPOCH %lu finished, Average cost was : %f\n", i, av_cost);
     }

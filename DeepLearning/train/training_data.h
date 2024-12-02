@@ -2,6 +2,7 @@
 #include <stddef.h>
 
 struct training_data{
+  size_t input_number;
   float* inputs;
   float* expected_output;
 };
