@@ -31,7 +31,11 @@ double _Cost(struct Network net, struct training_data data) {
 
 double Cost(struct Network net, struct training_data data){
   size_t outputsize = *(net.layersizes + net.layernb - 1);
-  double *output = feedforward(net, data.inputs, NULL, NULL);
+  double **a_mat = calloc(net.layernb, sizeof(double*));
+  double **z_mat = calloc(net.layernb, sizeof(double*));
+  double *output = feedforward(net, data.inputs, a_mat, z_mat);
+  free(a_mat);
+  free(z_mat);
   double cost = 0;
   double p_c;
   double y_c;
@@ -50,6 +54,7 @@ double Cost(struct Network net, struct training_data data){
     contrib = y_c*log(p_c) + (1-y_c)*log(1-p_c);
     cost += contrib;
   }
+  free(output);
   return -cost;
 }
 
@@ -382,7 +387,13 @@ double train(struct Network *net, struct training_set set, double rate,
       printf("Random sample : \n");
       print_double_arr(random_sample.expected_output, 26);
       printf("Network thinks... : \n");
-      print_double_arr(feedforward(*net, random_sample.inputs, NULL, NULL), 26);
+      double **a_mat = calloc(net->layernb, sizeof(double*));
+      double **z_mat = calloc(net->layernb, sizeof(double*));
+      double *output = feedforward(*net, random_sample.inputs, a_mat, z_mat);
+      print_double_arr(output, 26);
+      free(a_mat);
+      free(z_mat);
+      free(output);
       update_minibatch(net, curr_minibatch, rate, total_weight_nb, total_bias_nb);
       double cost = Cost(*net, random_sample);
       end = clock();

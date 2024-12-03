@@ -14,12 +14,12 @@
 
 // defining constants
 #define INPUT_SIZE 28 * 28
-#define LAYER_NUMBER 2
-#define LAYER_SIZES {32, 26}
+#define LAYER_NUMBER 3
+#define LAYER_SIZES {32, 32, 26}
 #define DATA_NB 372038
-#define MINIBATCH_SIZE 100
+#define MINIBATCH_SIZE 200
 #define EPOCHS 50
-#define RATE 1e-4
+#define RATE 1e-3
 #define BACKPROP_NUMBER 100
 #define DEFAULT_SAVE_PATH "./models/letter.model"
 // fork specific
