@@ -5,7 +5,7 @@
 #include "../shared/arr_helpers.h"
 
 // create the training set from the input and output arrays
-struct training_set create_training_set(float** inputs, float** outputs, size_t data_number, size_t input_number){
+struct training_set create_training_set(double** inputs, double** outputs, size_t data_number, size_t input_number){
   // create dataset array
   struct training_data* data = calloc(data_number, sizeof(struct training_data));
   for (size_t i =0; i<data_number; i++){

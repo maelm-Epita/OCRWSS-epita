@@ -16,8 +16,8 @@ size_t str_to_size(char* str){
   return s;
 }
 
-float* snum_to_output(size_t n){
-  float* output=calloc(OUTPUT_SIZE, sizeof(float));
+double* snum_to_output(size_t n){
+  double* output=calloc(OUTPUT_SIZE, sizeof(double));
   if (output==NULL){
     printf("could not create output array");
     exit(EXIT_FAILURE);
@@ -26,7 +26,7 @@ float* snum_to_output(size_t n){
   return output;
 }
 
-void load_training_data(FILE *file, float** *inputs_p, float** *outputs_p, size_t data_number, size_t input_size ){
+void load_training_data(FILE *file, double** *inputs_p, double** *outputs_p, size_t data_number, size_t input_size ){
   size_t line_size_max = 2500;
   char buf;
   size_t line_nb = 0;
@@ -38,12 +38,12 @@ void load_training_data(FILE *file, float** *inputs_p, float** *outputs_p, size_
     free(*outputs_p);
   }
   // we alloc depending on the number of training data
-  *inputs_p = calloc(data_number, sizeof(float*));
+  *inputs_p = calloc(data_number, sizeof(double*));
   if (*inputs_p == NULL){
     printf("could not alloc input array");
     exit(EXIT_FAILURE);
   }
-  *outputs_p = calloc(data_number, sizeof(float*));
+  *outputs_p = calloc(data_number, sizeof(double*));
   if (*outputs_p == NULL){
     printf("could not alloc output array");
     exit(EXIT_FAILURE);
@@ -77,9 +77,9 @@ void load_training_data(FILE *file, float** *inputs_p, float** *outputs_p, size_
     }
     if (linesize>1){
       // get the expected output of the training data; we get the line until the first , then convert that to a number then get the output from that number
-      float* output = snum_to_output(str_to_size(strtok(line, ",")));
+      double* output = snum_to_output(str_to_size(strtok(line, ",")));
       // get the remaining input_size columns which are the pixels and convert them to a number then from 0-255 to 0-1
-      float* input = calloc(input_size, sizeof(float));
+      double* input = calloc(input_size, sizeof(double));
       for (size_t i = 0; i<input_size; i++){
         *(input+i) = atof(strtok(NULL, ","))/255;
       }

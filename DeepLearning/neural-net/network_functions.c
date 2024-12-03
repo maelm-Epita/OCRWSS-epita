@@ -8,7 +8,7 @@
 #define DATA_WIDTH 28
 #define DATA_HEIGHT 28
 
-float *image_to_input(char *path) {
+double *image_to_input(char *path) {
   SDL_Surface *img = IMG_Load(path);
   if (img == NULL)
     errx(EXIT_FAILURE, "Could not open image");
@@ -17,7 +17,7 @@ float *image_to_input(char *path) {
   SDL_PixelFormat *format = img->format;
   Uint32 *pixels = img->pixels;
   size_t size = img->w * img->h;
-  float *input = calloc(size, sizeof(float));
+  double *input = calloc(size, sizeof(double));
 
   if (input == NULL)
     errx(EXIT_FAILURE, "could not create input array");
@@ -26,7 +26,7 @@ float *image_to_input(char *path) {
     Uint8 r, g, b;
     Uint32 pixel = pixels[i];
     SDL_GetRGB(pixel, format, &r, &g, &b);
-    float greyscale = (float)(r + g + b) / 3.0;
+    double greyscale = (double)(r + g + b) / 3.0;
     // squash input to range [0;1]
     input[i] = greyscale / 255;
   }
@@ -34,7 +34,7 @@ float *image_to_input(char *path) {
   return input;
 }
 
-void input_to_image(float* input) {
+void input_to_image(double* input) {
 	if (SDL_Init(SDL_INIT_VIDEO) < 0){
     exit(EXIT_FAILURE);
   }
@@ -55,7 +55,7 @@ void input_to_image(float* input) {
   SDL_Quit();
 }
 
-char output_to_prediction(float* output){
+char output_to_prediction(double* output){
   size_t max = 0;
   for (size_t i=0; i<OUTPUT_SIZE; i++){
     if (*(output+i)>*(output+max)){

@@ -13,14 +13,14 @@
 
 #define ARBITRARY_MIN_INITIALIZER 100
 #define L 0
-#define EPS 1e-6
+#define EPS 1e-8
 
-float _Cost(struct Network net, struct training_data data) {
+double _Cost(struct Network net, struct training_data data) {
   // the output size is the size of the last layer
   size_t outputsize = *(net.layersizes + net.layernb - 1);
-  float *output = feedforward(net, data.inputs, NULL, NULL);
-  float sub;
-  float cost = 0;
+  double *output = feedforward(net, data.inputs, NULL, NULL);
+  double sub;
+  double cost = 0;
   for (size_t i=0; i<outputsize; i++){
     sub = *(output+i) - *(data.expected_output+i);
     cost+=pow(sub, 2);
@@ -29,12 +29,12 @@ float _Cost(struct Network net, struct training_data data) {
   return cost;
 }
 
-float Cost(struct Network net, struct training_data data){
+double Cost(struct Network net, struct training_data data){
   size_t outputsize = *(net.layersizes + net.layernb - 1);
-  float *output = feedforward(net, data.inputs, NULL, NULL);
-  float cost = 0;
-  float p_c;
-  float y_c;
+  double *output = feedforward(net, data.inputs, NULL, NULL);
+  double cost = 0;
+  double p_c;
+  double y_c;
   for (size_t i=0; i<outputsize; i++){
     p_c = *(output+i);
     y_c = *(data.expected_output+i);
@@ -46,17 +46,17 @@ float Cost(struct Network net, struct training_data data){
       p_c = 1-EPS;
     }
     // USE LABEL SMOOTHING
-    float contrib;
+    double contrib;
     contrib = y_c*log(p_c) + (1-y_c)*log(1-p_c);
     cost += contrib;
   }
   return -cost;
 }
 
-float test_cost(float *p, float *y){
-  float cost = 0;
-  float p_c;
-  float y_c;
+double test_cost(double *p, double *y){
+  double cost = 0;
+  double p_c;
+  double y_c;
   for (size_t i=0; i<9; i++){
     p_c = *(p+i);
     y_c = *(y+i);
@@ -68,7 +68,7 @@ float test_cost(float *p, float *y){
       p_c = 1-EPS;
     }
     // USE LABEL SMOOTHING
-    float contrib;
+    double contrib;
     if (y_c == 0){
       contrib = (1-L)*log(1-p_c) + L*log(p_c);
       cost += contrib;
@@ -83,10 +83,10 @@ float test_cost(float *p, float *y){
   return -cost;
 }
 
-float _test_cost(float *p, float *y){
-  float cost = 0;
-  float p_c;
-  float y_c;
+double _test_cost(double *p, double *y){
+  double cost = 0;
+  double p_c;
+  double y_c;
   for (size_t i=0; i<9; i++){
     p_c = *(p+i);
     y_c = *(y+i);
@@ -98,7 +98,7 @@ float _test_cost(float *p, float *y){
       p_c = 1-EPS;
     }
     // USE LABEL SMOOTHING
-    float contrib;
+    double contrib;
     contrib = y_c*log(p_c) + (1-y_c)*log(1-p_c);
     cost += contrib;
     printf("Cost for : y_c = %f, p_c = %f -- %f\n", y_c, p_c, contrib);
@@ -107,30 +107,30 @@ float _test_cost(float *p, float *y){
   return -cost;
 }
 
-float _pd_Cost_of_activation(float activation, float expected){
+double _pd_Cost_of_activation(double activation, double expected){
   return 2 * (activation-expected);
 }
 
-float pd_Cost_of_activation(float activation, float expected){
+double pd_Cost_of_activation(double activation, double expected){
   return -(expected/activation) + (1-expected)/(1-activation);
 }
 
-float *get_Costs(struct Network net, struct training_set minibatch) {
-  float *costs = calloc(minibatch.data_number, sizeof(float));
+double *get_Costs(struct Network net, struct training_set minibatch) {
+  double *costs = calloc(minibatch.data_number, sizeof(double));
   for (size_t i = 0; i < minibatch.data_number; i++) {
     *(costs + i) = Cost(net, *(minibatch.data + i));
   }
   return costs;
 }
-float av_Cost(struct Network net, struct training_set minibatch, size_t thread_nb) {
-  float av_cost = -1;
+double av_Cost(struct Network net, struct training_set minibatch, size_t thread_nb) {
+  double av_cost = -1;
   if (thread_nb <= 1){
-    float *costs = get_Costs(net, minibatch);
+    double *costs = get_Costs(net, minibatch);
     av_cost = av_arr(costs, minibatch.data_number);
     free(costs);
   }
   else{
-    float sum = 0;
+    double sum = 0;
     int e;
     struct thread_data *th_data_arr = create_thread_data_array(thread_nb, &minibatch, &net);
     for (size_t t=0; t<thread_nb; t++){
@@ -150,62 +150,64 @@ float av_Cost(struct Network net, struct training_set minibatch, size_t thread_n
   return av_cost;
 }
 
-float av_Cost_PDW(struct Network net, struct Neuron *neuron, size_t windex,
+double av_Cost_PDW(struct Network net, struct Neuron *neuron, size_t windex,
                   struct training_set minibatch, size_t thread_nb) {
-  float av_cost = av_Cost(net, minibatch, thread_nb);
-  float w = *(neuron->weights + windex);
+  double av_cost = av_Cost(net, minibatch, thread_nb);
+  double w = *(neuron->weights + windex);
   *(neuron->weights + windex) = w + EPS;
-  float d_av_cost = av_Cost(net, minibatch, thread_nb);
+  double d_av_cost = av_Cost(net, minibatch, thread_nb);
   *(neuron->weights + windex) = w;
   return (d_av_cost - av_cost) / EPS;
 }
-float av_Cost_PDB(struct Network net, struct Neuron *neuron,
+double av_Cost_PDB(struct Network net, struct Neuron *neuron,
                   struct training_set minibatch, size_t thread_nb) {
-  float av_cost = av_Cost(net, minibatch, thread_nb);
-  float b = neuron->bias;
+  double av_cost = av_Cost(net, minibatch, thread_nb);
+  double b = neuron->bias;
   neuron->bias = b + EPS;
-  float d_av_cost = av_Cost(net, minibatch, thread_nb);
+  double d_av_cost = av_Cost(net, minibatch, thread_nb);
   neuron->bias = b;
   return (d_av_cost - av_cost) / EPS;
 }
 
-float true_derivative_weight(struct Network net, struct Neuron *neuron, size_t windex, struct training_data data){
-  float cost = Cost(net, data);
-  float w = *(neuron->weights+windex);
-  *(neuron->weights + windex) = w + EPS;
-  float d_cost= Cost(net, data);
+double true_derivative_weight(struct Network net, struct Neuron *neuron, size_t windex, struct training_data data){
+  double w = *(neuron->weights+windex);
+  *(neuron->weights + windex) = w - EPS/2;
+  double cost = Cost(net, data);
+  *(neuron->weights + windex) = w + EPS/2;
+  double d_cost= Cost(net, data);
   *(neuron->weights + windex) = w;
   return (d_cost - cost) / EPS;
 }
 
-float true_derivative_bias(struct Network net, struct Neuron *neuron, struct training_data data){
-  float cost = Cost(net, data);
-  float b = neuron->bias;
+double true_derivative_bias(struct Network net, struct Neuron *neuron, struct training_data data){
+  double b = neuron->bias;
+  neuron->bias = b - EPS;
+  double cost = Cost(net, data);
   neuron->bias = b + EPS;
-  float d_cost = Cost(net, data);
+  double d_cost = Cost(net, data);
   neuron->bias = b;
   return (d_cost - cost) / EPS;
 }
 
-void back_propagate(struct Network *net, struct training_data data, float* d_grad_w, float* d_grad_b){
+void back_propagate(struct Network *net, struct training_data data, double* d_grad_w, double* d_grad_b){
   // INITIALIZE the z matrix and the a matrix
   // z = w*i+b
   // a = activation(z)
   // index_b will help us write to the grad vector of biases
   // index_w will help us write to the grad vector of weights
-  float** z_mat = calloc(net->layernb, sizeof(float*));
-  float** a_mat = calloc(net->layernb, sizeof(float*));
+  double** z_mat = calloc(net->layernb, sizeof(double*));
+  double** a_mat = calloc(net->layernb, sizeof(double*));
   size_t index_b = 0;
   size_t index_w = 0;
   // FORWARD pass through the network, filling our matrixes
   feedforward(*net, data.inputs, z_mat, a_mat);
   // BACKPROP
-  float* NextLayer_pd_Cost_Act = NULL;
+  double* NextLayer_pd_Cost_Act = NULL;
   for (int l=net->layernb-1; l>=0; l--){
     size_t layersize = *(net->layersizes+l);
     // Grab the partial derivative of the cost with respect to the activation of each neuron
     // => how much does the cost change as the activation (output) of each specific neuron changes
-    float* pd_Cost_Act = calloc(layersize, sizeof(float));
+    double* pd_Cost_Act = calloc(layersize, sizeof(double));
     // If we are on the last layer, the formula is specially defined as the derivative of our cost function in relation to weights only
     if ((size_t)l==net->layernb-1){
       for (size_t n=0; n<layersize; n++){
@@ -216,14 +218,14 @@ void back_propagate(struct Network *net, struct training_data data, float* d_gra
     else{
       //printf("Layer : %d, size : %lu\n", l, layersize);
       for (size_t n=0; n<layersize; n++){
-        float pdn = 0;
+        double pdn = 0;
         // Sum impact of the change in activation of the neuron over all the neurons in the next layer
         for (size_t k=0; k<*(net->layersizes+l+1); k++){
           //printf("tf4 %lu\n", k);
           // the weight linking the activation of neuron n of this layer to the neuron k of the next layer
           // => the nth weight of the kth neuron of the l+1th layer
           //printf("%lu - %lu ; %lu - %lu\n", *(net->layersizes+l+1), k, ((net->layers+l+1)->neurons+k)->inputsize, n);
-          float w_k_j = *(((net->layers+l+1)->neurons+k)->weights+n);
+          double w_k_j = *(((net->layers+l+1)->neurons+k)->weights+n);
           // Hard to understand formula
           //printf("%f\n", NextLayer_pd_Cost_Act[k]);
           //printf("%f\n", z_mat[l+1][k]);
@@ -237,7 +239,7 @@ void back_propagate(struct Network *net, struct training_data data, float* d_gra
     // We can compute the partial derivative of the cost with respect to each weight or bias in the layer
     // Meaning we have the grad for a single layer
     for (size_t n=0; n<layersize; n++){
-      float sig_d_z_l_n = sigmoid_derivative(z_mat[l][n]);
+      double sig_d_z_l_n = sigmoid_derivative(z_mat[l][n]);
       *(d_grad_b+index_b) = sig_d_z_l_n * pd_Cost_Act[n];
       //printf("backprop found : %e, differentiation found : %e\n", *(d_grad_b+index_b), 
       //       true_derivative_bias(*net, ((net->layers+l)->neurons+n), data));
@@ -257,8 +259,8 @@ void back_propagate(struct Network *net, struct training_data data, float* d_gra
           //printf("n : %lu, a_mat[l-1][k] = %f -- sig_d_z_l_n = %f -- pd_Cost_Act[n] = %f\n",
           //       n, a_mat[l-1][k], sig_d_z_l_n, pd_Cost_Act[n]);
           *(d_grad_w+index_w) = a_mat[l-1][k] * sig_d_z_l_n * pd_Cost_Act[n];
-          printf("backprop found : %e, differentiation found : %e\n", *(d_grad_w+index_w), 
-                 true_derivative_weight(*net, ((net->layers+l)->neurons+n), k, data));
+          //printf("backprop found : %e, differentiation found : %e\n", *(d_grad_w+index_w), 
+          //      true_derivative_weight(*net, ((net->layers+l)->neurons+n), k, data));
           index_w++;
         }
       }
@@ -272,22 +274,22 @@ void back_propagate(struct Network *net, struct training_data data, float* d_gra
   }
   // CLEAN up
   free(NextLayer_pd_Cost_Act);
-  free_float_matrix(z_mat, net->layernb);
-  free_float_matrix(a_mat, net->layernb);
+  free_double_matrix(z_mat, net->layernb);
+  free_double_matrix(a_mat, net->layernb);
 }
 
-void back_propagate_minibatch(struct Network *net, struct training_set minibatch, float* grad_w, float* grad_b, size_t total_weight_nb, size_t total_bias_nb){
+void back_propagate_minibatch(struct Network *net, struct training_set minibatch, double* grad_w, double* grad_b, size_t total_weight_nb, size_t total_bias_nb){
   // Initialize matrix of all our gradients of weights and matrix of all gradients of biases
   // for single training datas; given by back_propagate
-  float** d_grad_ws = calloc(minibatch.data_number, sizeof(float*));
-  float** d_grad_bs = calloc(minibatch.data_number, sizeof(float*));
+  double** d_grad_ws = calloc(minibatch.data_number, sizeof(double*));
+  double** d_grad_bs = calloc(minibatch.data_number, sizeof(double*));
   // Fill the matrixes
   for (size_t i=0; i<minibatch.data_number; i++){
-    float* d_grad_w = calloc(total_weight_nb, sizeof(float));
+    double* d_grad_w = calloc(total_weight_nb, sizeof(double));
     if (d_grad_w == NULL){
       errx(EXIT_FAILURE, "Calloc failed for delta grad weights\n");
     }
-    float* d_grad_b = calloc(total_bias_nb, sizeof(float));
+    double* d_grad_b = calloc(total_bias_nb, sizeof(double));
     if (d_grad_b == NULL){
       errx(EXIT_FAILURE, "Calloc failed for delta grad bias\n");
     }
@@ -300,15 +302,16 @@ void back_propagate_minibatch(struct Network *net, struct training_set minibatch
   }
   // Find the average of each weight change and bias change (average gradient) over the minibatch
   average_matrix(d_grad_ws, grad_w, minibatch.data_number, total_weight_nb);
+  printf("data gradient : %f, minibatch gradient : %f\n", d_grad_ws[0][0], grad_w[0]);
   average_matrix(d_grad_bs, grad_b, minibatch.data_number, total_bias_nb);
   // Clean up
-  free_float_matrix(d_grad_ws, minibatch.data_number);
-  free_float_matrix(d_grad_bs, minibatch.data_number);
+  free_double_matrix(d_grad_ws, minibatch.data_number);
+  free_double_matrix(d_grad_bs, minibatch.data_number);
 }
 
-void update_minibatch(struct Network *net, struct training_set minibatch, float rate, size_t total_weight_nb, size_t total_bias_nb){
-  float* grad_w = calloc(total_weight_nb, sizeof(float));
-  float* grad_b = calloc(total_bias_nb, sizeof(float));
+void update_minibatch(struct Network *net, struct training_set minibatch, double rate, size_t total_weight_nb, size_t total_bias_nb){
+  double* grad_w = calloc(total_weight_nb, sizeof(double));
+  double* grad_b = calloc(total_bias_nb, sizeof(double));
   size_t index_w = 0;
   size_t index_b = 0;
   back_propagate_minibatch(net, minibatch, grad_w, grad_b, total_weight_nb, total_bias_nb);
@@ -329,7 +332,7 @@ void update_minibatch(struct Network *net, struct training_set minibatch, float 
   free(grad_b);
 }
 
-float train(struct Network *net, struct training_set set, double rate,
+double train(struct Network *net, struct training_set set, double rate,
             size_t minibatch_size, size_t epochs, char* model_name,
             int backprop_nb, size_t thread_nb, char print_b) {
   if (print_b){
@@ -345,7 +348,7 @@ float train(struct Network *net, struct training_set set, double rate,
   // EACH EPOCH 
   for (size_t i = 0; i <= epochs; i++) {
     size_t it = backprop_nb;
-    float av_cost = 0;
+    double av_cost = 0;
     if (print_b){
       printf("EPOCH %lu\n", i);
       printf("Training.....\n");
@@ -361,11 +364,11 @@ float train(struct Network *net, struct training_set set, double rate,
       start = clock();
       struct training_data random_sample = *(curr_minibatch.data);
       printf("Random sample : \n");
-      print_float_arr(random_sample.expected_output, 26);
+      print_double_arr(random_sample.expected_output, 26);
       printf("Network thinks... : \n");
-      print_float_arr(feedforward(*net, random_sample.inputs, NULL, NULL), 26);
+      print_double_arr(feedforward(*net, random_sample.inputs, NULL, NULL), 26);
       update_minibatch(net, curr_minibatch, rate, total_weight_nb, total_bias_nb);
-      float cost = Cost(*net, random_sample);
+      double cost = Cost(*net, random_sample);
       end = clock();
       if (print_b){
         printf("Mini batch took : %f seconds\n", (double)(end-start)/CLOCKS_PER_SEC);  
@@ -391,7 +394,7 @@ float train(struct Network *net, struct training_set set, double rate,
     printf("END OF TRAINING...\n");
     printf("---------------------\n");
   }
-  float final_av_cost = av_Cost(*net, set, thread_nb);
+  double final_av_cost = av_Cost(*net, set, thread_nb);
   if (print_b){
     printf("Final average cost of the network on all training data : %f\n",
            final_av_cost);
@@ -399,7 +402,7 @@ float train(struct Network *net, struct training_set set, double rate,
   return final_av_cost;
 }
 
-float train_fork(struct Network base_net, struct training_set set, double rate, 
+double train_fork(struct Network base_net, struct training_set set, double rate, 
                  size_t minibatch_size, size_t epochs, size_t backprop_nb, 
                  size_t nb_children, size_t thread_nb, char* model_name){
   // allocate for cost pipes and pipe res pipe
@@ -431,7 +434,7 @@ float train_fork(struct Network base_net, struct training_set set, double rate,
       struct Network net = {base_net.inputsize, base_net.layernb, base_net.layersizes, NULL};
       fill_network(&net);
       // train net of the child 
-      float cost = train(&net, set, rate, minibatch_size, epochs, model_name, backprop_nb, thread_nb, 0);
+      double cost = train(&net, set, rate, minibatch_size, epochs, model_name, backprop_nb, thread_nb, 0);
       printf("Finished training child %lu: Cost is %.6f, Pid is %d\n", i, cost, pid);
       // sending results to father thread
       if (write(costfds[i][1], &cost, sizeof(cost)) < (long)sizeof(cost)){
@@ -470,15 +473,15 @@ float train_fork(struct Network base_net, struct training_set set, double rate,
   // reading from each child's write pipe to know each pid and cost in order
   // to find the minimum cost's child pid
   // we do not need to worry about timing the reads because read will block execution until it receives data
-  float min_cost = ARBITRARY_MIN_INITIALIZER;
+  double min_cost = ARBITRARY_MIN_INITIALIZER;
   int min_pid;
-  float temp_cost;
+  double temp_cost;
   int temp_pid;
   printf("Parent: waiting for all children to finish...\n");
   for (size_t i = 0; i < nb_children; i++) {
     // we will close the unused end of the cost pipe of each child
     close(costfds[i][1]);
-    if (read(costfds[i][0], &temp_cost, sizeof(float)) < (long)sizeof(float)){
+    if (read(costfds[i][0], &temp_cost, sizeof(double)) < (long)sizeof(double)){
         errx(EXIT_FAILURE, "Failed to read all cost from child %lu\n", i);
     }
     if (read(costfds[i][0], &temp_pid, sizeof(int)) < (long)sizeof(int)){

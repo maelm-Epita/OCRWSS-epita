@@ -4,23 +4,23 @@
 #include "math_helpers.h"
 
 
-float sigmoid(float z){
+double sigmoid(double z){
   return 1/(1+exp(-z));
 }
 
-float sigmoid_derivative(float z){
+double sigmoid_derivative(double z){
   return sigmoid(z)*(1-sigmoid(z));
 }
 
-float float_rand( float min, float max )
+double double_rand( double min, double max )
 {
-  float x = (float)rand()/(float)RAND_MAX;
+  double x = (double)rand()/(double)RAND_MAX;
   return min + x * (max-min);
 }
-float* rand_float_array(float min, float max, size_t size){
-  float* arr = calloc(size, sizeof(float));
+double* rand_double_array(double min, double max, size_t size){
+  double* arr = calloc(size, sizeof(double));
   for(size_t i=0; i<size; i++){
-    *(arr+i) = float_rand(min, max);
+    *(arr+i) = double_rand(min, max);
   }
   return arr;
 }

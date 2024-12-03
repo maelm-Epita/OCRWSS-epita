@@ -19,7 +19,7 @@
 #define DATA_NB 372038
 #define MINIBATCH_SIZE 100
 #define EPOCHS 50
-#define RATE 1e-2
+#define RATE 1e-4
 #define BACKPROP_NUMBER 100
 #define DEFAULT_SAVE_PATH "./models/letter.model"
 // fork specific
@@ -105,9 +105,9 @@ void letter_train_fork(struct training_set set, char* save_path){
 
 void use_model(char* model_path, char* image_path){
   struct Network net = load_network(model_path);
-  float* input = image_to_input(image_path);
-  float* res = feedforward(net, input, NULL, NULL);
-  print_float_arr(res, 26);
+  double* input = image_to_input(image_path);
+  double* res = feedforward(net, input, NULL, NULL);
+  print_double_arr(res, 26);
   printf("Network's prediction : %c\n", output_to_prediction(res));
 }
 
@@ -116,26 +116,47 @@ void test_dataset(struct training_set set){
   while (1){
     i = rand() % set.data_number;
     printf("%lu - Expected guess : %c\n", i, output_to_prediction((set.data+i)->expected_output));
-    print_float_arr((set.data+i)->expected_output, 26);
+    print_double_arr((set.data+i)->expected_output, 26);
     input_to_image((set.data+i)->inputs);
   }
 }
 
 void test_image(char* path){
-  float *i = image_to_input(path);
+  double *i = image_to_input(path);
   input_to_image(i);
 }
 
-int main(int argc, char* argv[]) {
-  float p[9] = {0,0,0,0,1,1,0,0,0};
-  float y[9] = {0,0,1,0,0,0,0,0,0};
+void test_derivative(){
+  // derivative should be -0.160411
+  double inputs1[1] = {0.5};
+  double expected1[1] = {1};
+  struct training_data d = {1, inputs1, expected1};
+  size_t layersizes1[1] = {1};
+  struct Network net1 = {1, 1, layersizes1, NULL};
+  fill_network(&net1);
+  *(net1.layers->neurons->weights) = 0.5;
+  (net1.layers->neurons->bias) = 0.5;
+  (net1.layers->neurons->inputsize) = 1;
+  //printf("%f\n", true_derivative_weight(net1, (net1.layers->neurons), 0, d));
+  double *dw = calloc(1, sizeof(double));
+  double *db = calloc(1, sizeof(double));
+  back_propagate(&net1, d, dw, db);
+}
+
+void test_cost_function(){
+  double p[9] = {0,0,0,0,1,1,0,0,0};
+  double y[9] = {0,0,1,0,0,0,0,0,0};
   test_cost(p, y);
-  float p1[9] = {0,0,0.1,0,0,0,0,0,0};
-  float y1[9] = {0,0,1,0,0,0,0,0,0};
+  double p1[9] = {0,0,0.1,0,0,0,0,0,0};
+  double y1[9] = {0,0,1,0,0,0,0,0,0};
   test_cost(p1, y1);
-  float p2[9] = {0,0,0.9,0,0,0,0,0,0};
-  float y2[9] = {0,0,1,0,0,0,0,0,0};
+  double p2[9] = {0,0,0.9,0,0,0,0,0,0};
+  double y2[9] = {0,0,1,0,0,0,0,0,0};
   test_cost(p2, y2);
+}
+
+int main(int argc, char* argv[]) {
+  test_derivative();
   // handling arguments
   char* opt = NULL;
   char* existing_path = NULL;
@@ -216,14 +237,15 @@ int main(int argc, char* argv[]) {
   }
   else if (opt != NULL && strcmp(opt, "--test-image") == 0){
     test_image(image_path);
+    exit(EXIT_SUCCESS);
   }
 
   // creating training set
   printf("------------\n");
   printf("Training set :\n");
   printf("------------\n");
-  float **inputs;
-  float **outputs;
+  double **inputs;
+  double **outputs;
   FILE *fptr;
   fptr = fopen("./training-set/huge_data.csv", "r");
   if (fptr == NULL) {

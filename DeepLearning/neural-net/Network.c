@@ -10,26 +10,26 @@
 #include "../shared/math_helpers.h"
 #include "Network.h"
 
-// arbitrary size to calloc with, we assume that no single float/size_t data
+// arbitrary size to calloc with, we assume that no single double/size_t data
 // will be more than 20 chars
 #define CALLOC_MAX_DATA_SIZE 20
 #define MIN_RAND -1/sqrt(30)
 #define MAX_RAND 1/sqrt(30)
 
 
-float get_z(float *inputs, float *weights, float bias, size_t inputsize){
-  float sum_weighted_inputs = 0;
+double get_z(double *inputs, double *weights, double bias, size_t inputsize){
+  double sum_weighted_inputs = 0;
   for (size_t i = 0; i < inputsize; i++){
     sum_weighted_inputs += inputs[i] * weights[i];
   }
   return sum_weighted_inputs + bias;
 }
 
-float activation(float z){
+double activation(double z){
   return sigmoid(z);
 }
 
-float calculate_output(struct Neuron neuron, float* inputs){
+double calculate_output(struct Neuron neuron, double* inputs){
   return activation(get_z(inputs, neuron.weights, neuron.bias, neuron.inputsize));
 }
 
@@ -47,18 +47,18 @@ void calc_weight_bias_amount(struct Network net, size_t* weight_total, size_t* b
 
 }
 
-float *feedforward(struct Network net, float *input, float** z_mat, float** a_mat) {
-  float *prev_out = input;
+double *feedforward(struct Network net, double *input, double** z_mat, double** a_mat) {
+  double *prev_out = input;
   // if we provided z mat and a mat pointers, we are doing the forward pass in the backprop
   if (z_mat != NULL && a_mat != NULL){
     //size_t dead_neurons = 0;
     for (size_t l=0; l<net.layernb; l++){
       size_t layer_size = *(net.layersizes+l);
-      float *zs = calloc(layer_size, sizeof(float));
-      float *activations = calloc(layer_size, sizeof(float));
+      double *zs = calloc(layer_size, sizeof(double));
+      double *activations = calloc(layer_size, sizeof(double));
       for (size_t n=0; n<layer_size; n++){
         struct Neuron neuron = *((net.layers+l)->neurons+n);
-        float z = get_z(input, neuron.weights, neuron.bias, neuron.inputsize);
+        double z = get_z(input, neuron.weights, neuron.bias, neuron.inputsize);
         //if (z > 5 || z < -5){
         //  dead_neurons+=1;
         //}
@@ -76,7 +76,7 @@ float *feedforward(struct Network net, float *input, float** z_mat, float** a_ma
     for (size_t i = 0; i < (net.layernb); i++) {
       size_t layer_size = *(net.layersizes + i);
       // create the output array
-      float *out = calloc(layer_size, sizeof(float));
+      double *out = calloc(layer_size, sizeof(double));
       // foreach neuron in the layer
       for (size_t j = 0; j < layer_size; j++) {
         // add its output to the output array
@@ -96,7 +96,7 @@ float *feedforward(struct Network net, float *input, float** z_mat, float** a_ma
 }
 
 char *neuron_to_str(struct Neuron neur) {
-  char *wstr = float_arr_to_str(neur.weights, neur.inputsize);
+  char *wstr = double_arr_to_str(neur.weights, neur.inputsize);
   char *str = NULL;
   size_t b = asprintf(&str, "%s %f", wstr, neur.bias);
   if (b < 1) {
@@ -141,8 +141,8 @@ void fill_network(struct Network *network) {
       // previous layer
       neuron->inputsize = layer_inputsize;
       // fill bias and weights with random values between MIN_RAND and MAX_RAND
-      neuron->bias = float_rand(MIN_RAND, MAX_RAND);
-      neuron->weights = rand_float_array(MIN_RAND, MAX_RAND, layer_inputsize);
+      neuron->bias = double_rand(MIN_RAND, MAX_RAND);
+      neuron->weights = rand_double_array(MIN_RAND, MAX_RAND, layer_inputsize);
     }
     layer_inputsize = layersize;
   }
@@ -259,13 +259,13 @@ struct Network load_network(char *path) {
           } else {
             neuron->inputsize = network.layersizes[layindex - 1];
           }
-          neuron->weights = calloc(neuron->inputsize, sizeof(float));
+          neuron->weights = calloc(neuron->inputsize, sizeof(double));
         }
-        // convert data buffer to float
-        float f_data = atof(curr_data);
+        // convert data buffer to double
+        double f_data = atof(curr_data);
         if (f_data == 0)
           errx(EXIT_FAILURE,
-               "data could not be converted to a float or was null");
+               "data could not be converted to a double or was null");
 
         // if the sep was a newline or a EOF, we know we were on the last column
         // of the line, thus the data is the bias we can then increase the
