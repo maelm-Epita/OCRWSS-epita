@@ -33,7 +33,7 @@ double Cost(struct Network net, struct training_data data){
   size_t outputsize = *(net.layersizes + net.layernb - 1);
   double **a_mat = calloc(net.layernb, sizeof(double*));
   double **z_mat = calloc(net.layernb, sizeof(double*));
-  double *output = feedforward(net, data.inputs, a_mat, z_mat);
+  double *output = feedforward(net, data.inputs, z_mat, a_mat);
   free(a_mat);
   free(z_mat);
   double cost = 0;
@@ -389,7 +389,7 @@ double train(struct Network *net, struct training_set set, double rate,
       printf("Network thinks... : \n");
       double **a_mat = calloc(net->layernb, sizeof(double*));
       double **z_mat = calloc(net->layernb, sizeof(double*));
-      double *output = feedforward(*net, random_sample.inputs, a_mat, z_mat);
+      double *output = feedforward(*net, random_sample.inputs, z_mat, a_mat);
       print_double_arr(output, 26);
       free(a_mat);
       free(z_mat);
@@ -400,9 +400,9 @@ double train(struct Network *net, struct training_set set, double rate,
       if (print_b){
         printf("Mini batch took : %f seconds\n", (double)(end-start)/CLOCKS_PER_SEC);  
         printf("Current cost of network over a random training example of the batch: %f\n", cost);
-        printf("Saving network...\n");
+        //printf("Saving network...\n");
       }
-      save_network(model_name, *net);
+      //save_network(model_name, *net);
       av_cost += cost;
       it--;
     }
@@ -426,6 +426,7 @@ double train(struct Network *net, struct training_set set, double rate,
     printf("Final average cost of the network on all training data : %f\n",
            final_av_cost);
   }
+  save_network(model_name, *net);
   return final_av_cost;
 }
 

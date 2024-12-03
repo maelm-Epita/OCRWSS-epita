@@ -17,9 +17,9 @@
 #define LAYER_NUMBER 3
 #define LAYER_SIZES {32, 32, 26}
 #define DATA_NB 372038
-#define MINIBATCH_SIZE 200
-#define EPOCHS 50
-#define RATE 1e-3
+#define MINIBATCH_SIZE 300
+#define EPOCHS 10
+#define RATE 1e-1
 #define BACKPROP_NUMBER 100
 #define DEFAULT_SAVE_PATH "./models/letter.model"
 // fork specific
@@ -106,9 +106,32 @@ void letter_train_fork(struct training_set set, char* save_path){
 void use_model(char* model_path, char* image_path){
   struct Network net = load_network(model_path);
   double* input = image_to_input(image_path);
-  double* res = feedforward(net, input, NULL, NULL);
+  double **a_mat = calloc(net.layernb, sizeof(double*));
+  double **z_mat = calloc(net.layernb, sizeof(double*));
+  double* res = feedforward(net, input, z_mat, a_mat);
+  free(a_mat);
+  free(z_mat);
   print_double_arr(res, 26);
   printf("Network's prediction : %c\n", output_to_prediction(res));
+  free(res);
+}
+
+void use_model_random(char *model_path, struct training_set set){
+  long i;
+  struct Network net = load_network(model_path);
+  while (1){
+    i = rand() % set.data_number;
+    struct training_data data = *(set.data+i);
+    double **a_mat = calloc(net.layernb, sizeof(double*));
+    double **z_mat = calloc(net.layernb, sizeof(double*));
+    double* res = feedforward(net, data.inputs, z_mat, a_mat);
+    free(a_mat);
+    free(z_mat);
+    printf("%lu - Expected guess : %c\n", i, output_to_prediction(data.expected_output));
+    print_double_arr(data.expected_output, 26);
+    printf("%lu - Network guessed : %c\n", i, output_to_prediction(res));
+    print_double_arr(res, 26);
+  }
 }
 
 void test_dataset(struct training_set set){
@@ -227,6 +250,15 @@ int main(int argc, char* argv[]) {
         image_path = *(argv+2);
       }
     }
+    else if (strcmp(opt, "--use-random") == 0){
+      if (argc != 3){
+        errx(EXIT_FAILURE, "Incorrect usage of option -u\n\
+             Should be \"--use-random {MODEL_PATH}\"\n");
+      }
+      else{
+        existing_path = *(argv+2);
+      }
+    }
     else{
       errx(EXIT_FAILURE, "Unknown argument \"%s\"\n", opt);
     }
@@ -287,5 +319,8 @@ int main(int argc, char* argv[]) {
   }
   else if (strcmp(opt, "-t") == 0){
     test_dataset(letter_training_set);
+  }
+  else if (strcmp(opt, "--use-random") == 0){
+    use_model_random(existing_path, letter_training_set);
   }
 }
