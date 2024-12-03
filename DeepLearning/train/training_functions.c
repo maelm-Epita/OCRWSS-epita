@@ -12,9 +12,10 @@
 #include <unistd.h>
 
 #define ARBITRARY_MIN_INITIALIZER 100
-#define EPS 1e-3;
+#define L 0
+#define EPS 1e-6
 
-float Cost(struct Network net, struct training_data data) {
+float _Cost(struct Network net, struct training_data data) {
   // the output size is the size of the last layer
   size_t outputsize = *(net.layersizes + net.layernb - 1);
   float *output = feedforward(net, data.inputs, NULL, NULL);
@@ -28,8 +29,90 @@ float Cost(struct Network net, struct training_data data) {
   return cost;
 }
 
-float pd_Cost_of_activation(float activation, float expected){
+float Cost(struct Network net, struct training_data data){
+  size_t outputsize = *(net.layersizes + net.layernb - 1);
+  float *output = feedforward(net, data.inputs, NULL, NULL);
+  float cost = 0;
+  float p_c;
+  float y_c;
+  for (size_t i=0; i<outputsize; i++){
+    p_c = *(output+i);
+    y_c = *(data.expected_output+i);
+    // PREVENT LOG(EPS) -> -INF
+    if (p_c<EPS){
+      p_c = EPS;
+    }
+    if (p_c>1-EPS){
+      p_c = 1-EPS;
+    }
+    // USE LABEL SMOOTHING
+    float contrib;
+    contrib = y_c*log(p_c) + (1-y_c)*log(1-p_c);
+    cost += contrib;
+  }
+  return -cost;
+}
+
+float test_cost(float *p, float *y){
+  float cost = 0;
+  float p_c;
+  float y_c;
+  for (size_t i=0; i<9; i++){
+    p_c = *(p+i);
+    y_c = *(y+i);
+    // PREVENT LOG(EPS--) -> -INF
+    if (p_c<EPS){
+      p_c = EPS;
+    }
+    if (p_c>1-EPS){
+      p_c = 1-EPS;
+    }
+    // USE LABEL SMOOTHING
+    float contrib;
+    if (y_c == 0){
+      contrib = (1-L)*log(1-p_c) + L*log(p_c);
+      cost += contrib;
+    }
+    else{
+      contrib = L*log(1-p_c) + (1-L)*log(p_c);
+      cost += contrib;
+    }
+    printf("Cost for : y_c = %f, p_c = %f -- %f\n", y_c, p_c, contrib);
+  }
+  printf("Final cost : %f\n", -cost);
+  return -cost;
+}
+
+float _test_cost(float *p, float *y){
+  float cost = 0;
+  float p_c;
+  float y_c;
+  for (size_t i=0; i<9; i++){
+    p_c = *(p+i);
+    y_c = *(y+i);
+    // PREVENT LOG(EPS--) -> -INF
+    if (p_c<EPS){
+      p_c = EPS;
+    }
+    if (p_c>1-EPS){
+      p_c = 1-EPS;
+    }
+    // USE LABEL SMOOTHING
+    float contrib;
+    contrib = y_c*log(p_c) + (1-y_c)*log(1-p_c);
+    cost += contrib;
+    printf("Cost for : y_c = %f, p_c = %f -- %f\n", y_c, p_c, contrib);
+  }
+  printf("Final cost : %f\n", -cost);
+  return -cost;
+}
+
+float _pd_Cost_of_activation(float activation, float expected){
   return 2 * (activation-expected);
+}
+
+float pd_Cost_of_activation(float activation, float expected){
+  return -(expected/activation) + (1-expected)/(1-activation);
 }
 
 float *get_Costs(struct Network net, struct training_set minibatch) {
@@ -86,6 +169,24 @@ float av_Cost_PDB(struct Network net, struct Neuron *neuron,
   return (d_av_cost - av_cost) / EPS;
 }
 
+float true_derivative_weight(struct Network net, struct Neuron *neuron, size_t windex, struct training_data data){
+  float cost = Cost(net, data);
+  float w = *(neuron->weights+windex);
+  *(neuron->weights + windex) = w + EPS;
+  float d_cost= Cost(net, data);
+  *(neuron->weights + windex) = w;
+  return (d_cost - cost) / EPS;
+}
+
+float true_derivative_bias(struct Network net, struct Neuron *neuron, struct training_data data){
+  float cost = Cost(net, data);
+  float b = neuron->bias;
+  neuron->bias = b + EPS;
+  float d_cost = Cost(net, data);
+  neuron->bias = b;
+  return (d_cost - cost) / EPS;
+}
+
 void back_propagate(struct Network *net, struct training_data data, float* d_grad_w, float* d_grad_b){
   // INITIALIZE the z matrix and the a matrix
   // z = w*i+b
@@ -113,16 +214,22 @@ void back_propagate(struct Network *net, struct training_data data, float* d_gra
     }
     // Otherwise, it is defined recursively in relation to the next layer after
     else{
+      //printf("Layer : %d, size : %lu\n", l, layersize);
       for (size_t n=0; n<layersize; n++){
         float pdn = 0;
         // Sum impact of the change in activation of the neuron over all the neurons in the next layer
         for (size_t k=0; k<*(net->layersizes+l+1); k++){
+          //printf("tf4 %lu\n", k);
           // the weight linking the activation of neuron n of this layer to the neuron k of the next layer
           // => the nth weight of the kth neuron of the l+1th layer
+          //printf("%lu - %lu ; %lu - %lu\n", *(net->layersizes+l+1), k, ((net->layers+l+1)->neurons+k)->inputsize, n);
           float w_k_j = *(((net->layers+l+1)->neurons+k)->weights+n);
           // Hard to understand formula
+          //printf("%f\n", NextLayer_pd_Cost_Act[k]);
+          //printf("%f\n", z_mat[l+1][k]);
           pdn += w_k_j * sigmoid_derivative(z_mat[l+1][k]) * NextLayer_pd_Cost_Act[k];
         }
+        //printf("n : %lu, pdn : %f\n", n, pdn);
         *(pd_Cost_Act+n) = pdn;
       }
     }
@@ -132,23 +239,30 @@ void back_propagate(struct Network *net, struct training_data data, float* d_gra
     for (size_t n=0; n<layersize; n++){
       float sig_d_z_l_n = sigmoid_derivative(z_mat[l][n]);
       *(d_grad_b+index_b) = sig_d_z_l_n * pd_Cost_Act[n];
+      //printf("backprop found : %e, differentiation found : %e\n", *(d_grad_b+index_b), 
+      //       true_derivative_bias(*net, ((net->layers+l)->neurons+n), data));
       index_b++;
       // For this term, we use the previous layer's activation
       // If we are on the first layer, this will be the input of the network
       if (l==0){
         for (size_t k=0; k<data.input_number; k++){
           *(d_grad_w+index_w) = data.inputs[k] * sig_d_z_l_n * pd_Cost_Act[n];
+          //printf("backprop found : %e, differentiation found : %e\n", *(d_grad_w+index_w), 
+          //     true_derivative_weight(*net, ((net->layers+l)->neurons+n), k, data));
           index_w++;
         }
       }
       else{
         for (size_t k=0; k<*(net->layersizes+l-1); k++){
+          //printf("n : %lu, a_mat[l-1][k] = %f -- sig_d_z_l_n = %f -- pd_Cost_Act[n] = %f\n",
+          //       n, a_mat[l-1][k], sig_d_z_l_n, pd_Cost_Act[n]);
           *(d_grad_w+index_w) = a_mat[l-1][k] * sig_d_z_l_n * pd_Cost_Act[n];
+          printf("backprop found : %e, differentiation found : %e\n", *(d_grad_w+index_w), 
+                 true_derivative_weight(*net, ((net->layers+l)->neurons+n), k, data));
           index_w++;
         }
       }
     }
-
     // We can discard the previously calculated pd_cost_act we do not need anymore
     if (NextLayer_pd_Cost_Act != NULL){
       free(NextLayer_pd_Cost_Act);
@@ -170,7 +284,16 @@ void back_propagate_minibatch(struct Network *net, struct training_set minibatch
   // Fill the matrixes
   for (size_t i=0; i<minibatch.data_number; i++){
     float* d_grad_w = calloc(total_weight_nb, sizeof(float));
+    if (d_grad_w == NULL){
+      errx(EXIT_FAILURE, "Calloc failed for delta grad weights\n");
+    }
     float* d_grad_b = calloc(total_bias_nb, sizeof(float));
+    if (d_grad_b == NULL){
+      errx(EXIT_FAILURE, "Calloc failed for delta grad bias\n");
+    }
+    if ((minibatch.data+i) == NULL){
+      errx(EXIT_FAILURE, "Minibatch wtf\n");
+    }
     back_propagate(net, *(minibatch.data+i), d_grad_w, d_grad_b);
     *(d_grad_ws+i) = d_grad_w;
     *(d_grad_bs+i) = d_grad_b;
@@ -195,6 +318,7 @@ void update_minibatch(struct Network *net, struct training_set minibatch, float 
     for (size_t n=0; n<layersize; n++){
       struct Neuron *neuron = ((net->layers+l)->neurons+n);
       for (size_t w=0; w<neuron->inputsize; w++){
+        //printf("%f\n", grad_w[index_w]);
         *(neuron->weights+w) -= rate*grad_w[index_w];
         index_w++;
       }
@@ -213,14 +337,14 @@ float train(struct Network *net, struct training_set set, double rate,
     printf("TRAINING NEURAL NETWORK\n");
     printf("----------------------\n");
   }
-  // INITIALIZE USEFUL VARIABLES FOR THE ENTIRE TRAINING
-  size_t it = backprop_nb;
+  // DEFINE USEFUL VARIABLES FOR THE ENTIRE TRAINING
   clock_t start, end;
   size_t total_weight_nb;
   size_t total_bias_nb;
   calc_weight_bias_amount(*net, &total_weight_nb, &total_bias_nb);
   // EACH EPOCH 
   for (size_t i = 0; i <= epochs; i++) {
+    size_t it = backprop_nb;
     float av_cost = 0;
     if (print_b){
       printf("EPOCH %lu\n", i);
@@ -235,8 +359,13 @@ float train(struct Network *net, struct training_set set, double rate,
         printf("Mini-batch %lu - Back propagation...\n", j);
       }
       start = clock();
+      struct training_data random_sample = *(curr_minibatch.data);
+      printf("Random sample : \n");
+      print_float_arr(random_sample.expected_output, 26);
+      printf("Network thinks... : \n");
+      print_float_arr(feedforward(*net, random_sample.inputs, NULL, NULL), 26);
       update_minibatch(net, curr_minibatch, rate, total_weight_nb, total_bias_nb);
-      float cost = Cost(*net, *(curr_minibatch.data));
+      float cost = Cost(*net, random_sample);
       end = clock();
       if (print_b){
         printf("Mini batch took : %f seconds\n", (double)(end-start)/CLOCKS_PER_SEC);  
@@ -244,7 +373,14 @@ float train(struct Network *net, struct training_set set, double rate,
         printf("Saving network...\n");
       }
       save_network(model_name, *net);
+      av_cost += cost;
       it--;
+    }
+    if (backprop_nb <= 0){
+      av_cost/=mini_set.minibatch_number ;
+    }
+    else{
+      av_cost/=backprop_nb;
     }
     if (print_b){
       printf("EPOCH %lu finished, Average cost was : %f\n", i, av_cost);

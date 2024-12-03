@@ -14,13 +14,13 @@
 
 // defining constants
 #define INPUT_SIZE 28 * 28
-#define LAYER_NUMBER 3
-#define LAYER_SIZES {32, 32, 26}
+#define LAYER_NUMBER 2
+#define LAYER_SIZES {32, 26}
 #define DATA_NB 372038
-#define MINIBATCH_SIZE 2000
-#define EPOCHS 10
+#define MINIBATCH_SIZE 100
+#define EPOCHS 50
 #define RATE 1e-2
-#define BACKPROP_NUMBER -1
+#define BACKPROP_NUMBER 100
 #define DEFAULT_SAVE_PATH "./models/letter.model"
 // fork specific
 #define NETWORK_NUMBER 8
@@ -127,6 +127,15 @@ void test_image(char* path){
 }
 
 int main(int argc, char* argv[]) {
+  float p[9] = {0,0,0,0,1,1,0,0,0};
+  float y[9] = {0,0,1,0,0,0,0,0,0};
+  test_cost(p, y);
+  float p1[9] = {0,0,0.1,0,0,0,0,0,0};
+  float y1[9] = {0,0,1,0,0,0,0,0,0};
+  test_cost(p1, y1);
+  float p2[9] = {0,0,0.9,0,0,0,0,0,0};
+  float y2[9] = {0,0,1,0,0,0,0,0,0};
+  test_cost(p2, y2);
   // handling arguments
   char* opt = NULL;
   char* existing_path = NULL;

@@ -5,6 +5,7 @@
 #include <string.h>
 #include <time.h>
 #include <math.h>
+#include <unistd.h>
 #include "../shared/arr_helpers.h"
 #include "../shared/math_helpers.h"
 #include "Network.h"
@@ -50,6 +51,7 @@ float *feedforward(struct Network net, float *input, float** z_mat, float** a_ma
   float *prev_out = input;
   // if we provided z mat and a mat pointers, we are doing the forward pass in the backprop
   if (z_mat != NULL && a_mat != NULL){
+    //size_t dead_neurons = 0;
     for (size_t l=0; l<net.layernb; l++){
       size_t layer_size = *(net.layersizes+l);
       float *zs = calloc(layer_size, sizeof(float));
@@ -57,6 +59,9 @@ float *feedforward(struct Network net, float *input, float** z_mat, float** a_ma
       for (size_t n=0; n<layer_size; n++){
         struct Neuron neuron = *((net.layers+l)->neurons+n);
         float z = get_z(input, neuron.weights, neuron.bias, neuron.inputsize);
+        //if (z > 5 || z < -5){
+        //  dead_neurons+=1;
+        //}
         *(zs+n) = z;
         *(activations+n) = activation(z);
       }
@@ -64,6 +69,7 @@ float *feedforward(struct Network net, float *input, float** z_mat, float** a_ma
       *(z_mat+l) = zs;
       *(a_mat+l) = activations;
     }
+    //printf("dead neurons : %lu\n", dead_neurons);
   }
   // if we did not provide the matrixes, we are simply calculating the output
   else{

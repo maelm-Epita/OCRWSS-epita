@@ -4,6 +4,7 @@
 #include <stddef.h>
 
 float Cost(struct Network net, struct training_data data);
+float test_cost(float *p, float *y);
 float* get_Costs(struct Network net, struct training_set minibatch);
 // if thread_nb <= 1, will not use threading
 float av_Cost(struct Network net, struct training_set minibatch, size_t thread_nb);
