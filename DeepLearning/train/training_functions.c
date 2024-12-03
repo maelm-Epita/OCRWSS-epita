@@ -53,7 +53,7 @@ double Cost(struct Network net, struct training_data data){
   return -cost;
 }
 
-double test_cost(double *p, double *y){
+double _test_cost(double *p, double *y){
   double cost = 0;
   double p_c;
   double y_c;
@@ -83,7 +83,7 @@ double test_cost(double *p, double *y){
   return -cost;
 }
 
-double _test_cost(double *p, double *y){
+double test_cost(double *p, double *y){
   double cost = 0;
   double p_c;
   double y_c;
@@ -189,6 +189,8 @@ double true_derivative_bias(struct Network net, struct Neuron *neuron, struct tr
   return (d_cost - cost) / EPS;
 }
 
+// LAST LAYER WE HAVE THE FORMULA
+// OTHER LAYERS WE HAVE DERIVATIVE OF RELU
 void back_propagate(struct Network *net, struct training_data data, double* d_grad_w, double* d_grad_b){
   // INITIALIZE the z matrix and the a matrix
   // z = w*i+b
@@ -209,9 +211,11 @@ void back_propagate(struct Network *net, struct training_data data, double* d_gr
     // => how much does the cost change as the activation (output) of each specific neuron changes
     double* pd_Cost_Act = calloc(layersize, sizeof(double));
     // If we are on the last layer, the formula is specially defined as the derivative of our cost function in relation to weights only
+    // With the derivative of the softmax, this will actually simplify, thus we are directly writing the simplification
+    // here
     if ((size_t)l==net->layernb-1){
       for (size_t n=0; n<layersize; n++){
-        *(pd_Cost_Act+n) = pd_Cost_of_activation(a_mat[l][n], *(data.expected_output+n));
+        *(pd_Cost_Act+n) = a_mat[l][n] - *(data.expected_output+n);
       }
     }
     // Otherwise, it is defined recursively in relation to the next layer after
@@ -229,7 +233,7 @@ void back_propagate(struct Network *net, struct training_data data, double* d_gr
           // Hard to understand formula
           //printf("%f\n", NextLayer_pd_Cost_Act[k]);
           //printf("%f\n", z_mat[l+1][k]);
-          pdn += w_k_j * sigmoid_derivative(z_mat[l+1][k]) * NextLayer_pd_Cost_Act[k];
+          pdn += w_k_j * leaky_ReLu_derivative(z_mat[l+1][k]) * NextLayer_pd_Cost_Act[k];
         }
         //printf("n : %lu, pdn : %f\n", n, pdn);
         *(pd_Cost_Act+n) = pdn;
@@ -239,8 +243,8 @@ void back_propagate(struct Network *net, struct training_data data, double* d_gr
     // We can compute the partial derivative of the cost with respect to each weight or bias in the layer
     // Meaning we have the grad for a single layer
     for (size_t n=0; n<layersize; n++){
-      double sig_d_z_l_n = sigmoid_derivative(z_mat[l][n]);
-      *(d_grad_b+index_b) = sig_d_z_l_n * pd_Cost_Act[n];
+      double rel_d_z_l_n = leaky_ReLu_derivative(z_mat[l][n]);
+      *(d_grad_b+index_b) = rel_d_z_l_n * pd_Cost_Act[n];
       //printf("backprop found : %e, differentiation found : %e\n", *(d_grad_b+index_b), 
       //       true_derivative_bias(*net, ((net->layers+l)->neurons+n), data));
       index_b++;
@@ -248,19 +252,31 @@ void back_propagate(struct Network *net, struct training_data data, double* d_gr
       // If we are on the first layer, this will be the input of the network
       if (l==0){
         for (size_t k=0; k<data.input_number; k++){
-          *(d_grad_w+index_w) = data.inputs[k] * sig_d_z_l_n * pd_Cost_Act[n];
+          *(d_grad_w+index_w) = data.inputs[k] * rel_d_z_l_n * pd_Cost_Act[n];
           //printf("backprop found : %e, differentiation found : %e\n", *(d_grad_w+index_w), 
           //     true_derivative_weight(*net, ((net->layers+l)->neurons+n), k, data));
           index_w++;
         }
       }
-      else{
+      // Else if we are in a hidden layer, use the regular formula
+      else if ((size_t)l<net->layernb-1){
         for (size_t k=0; k<*(net->layersizes+l-1); k++){
           //printf("n : %lu, a_mat[l-1][k] = %f -- sig_d_z_l_n = %f -- pd_Cost_Act[n] = %f\n",
           //       n, a_mat[l-1][k], sig_d_z_l_n, pd_Cost_Act[n]);
-          *(d_grad_w+index_w) = a_mat[l-1][k] * sig_d_z_l_n * pd_Cost_Act[n];
+          *(d_grad_w+index_w) = a_mat[l-1][k] * rel_d_z_l_n * pd_Cost_Act[n];
           //printf("backprop found : %e, differentiation found : %e\n", *(d_grad_w+index_w), 
           //      true_derivative_weight(*net, ((net->layers+l)->neurons+n), k, data));
+          index_w++;
+        }
+      }
+      // Else if we are on the last layer, the gradient is the same formula as the hidden layers, 
+      // but we would use the derivative of softmax, however it simplifies with the pd of cost
+      // (cross entropy + softmax formula)
+      // therefore we wrote that directly to the pd_cost_act matrix, so we will only use that
+      // hence the missing derivative term
+      else{
+        for (size_t k=0; k<*(net->layersizes+l-1); k++){
+          *(d_grad_w + index_w) = a_mat[l - 1][k] * pd_Cost_Act[n];
           index_w++;
         }
       }

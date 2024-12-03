@@ -26,7 +26,7 @@ double get_z(double *inputs, double *weights, double bias, size_t inputsize){
 }
 
 double activation(double z){
-  return sigmoid(z);
+  return leaky_ReLu(z);
 }
 
 double calculate_output(struct Neuron neuron, double* inputs){
@@ -58,41 +58,25 @@ double *feedforward(struct Network net, double *input, double** z_mat, double** 
       double *activations = calloc(layer_size, sizeof(double));
       for (size_t n=0; n<layer_size; n++){
         struct Neuron neuron = *((net.layers+l)->neurons+n);
-        double z = get_z(input, neuron.weights, neuron.bias, neuron.inputsize);
-        //if (z > 5 || z < -5){
-        //  dead_neurons+=1;
-        //}
+        double z = get_z(prev_out, neuron.weights, neuron.bias, neuron.inputsize);
         *(zs+n) = z;
-        *(activations+n) = activation(z);
+        // IF WE ARE ON THE OUTPUT LAYER ; SOFTMAX WILL BE APPLIED (Because we need a probability distribution)
+        // WE APPLY SOFTMAX AFTER ALL LOGITS ARE CALCULATED
+        // ELSE FOR THE HIDDEN LAYER ; RELU WILL BE APPLIED (Because we need to prevent vanihsing gradient
+        if (l < net.layernb-1){
+          *(activations+n) = activation(z);
+        }
+      }
+      // THIS IS WHERE SOFTMAX IS APPLIED ONTO 
+      if (l == net.layernb-1){
+        softmax(zs, layer_size, activations);
       }
       prev_out = activations;
       *(z_mat+l) = zs;
       *(a_mat+l) = activations;
     }
-    //printf("dead neurons : %lu\n", dead_neurons);
   }
-  // if we did not provide the matrixes, we are simply calculating the output
-  else{
-    for (size_t i = 0; i < (net.layernb); i++) {
-      size_t layer_size = *(net.layersizes + i);
-      // create the output array
-      double *out = calloc(layer_size, sizeof(double));
-      // foreach neuron in the layer
-      for (size_t j = 0; j < layer_size; j++) {
-        // add its output to the output array
-        *(out + j) =
-          calculate_output(*((*(net.layers + i)).neurons + j), prev_out);
-      }
-      // free the output we just used (if it isnt the input of the network)
-      if (i > 0)
-        free(prev_out);
-
-      // the output becomes the previous output thus the input of the next layer
-      prev_out = out;
-    }
-  }
-  // the last layer's output is the network's output
-  return prev_out;
+  return *(a_mat+net.layernb-1);
 }
 
 char *neuron_to_str(struct Neuron neur) {
