@@ -44,8 +44,8 @@ int main(int argc, char *argv[]) {
   if (renderer == NULL)
     errx(EXIT_FAILURE, "%s", SDL_GetError());
 
-  double brightness = get_brightness(image);
-  double con = get_contrast(image, brightness);
+  //double brightness = get_brightness(image);
+  //double con = get_contrast(image, brightness);
   printf("Contrast: %f\nBrightness: %f\n\n", con, brightness);
 
   int run = 1;
