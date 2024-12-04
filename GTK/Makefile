@@ -13,6 +13,11 @@ $(BIN) : $(OBJ)
 $(OBJ):
 	$(CC) $(CFLAGS) $(SRC) -c
 
+.PHONY: debug
+debug: CFLAGS += -g -O0 -fsanitize=address
+debug: LDFLAGS += -g -O0 -fsanitize=address
+debug: $(BIN)
+
 .PHONY: clean
 clean:
 	$(RM) $(BIN) $(OBJ)
