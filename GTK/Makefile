@@ -1,8 +1,8 @@
 CC = gcc
-CFLAGS = -Wall -Wextra -Wvla -pedantic `pkg-config --cflags gtk+-3.0`
-LDFLAGS = `pkg-config --libs gtk+-3.0`
-SRC = nvam.c home_screen.c toolchain_screen.c solving_screen.c image_processing_screen.c
-OBJ = $(SRC:.c=.o)
+CFLAGS = -Wall -Wextra -Wvla `pkg-config --cflags gtk+-3.0`
+LDFLAGS = `pkg-config --libs gtk+-3.0` -lm -lSDL2 -lSDL2_image
+SRC = nvam.c home_screen.c toolchain_screen.c solving_screen.c image_processing_screen.c gtk_tools.c ../ImageProcessing/image_tools.c
+OBJ = *.o
 BIN = nvam-ocr
 
 all: $(BIN)

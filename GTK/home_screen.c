@@ -7,10 +7,6 @@ extern GtkWidget *window;
 extern GtkWidget *box;
 extern size_t version;
 
-void destroy_box(GtkWidget *box) {
-  gtk_widget_destroy(box);
-}
-
 void open_file(char *filename) {
   char *cmd = NULL;
   version = 0;
