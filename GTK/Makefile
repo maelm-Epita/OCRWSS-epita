@@ -1,7 +1,7 @@
 CC = gcc
 CFLAGS = -Wall -Wextra -Wvla -pedantic `pkg-config --cflags gtk+-3.0`
 LDFLAGS = `pkg-config --libs gtk+-3.0`
-SRC = main_window.c
+SRC = nvam.c home_screen.c toolchain_screen.c solving_screen.c image_processing_screen.c
 OBJ = $(SRC:.c=.o)
 BIN = nvam-ocr
 

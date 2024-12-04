@@ -1,32 +1,24 @@
 #include <gtk/gtk.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
-#define LOGO_PATH "NVAM.ico"
+#include "home_screen.h"
+#include "toolchain_screen.h"
 
-// On déclare notre fenêtre window
-GtkWidget *window = NULL;
-GtkWidget *box = NULL;
-size_t version = 0;
+extern GtkWidget *window;
+extern GtkWidget *box;
+extern size_t version;
 
 void open_file(char *filename) {
   char *cmd = NULL;
+  version = 0;
   asprintf(&cmd, "magick \"%s\" /tmp/OCR/Images/image-0.png", filename);
   system(cmd);
   free(cmd);
 
-  gtk_container_remove(GTK_CONTAINER(window), box);
-  box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 50);
-
-  GtkWidget *image = gtk_image_new_from_file(filename);
-  gtk_box_pack_start(GTK_BOX(box), image, TRUE, TRUE, 0);
-  gtk_container_add(GTK_CONTAINER(window), box);
-  gtk_widget_show_all(window);
+  toolchain_screen();
 }
 
 void choose_file(void) {
-  GtkWidget *dialog;
+  GtkWidget *dialog = NULL;
   GtkFileChooserAction action = GTK_FILE_CHOOSER_ACTION_OPEN;
   gint res;
 
@@ -36,7 +28,7 @@ void choose_file(void) {
 
   res = gtk_dialog_run(GTK_DIALOG(dialog));
   if (res == GTK_RESPONSE_ACCEPT) {
-    char *filename;
+    char *filename = NULL;
     GtkFileChooser *chooser = GTK_FILE_CHOOSER(dialog);
     filename = gtk_file_chooser_get_filename(chooser);
     open_file(filename);
@@ -45,7 +37,6 @@ void choose_file(void) {
 
   gtk_widget_destroy(dialog);
 }
-
 void home_screen() {
   system("rm -rf /tmp/OCR");
   system("mkdir -p /tmp/OCR/Images");
@@ -69,23 +60,4 @@ void home_screen() {
   // On demande à GTK d'afficher notre window et tout ce qu'elle contient (rien
   // pour l'instant)
   gtk_widget_show_all(window);
-}
-
-int main(int argc, char **argv) {
-
-  // On demande à GTK de s'initialiser : il faut toujours faire passer argc et
-  // argv en argument
-  gtk_init(&argc, &argv);
-
-  // On initialise notre window
-  window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-
-  home_screen();
-
-  g_signal_connect(window, "destroy", G_CALLBACK(gtk_main_quit), NULL);
-  gtk_container_set_border_width(GTK_CONTAINER(window), 10);
-
-  // On demande à GTK de ne pas quitter et de laisser notre fenêtre ouverte
-  gtk_main();
-  return 0;
 }
