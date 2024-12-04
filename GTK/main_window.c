@@ -1,9 +1,10 @@
 #include <gtk/gtk.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 int main(int argc, char **argv) {
   // On déclare notre fenêtre window
-  GtkWidget *window;
+  GtkWidget *window = NULL;
   // On demande à GTK de s'initialiser : il faut toujours faire passer argc et
   // argv en argument
   gtk_init(&argc, &argv);
