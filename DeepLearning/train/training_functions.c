@@ -384,13 +384,13 @@ double train(struct Network *net, struct training_set set, double rate,
       }
       start = clock();
       struct training_data random_sample = *(curr_minibatch.data);
-      printf("Random sample : \n");
-      print_double_arr(random_sample.expected_output, 26);
-      printf("Network thinks... : \n");
+      //printf("Random sample : \n");
+      //print_double_arr(random_sample.expected_output, 26);
+      //printf("Network thinks... : \n");
       double **a_mat = calloc(net->layernb, sizeof(double*));
       double **z_mat = calloc(net->layernb, sizeof(double*));
       double *output = feedforward(*net, random_sample.inputs, z_mat, a_mat);
-      print_double_arr(output, 26);
+      //print_double_arr(output, 26);
       free(a_mat);
       free(z_mat);
       free(output);
@@ -414,7 +414,9 @@ double train(struct Network *net, struct training_set set, double rate,
     }
     if (print_b){
       printf("EPOCH %lu finished, Average cost was : %f\n", i, av_cost);
+      printf("Saving network, don't exit program...\n");
     }
+    save_network(model_name, *net);
     free_minibatch_set(mini_set);
   }
   if (print_b){

@@ -43,4 +43,4 @@ dkms.conf
 uncompressed/
 *.model
 *.zip
-huge_data.csv
+training-set/

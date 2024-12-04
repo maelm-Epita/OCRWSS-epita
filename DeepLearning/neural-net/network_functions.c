@@ -55,12 +55,15 @@ void input_to_image(double* input) {
   SDL_Quit();
 }
 
-char output_to_prediction(double* output){
+char output_to_prediction(double* output, double* confidence){
   size_t max = 0;
   for (size_t i=0; i<OUTPUT_SIZE; i++){
     if (*(output+i)>*(output+max)){
       max = i;
     }
+  }
+  if (confidence != NULL){
+    *confidence = *(output+max);
   }
   return 'A'+max;
 }

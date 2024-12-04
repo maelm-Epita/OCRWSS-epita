@@ -9,4 +9,5 @@ void input_to_image(double* input);
 // converts the network's prediction, which is an array of 26 doubles representing the guess of the network
 // to a character
 // to do so, it simply takes the index of the max of the network
-char output_to_prediction(double* output);
+// if a pointer to a double is also provided, we will store the value of max which is the confidence
+char output_to_prediction(double* output, double* confidence);

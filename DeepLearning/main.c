@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/wait.h>
+#include <time.h>
 #include <unistd.h>
 #include <err.h>
 
@@ -16,11 +17,12 @@
 #define INPUT_SIZE 28 * 28
 #define LAYER_NUMBER 3
 #define LAYER_SIZES {32, 32, 26}
-#define DATA_NB 372038
-#define MINIBATCH_SIZE 300
+#define DATA_NB 13130
+#define MINIBATCH_SIZE 500
 #define EPOCHS 10
 #define RATE 1e-1
 #define BACKPROP_NUMBER 100
+#define TRAINING_SET_PATH "./training-set/digital_letters.csv"
 #define DEFAULT_SAVE_PATH "./models/letter.model"
 // fork specific
 #define NETWORK_NUMBER 8
@@ -109,36 +111,63 @@ void use_model(char* model_path, char* image_path){
   double **a_mat = calloc(net.layernb, sizeof(double*));
   double **z_mat = calloc(net.layernb, sizeof(double*));
   double* res = feedforward(net, input, z_mat, a_mat);
-  free(a_mat);
-  free(z_mat);
+  double confidence;
   print_double_arr(res, 26);
-  printf("Network's prediction : %c\n", output_to_prediction(res));
-  free(res);
+  printf("Network's prediction : %c -- ", output_to_prediction(res, &confidence));
+  printf("Confidence : %f%%\n", confidence*100);
+  free_double_matrix(a_mat, net.layernb);
+  free_double_matrix(z_mat, net.layernb);
+  // we dont free res because it is just a_mat[L] which was already freed
+  free(input);
+  free_network_loaded(&net);
 }
 
 void use_model_random(char *model_path, struct training_set set){
+  srand(time(0));
+  size_t it = 100000;
   long i;
+  double wrong[26][3];
+  for (size_t i=0; i<26; i++){
+    wrong[i][0] = 0;
+    wrong[i][1] = 0;
+    wrong[i][2] = 0;
+  }
   struct Network net = load_network(model_path);
-  while (1){
+  while (it){
     i = rand() % set.data_number;
     struct training_data data = *(set.data+i);
     double **a_mat = calloc(net.layernb, sizeof(double*));
     double **z_mat = calloc(net.layernb, sizeof(double*));
     double* res = feedforward(net, data.inputs, z_mat, a_mat);
-    free(a_mat);
-    free(z_mat);
-    printf("%lu - Expected guess : %c\n", i, output_to_prediction(data.expected_output));
+    double confidence;
+    char label = output_to_prediction(data.expected_output, NULL);
+    char prediction = output_to_prediction(res, &confidence);
+    printf("%lu - Expected guess : %c\n", i, label);
     print_double_arr(data.expected_output, 26);
-    printf("%lu - Network guessed : %c\n", i, output_to_prediction(res));
+    printf("%lu - Network guessed : %c\n", i, prediction);
     print_double_arr(res, 26);
+    printf("Confidence : %f%%\n", confidence*100);
+    wrong[label-'A'][2] += 1;
+    if (label != prediction){
+      wrong[label-'A'][0]+=1;
+      wrong[label-'A'][1]+=confidence;
+    }
+    free_double_matrix(a_mat, net.layernb);
+    free_double_matrix(z_mat, net.layernb);
+    it--;
   }
+  for (size_t i=0; i<26; i++){
+    printf("Letter : %c -- Guesses : %f -- Wrong guess number : %f -- Ratio : %f -- Wrong guess average confidence : %f%%\n",
+           (char)i+'A', wrong[i][2], wrong[i][0], wrong[i][0]/wrong[i][2], wrong[i][1]*100/wrong[i][0]);
+  }
+  free_network_loaded(&net);
 }
 
 void test_dataset(struct training_set set){
   long i;
   while (1){
     i = rand() % set.data_number;
-    printf("%lu - Expected guess : %c\n", i, output_to_prediction((set.data+i)->expected_output));
+    printf("%lu - Expected guess : %c\n", i, output_to_prediction((set.data+i)->expected_output, NULL));
     print_double_arr((set.data+i)->expected_output, 26);
     input_to_image((set.data+i)->inputs);
   }
@@ -179,7 +208,6 @@ void test_cost_function(){
 }
 
 int main(int argc, char* argv[]) {
-  test_derivative();
   // handling arguments
   char* opt = NULL;
   char* existing_path = NULL;
@@ -278,15 +306,8 @@ int main(int argc, char* argv[]) {
   printf("------------\n");
   double **inputs;
   double **outputs;
-  FILE *fptr;
-  fptr = fopen("./training-set/huge_data.csv", "r");
-  if (fptr == NULL) {
-    printf("File could not be opened");
-    exit(EXIT_FAILURE);
-  }
   printf("Loading training data...\n");
-  load_training_data(fptr, &inputs, &outputs, DATA_NB, INPUT_SIZE);
-  fclose(fptr);
+  load_training_data(TRAINING_SET_PATH, &inputs, &outputs, DATA_NB, INPUT_SIZE);
   printf("Creating training set...\n");
   struct training_set letter_training_set = 
     create_training_set(inputs, outputs, DATA_NB, INPUT_SIZE);
@@ -323,4 +344,7 @@ int main(int argc, char* argv[]) {
   else if (strcmp(opt, "--use-random") == 0){
     use_model_random(existing_path, letter_training_set);
   }
+
+  // clean
+  free_training_set(letter_training_set);
 }
