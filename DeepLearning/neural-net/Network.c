@@ -4,7 +4,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include <math.h>
 #include <unistd.h>
 #include "../shared/arr_helpers.h"
 #include "../shared/math_helpers.h"
@@ -13,9 +12,6 @@
 // arbitrary size to calloc with, we assume that no single double/size_t data
 // will be more than 20 chars
 #define CALLOC_MAX_DATA_SIZE 20
-#define MIN_RAND -1/sqrt(30)
-#define MAX_RAND 1/sqrt(30)
-
 
 double get_z(double *inputs, double *weights, double bias, size_t inputsize){
   double sum_weighted_inputs = 0;
@@ -125,8 +121,8 @@ void fill_network(struct Network *network) {
       // previous layer
       neuron->inputsize = layer_inputsize;
       // fill bias and weights with random values between MIN_RAND and MAX_RAND
-      neuron->bias = double_rand(MIN_RAND, MAX_RAND);
-      neuron->weights = rand_double_array(MIN_RAND, MAX_RAND, layer_inputsize);
+      neuron->bias = 0;
+      neuron->weights = he_weight_array(layer_inputsize);
     }
     layer_inputsize = layersize;
   }
@@ -226,11 +222,6 @@ struct Network load_network(char *path) {
       // rest of the lines contain info for one neuron each ("$weight1 $weight2
       // ... $weightn_$bias)
       else {
-        // TODO : get the layer and the neuron and stuff, also the code for
-        // getting the inputsize of the neuron can be to get the previous
-        // layer's layersize, but if layindex is 0 then inputsize of the neuron
-        // is inputsize of the network
-        //
         //
         struct Layer layer = network.layers[layindex];
         struct Neuron *neuron = layer.neurons + neurindex;
@@ -246,11 +237,12 @@ struct Network load_network(char *path) {
           neuron->weights = calloc(neuron->inputsize, sizeof(double));
         }
         // convert data buffer to double
-        double f_data = atof(curr_data);
-        if (f_data == 0)
+        char *endptr;
+        double f_data = strtod(curr_data, &endptr);
+        if (*endptr != '\0'){
           errx(EXIT_FAILURE,
-               "data could not be converted to a double or was null");
-
+               "data could not be converted to a double or was null, %s\n", curr_data);
+        }
         // if the sep was a newline or a EOF, we know we were on the last column
         // of the line, thus the data is the bias we can then increase the
         // neuron index and then layer index if need be

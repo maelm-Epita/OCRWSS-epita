@@ -34,8 +34,6 @@ double Cost(struct Network net, struct training_data data){
   double **a_mat = calloc(net.layernb, sizeof(double*));
   double **z_mat = calloc(net.layernb, sizeof(double*));
   double *output = feedforward(net, data.inputs, z_mat, a_mat);
-  free(a_mat);
-  free(z_mat);
   double cost = 0;
   double p_c;
   double y_c;
@@ -54,7 +52,8 @@ double Cost(struct Network net, struct training_data data){
     contrib = y_c*log(p_c) + (1-y_c)*log(1-p_c);
     cost += contrib;
   }
-  free(output);
+  free_double_matrix(a_mat, net.layernb);
+  free_double_matrix(z_mat, net.layernb);
   return -cost;
 }
 
@@ -374,31 +373,29 @@ double train(struct Network *net, struct training_set set, double rate,
       printf("EPOCH %lu\n", i);
       printf("Training.....\n");
     }
+    start = clock();
     // CREATE THE MINIBATCH SET
     struct minibatch_set mini_set = create_minibatch_set(set, minibatch_size);
     // GO THROUGH THE ENTIRE SET DOING 1 BACKPROP PER BATCH
     for (size_t j = 0; j < mini_set.minibatch_number && it != 0; j++) {
       struct training_set curr_minibatch = *(mini_set.mini_batches + j);
       if (print_b){
-        printf("Mini-batch %lu - Back propagation...\n", j);
+        printf("EPOCH %lu : Mini-batch %lu - Back propagation...\n", i, j);
       }
-      start = clock();
       struct training_data random_sample = *(curr_minibatch.data);
-      //printf("Random sample : \n");
-      //print_double_arr(random_sample.expected_output, 26);
-      //printf("Network thinks... : \n");
+      /*printf("Random sample : \n");
+      print_double_arr(random_sample.expected_output, 26);
+      printf("Network thinks... : \n");
       double **a_mat = calloc(net->layernb, sizeof(double*));
       double **z_mat = calloc(net->layernb, sizeof(double*));
       double *output = feedforward(*net, random_sample.inputs, z_mat, a_mat);
       //print_double_arr(output, 26);
       free(a_mat);
       free(z_mat);
-      free(output);
+      free(output);*/
       update_minibatch(net, curr_minibatch, rate, total_weight_nb, total_bias_nb);
       double cost = Cost(*net, random_sample);
-      end = clock();
       if (print_b){
-        printf("Mini batch took : %f seconds\n", (double)(end-start)/CLOCKS_PER_SEC);  
         printf("Current cost of network over a random training example of the batch: %f\n", cost);
         //printf("Saving network...\n");
       }
@@ -406,14 +403,16 @@ double train(struct Network *net, struct training_set set, double rate,
       av_cost += cost;
       it--;
     }
-    if (backprop_nb <= 0){
+    if (backprop_nb <= 0 || mini_set.minibatch_number < (size_t)backprop_nb ){
       av_cost/=mini_set.minibatch_number ;
     }
     else{
       av_cost/=backprop_nb;
     }
+    end = clock();
     if (print_b){
       printf("EPOCH %lu finished, Average cost was : %f\n", i, av_cost);
+      printf("Epoch took : %f seconds\n", (double)(end-start)/CLOCKS_PER_SEC);
       printf("Saving network, don't exit program...\n");
     }
     save_network(model_name, *net);

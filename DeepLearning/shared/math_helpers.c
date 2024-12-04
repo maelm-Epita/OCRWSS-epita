@@ -14,6 +14,15 @@ double _sigmoid_derivative(double z){
   return _sigmoid(z)*(1-_sigmoid(z));
 }
 
+// he
+double random_normal(double mean, double stddev) {
+    // Box-Muller transform for generating normal distribution
+    double u1 = ((double) rand() / RAND_MAX);
+    double u2 = ((double) rand() / RAND_MAX);
+    double z0 = sqrt(-2.0 * log(u1)) * cos(2.0 * M_PI * u2);
+    return mean + z0 * stddev;
+}
+
 // new
 double leaky_ReLu(double z){
   if (z > 0){
@@ -46,10 +55,15 @@ double double_rand( double min, double max )
   double x = (double)rand()/(double)RAND_MAX;
   return min + x * (max-min);
 }
-double* rand_double_array(double min, double max, size_t size){
+
+double* rand_normal_double_array(double mean, double stddev, size_t size){
   double* arr = calloc(size, sizeof(double));
   for(size_t i=0; i<size; i++){
-    *(arr+i) = double_rand(min, max);
+    *(arr+i) = random_normal(mean, stddev);
   }
   return arr;
+}
+
+double* he_weight_array(size_t size){
+  return rand_normal_double_array(0, sqrt(2.0 / size), size);
 }

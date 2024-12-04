@@ -15,13 +15,15 @@
 
 // defining constants
 #define INPUT_SIZE 28 * 28
-#define LAYER_NUMBER 3
-#define LAYER_SIZES {32, 32, 26}
+#define LAYER_NUMBER 4
+#define LAYER_SIZES {64, 128, 32, 26}
+#define _DATA_NB 372451
 #define DATA_NB 13130
 #define MINIBATCH_SIZE 500
-#define EPOCHS 10
+#define EPOCHS 100
 #define RATE 1e-1
 #define BACKPROP_NUMBER 100
+#define _TRAINING_SET_PATH "./training-set/handwritten_letters.csv"
 #define TRAINING_SET_PATH "./training-set/digital_letters.csv"
 #define DEFAULT_SAVE_PATH "./models/letter.model"
 // fork specific
@@ -52,7 +54,6 @@ void letter_train(struct training_set set, char* save_path) {
   // cleanup
   printf("Freeing the heap\n");
   free_network(&net);
-  free_training_set(set);
   printf("------------\n");
   printf("Finished\n");
 }
@@ -76,8 +77,7 @@ void letter_train_existing(struct training_set set, char* model_path, char* save
   save_network(save_path, net);
   // cleanup
   printf("Freeing the heap\n");
-  free_network(&net);
-  free_training_set(set);
+  free_network_loaded(&net);
   printf("------------\n");
   printf("Finished\n");
 }
@@ -101,7 +101,6 @@ void letter_train_fork(struct training_set set, char* save_path){
   // cleanup
   printf("-> Freeing the heap\n");
   free_network(&net);
-  free_training_set(set);
   printf("-> Finished\n");
 }
 
@@ -119,7 +118,7 @@ void use_model(char* model_path, char* image_path){
   free_double_matrix(z_mat, net.layernb);
   // we dont free res because it is just a_mat[L] which was already freed
   free(input);
-  free_network_loaded(&net);
+  free_network(&net);
 }
 
 void use_model_random(char *model_path, struct training_set set){
@@ -304,8 +303,8 @@ int main(int argc, char* argv[]) {
   printf("------------\n");
   printf("Training set :\n");
   printf("------------\n");
-  double **inputs;
-  double **outputs;
+  double **inputs = NULL;
+  double **outputs = NULL;
   printf("Loading training data...\n");
   load_training_data(TRAINING_SET_PATH, &inputs, &outputs, DATA_NB, INPUT_SIZE);
   printf("Creating training set...\n");

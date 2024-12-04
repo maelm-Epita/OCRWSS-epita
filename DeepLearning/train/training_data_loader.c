@@ -96,11 +96,9 @@ void load_training_data(char* path, double** *inputs_p, double** *outputs_p, siz
           // so we pass nothing to strtok to get the remainder of the string
           if (i==input_size-1){
             *(input+i) = atof(strtok(NULL, ""))/255;
-            printf("%f\n", *(input+i));
           }
           else{
             *(input+i) = atof(strtok(NULL, ","))/255;
-            printf("%f\n", *(input+i));
           }
         }
       }
