@@ -29,12 +29,12 @@ void toolchain_screen() {
                    G_CALLBACK(image_processing_screen), NULL);
   g_signal_connect(solve_button, "clicked", G_CALLBACK(solving_screen), NULL);
   g_signal_connect(other_file, "clicked", G_CALLBACK(choose_file), NULL);
-  gtk_box_pack_start(GTK_BOX(buttons_box), processing_button, FALSE, TRUE, 10);
-  gtk_box_pack_start(GTK_BOX(buttons_box), solve_button, FALSE, TRUE, 10);
-  gtk_box_pack_start(GTK_BOX(buttons_box), other_file, FALSE, TRUE, 10);
+  gtk_box_pack_start(GTK_BOX(buttons_box), processing_button, TRUE, TRUE, 10);
+  gtk_box_pack_start(GTK_BOX(buttons_box), solve_button, TRUE, TRUE, 10);
+  gtk_box_pack_start(GTK_BOX(buttons_box), other_file, TRUE, TRUE, 10);
 
   gtk_box_pack_start(GTK_BOX(box), image, FALSE, FALSE, 10);
-  gtk_box_pack_start(GTK_BOX(box), buttons_box, TRUE, TRUE, 10);
+  gtk_box_pack_start(GTK_BOX(box), buttons_box, FALSE, FALSE, 10);
   gtk_container_add(GTK_CONTAINER(window), box);
 
   gtk_widget_show_all(window);

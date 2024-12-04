@@ -7,6 +7,10 @@ extern GtkWidget *window;
 extern GtkWidget *box;
 extern size_t version;
 
+void destroy_box(GtkWidget *box) {
+  gtk_widget_destroy(box);
+}
+
 void open_file(char *filename) {
   char *cmd = NULL;
   version = 0;
@@ -30,6 +34,12 @@ void choose_file(void) {
   if (res == GTK_RESPONSE_ACCEPT) {
     char *filename = NULL;
     GtkFileChooser *chooser = GTK_FILE_CHOOSER(dialog);
+    GtkFileFilter *filter = gtk_file_filter_new();
+    gtk_file_filter_add_pattern(filter, "*.png");
+    gtk_file_filter_add_pattern(filter, "*.bmp");
+    gtk_file_filter_add_pattern(filter, "*.jpg");
+    gtk_file_filter_add_pattern(filter, "*.jpeg");
+    gtk_file_chooser_add_filter(chooser, filter);
     filename = gtk_file_chooser_get_filename(chooser);
     open_file(filename);
     g_free(filename);
@@ -41,8 +51,6 @@ void home_screen() {
   system("rm -rf /tmp/OCR");
   system("mkdir -p /tmp/OCR/Images");
   system("mkdir -p /tmp/OCR/Letters");
-  gtk_window_set_title(GTK_WINDOW(window), "NVAM - OCR");
-  gtk_window_set_icon_from_file(GTK_WINDOW(window), LOGO_PATH, NULL);
 
   // Boîte verticale avec un espacement de 5 pixels
   box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
@@ -57,7 +65,5 @@ void home_screen() {
   gtk_box_pack_start(GTK_BOX(box), button, TRUE, TRUE, 0);
   gtk_container_add(GTK_CONTAINER(window), box);
 
-  // On demande à GTK d'afficher notre window et tout ce qu'elle contient (rien
-  // pour l'instant)
   gtk_widget_show_all(window);
 }
