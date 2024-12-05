@@ -85,7 +85,8 @@ void load_training_data(char* path, double** *inputs_p, double** *outputs_p, siz
     double *output;
     if (linesize>1){
       // if we are loading the handwritten training set ; the lines are : expected label index -- pixels
-      if (strcmp(path, "./training-set/handwritten_letters.csv") == 0){
+      if (strcmp(path, "./training-set/handwritten_letters.csv") == 0 || strcmp(path, "./training-set/easy_font.csv") == 0 ||
+          strcmp(path, "./training-set/hard_font.csv") == 0) {
         // get the expected output of the training data; we get the line until the first , 
         // then convert that to a number then get the output from that number
         output = snum_to_output(str_to_size(strtok(line, ",")));

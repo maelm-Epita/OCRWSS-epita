@@ -15,16 +15,19 @@
 
 // defining constants
 #define INPUT_SIZE 28 * 28
-#define LAYER_NUMBER 4
-#define LAYER_SIZES {64, 128, 32, 26}
-#define _DATA_NB 372451
+#define LAYER_NUMBER 3
+#define LAYER_SIZES {32, 32, 26}
+#define __DATA_NB 372451
 #define DATA_NB 13130
-#define MINIBATCH_SIZE 500
-#define EPOCHS 100
+#define _DATA_NB 26
+#define MINIBATCH_SIZE 26
+#define EPOCHS 75
 #define RATE 1e-1
-#define BACKPROP_NUMBER 100
-#define _TRAINING_SET_PATH "./training-set/handwritten_letters.csv"
+#define BACKPROP_NUMBER -1
+#define ___TRAINING_SET_PATH "./training-set/handwritten_letters.csv"
 #define TRAINING_SET_PATH "./training-set/digital_letters.csv"
+#define __TRAINING_SET_PATH "./training-set/easy_font.csv"
+#define _TRAINING_SET_PATH "./training-set/hard_font.csv"
 #define DEFAULT_SAVE_PATH "./models/letter.model"
 // fork specific
 #define NETWORK_NUMBER 8
@@ -121,10 +124,11 @@ void use_model(char* model_path, char* image_path){
   free_network(&net);
 }
 
+// TODO back
 void use_model_random(char *model_path, struct training_set set){
   srand(time(0));
-  size_t it = 100000;
-  long i;
+  //size_t it = 100000;
+  //long i;
   double wrong[26][3];
   for (size_t i=0; i<26; i++){
     wrong[i][0] = 0;
@@ -132,6 +136,7 @@ void use_model_random(char *model_path, struct training_set set){
     wrong[i][2] = 0;
   }
   struct Network net = load_network(model_path);
+  /*
   while (it){
     i = rand() % set.data_number;
     struct training_data data = *(set.data+i);
@@ -154,6 +159,28 @@ void use_model_random(char *model_path, struct training_set set){
     free_double_matrix(a_mat, net.layernb);
     free_double_matrix(z_mat, net.layernb);
     it--;
+  }
+  */
+  for (size_t i = 0; i<set.data_number; i++){
+    struct training_data data = *(set.data+i);
+    double **a_mat = calloc(net.layernb, sizeof(double*));
+    double **z_mat = calloc(net.layernb, sizeof(double*));
+    double* res = feedforward(net, data.inputs, z_mat, a_mat);
+    double confidence;
+    char label = output_to_prediction(data.expected_output, NULL);
+    char prediction = output_to_prediction(res, &confidence);
+    printf("%lu - Expected guess : %c\n", i, label);
+    print_double_arr(data.expected_output, 26);
+    printf("%lu - Network guessed : %c\n", i, prediction);
+    print_double_arr(res, 26);
+    printf("Confidence : %f%%\n", confidence*100);
+    wrong[label-'A'][2] += 1;
+    if (label != prediction){
+      wrong[label-'A'][0]+=1;
+      wrong[label-'A'][1]+=confidence;
+    }
+    free_double_matrix(a_mat, net.layernb);
+    free_double_matrix(z_mat, net.layernb);
   }
   for (size_t i=0; i<26; i++){
     printf("Letter : %c -- Guesses : %f -- Wrong guess number : %f -- Ratio : %f -- Wrong guess average confidence : %f%%\n",
