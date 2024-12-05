@@ -39,8 +39,5 @@ Module.symvers
 Mkfile.old
 dkms.conf
 
-# ignore uncompressed training data DO NOT REMOVE
-uncompressed/
-*.model
-*.zip
+# ignore training data DO NOT REMOVE
 training-set/
