@@ -38,3 +38,6 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+
+# ignore training data DO NOT REMOVE
+training-set/
