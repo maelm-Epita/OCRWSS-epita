@@ -8,6 +8,7 @@
 #define LETTERS_PATH "/tmp/OCR/Letters"
 
 #include "home_screen.h"
+#include "gtk_tools.h"
 
 // On déclare notre fenêtre window
 GtkWidget *window = NULL;
@@ -15,10 +16,9 @@ GtkWidget *box = NULL;
 size_t version = 0;
 
 void quit() {
-  puts("zizi");
   gtk_widget_destroy(box);
   GList *children = gtk_container_get_children(GTK_CONTAINER(window));
-  for (GList *child = children; child != NULL; child = child->next){
+  for (GList *child = children; child != NULL; child = child->next) {
     gtk_widget_destroy(GTK_WIDGET(child->data));
   }
   g_list_free(children);
@@ -31,6 +31,8 @@ int main(int argc, char **argv) {
   // On demande à GTK de s'initialiser : il faut toujours faire passer argc et
   // argv en argument
   gtk_init(&argc, &argv);
+
+  //apply_theme("rose-pine-theme/gtk-3.0/gtk.css");
 
   // On initialise notre window
   window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
