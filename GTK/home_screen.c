@@ -1,7 +1,6 @@
 #include <gtk/gtk.h>
 
-#include "home_screen.h"
-#include "toolchain_screen.h"
+#include "screens.h"
 
 extern GtkWidget *window;
 extern GtkWidget *box;

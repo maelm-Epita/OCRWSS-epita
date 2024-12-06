@@ -7,7 +7,7 @@
 #define IMAGES_PATH "/tmp/OCR/Images"
 #define LETTERS_PATH "/tmp/OCR/Letters"
 
-#include "home_screen.h"
+#include "screens.h"
 #include "gtk_tools.h"
 
 // On déclare notre fenêtre window
@@ -33,6 +33,7 @@ int main(int argc, char **argv) {
   gtk_init(&argc, &argv);
 
   //apply_theme("rose-pine-theme/gtk-3.0/gtk.css");
+  apply_theme("Orchis-Pink/gtk-3.0/gtk.css");
 
   // On initialise notre window
   window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
