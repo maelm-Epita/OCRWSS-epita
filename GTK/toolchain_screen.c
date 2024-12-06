@@ -24,16 +24,19 @@ void toolchain_screen() {
   free(image_path);
 
   GtkWidget *processing_button = gtk_button_new_with_label("Modifier l'image");
-  GtkWidget *solve_button = gtk_button_new_with_label("Resoudre la grille");
+  GtkWidget *solve_button = gtk_button_new_with_label("Résoudre la grille");
+  GtkWidget *frame_button = gtk_button_new_with_label("Encadrer les élements");
   GtkWidget *other_file =
       gtk_button_new_with_label("Selectionner un autre fichier");
 
   g_signal_connect(processing_button, "clicked",
                    G_CALLBACK(image_processing_screen), NULL);
   g_signal_connect(solve_button, "clicked", G_CALLBACK(solving_screen), NULL);
+  g_signal_connect(frame_button, "clicked", G_CALLBACK(framing_screen), NULL);
   g_signal_connect(other_file, "clicked", G_CALLBACK(choose_file), NULL);
   gtk_box_pack_start(GTK_BOX(buttons_box), processing_button, TRUE, TRUE, 10);
   gtk_box_pack_start(GTK_BOX(buttons_box), solve_button, TRUE, TRUE, 10);
+  gtk_box_pack_start(GTK_BOX(buttons_box), frame_button, TRUE, TRUE, 10);
   gtk_box_pack_start(GTK_BOX(buttons_box), other_file, TRUE, TRUE, 10);
 
   gtk_box_pack_start(GTK_BOX(box), drawing_area, TRUE, TRUE, 10);

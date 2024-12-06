@@ -60,20 +60,17 @@ void image_processing_screen(void) {
 
   GtkWidget *undo_b = gtk_button_new_with_label("Undo");
   GtkWidget *redo_b = gtk_button_new_with_label("Redo");
-  GtkWidget *toolchain = gtk_button_new_with_label("Go back");
-  GtkWidget *solve = gtk_button_new_with_label("Try to solve");
+  GtkWidget *toolchain = gtk_button_new_with_label("Valider");
   g_signal_connect(undo_b, "clicked", G_CALLBACK(undo), NULL);
   g_signal_connect(redo_b, "clicked", G_CALLBACK(redo), NULL);
   g_signal_connect(toolchain, "clicked", G_CALLBACK(toolchain_screen), NULL);
-  g_signal_connect(solve, "clicked", G_CALLBACK(solving_screen), NULL);
   gtk_box_pack_start(GTK_BOX(action_buttons), undo_b, TRUE, TRUE, 10);
   gtk_box_pack_start(GTK_BOX(action_buttons), redo_b, TRUE, TRUE, 10);
   gtk_box_pack_start(GTK_BOX(action_buttons), toolchain, TRUE, TRUE, 10);
-  gtk_box_pack_start(GTK_BOX(action_buttons), solve, TRUE, TRUE, 10);
 
   GtkWidget *grayscale = gtk_button_new_with_label("Grayscale");
-  GtkWidget *black_and_white_b = gtk_button_new_with_label("Black and White");
-  GtkWidget *negatif_b = gtk_button_new_with_label("Negatif");
+  GtkWidget *black_and_white_b = gtk_button_new_with_label("Noir et blanc");
+  GtkWidget *negatif_b = gtk_button_new_with_label("Négatif");
   GtkWidget *gauss_b = gtk_button_new_with_label("Gauss");
   g_signal_connect(grayscale, "clicked", G_CALLBACK(exec_filter), gray_level);
   g_signal_connect(black_and_white_b, "clicked", G_CALLBACK(exec_filter),
@@ -86,10 +83,10 @@ void image_processing_screen(void) {
   gtk_box_pack_start(GTK_BOX(filter_buttons), negatif_b, TRUE, TRUE, 10);
   gtk_box_pack_start(GTK_BOX(filter_buttons), gauss_b, TRUE, TRUE, 10);
 
-  GtkWidget *inc_contrast = gtk_button_new_with_label("Contrast +");
-  GtkWidget *dec_contrast = gtk_button_new_with_label("Contrast -");
-  GtkWidget *inc_luminosity = gtk_button_new_with_label("Luminosity +");
-  GtkWidget *dec_luminosity = gtk_button_new_with_label("Luminosity -");
+  GtkWidget *inc_contrast = gtk_button_new_with_label("Contraste +");
+  GtkWidget *dec_contrast = gtk_button_new_with_label("Contraste -");
+  GtkWidget *inc_luminosity = gtk_button_new_with_label("Luminosité +");
+  GtkWidget *dec_luminosity = gtk_button_new_with_label("Luminosité -");
   g_signal_connect(inc_contrast, "clicked", G_CALLBACK(exec_filter),
                    increase_contrast);
   g_signal_connect(dec_contrast, "clicked", G_CALLBACK(exec_filter),

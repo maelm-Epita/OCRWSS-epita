@@ -2,6 +2,12 @@
 #include <gtk/gtk.h>
 
 extern GtkWidget *window;
+extern gboolean DrawGridRectangle;
+extern gboolean DrawListRectangle;
+extern gdouble grid_start_coord[2];
+extern gdouble grid_end_coord[2];
+extern gdouble list_start_coord[2];
+extern gdouble list_end_coord[2];
 
 cairo_surface_t *create_cairo_surface_from_pixbuf(const GdkPixbuf *pixbuf) {
   int width = gdk_pixbuf_get_width(pixbuf);
@@ -43,6 +49,31 @@ gboolean on_draw(GtkWidget *widget, cairo_t *cr, gpointer data) {
   cairo_scale(cr, scale, scale);
   cairo_set_source_surface(cr, surface, 0, 0);
   cairo_paint(cr);
+
+  if (DrawGridRectangle) {
+    int start_x = (grid_start_coord[0] - offset_x)/scale;
+    int start_y = (grid_start_coord[1] - offset_y)/scale;
+    int end_x = (grid_end_coord[0] - offset_x)/scale;
+    int end_y = (grid_end_coord[1] - offset_y)/scale;
+    double width = end_x - start_x;
+    double height = end_y - start_y;
+    cairo_set_line_width(cr, 2);
+    cairo_set_source_rgb(cr, 1, 0, 0);  // Couleur rouge
+    cairo_rectangle(cr, start_x, start_y, width, height);
+    cairo_stroke(cr);  // Appliquer les dessins
+  }
+  if (DrawGridRectangle) {
+    int start_x = (list_start_coord[0] - offset_x)/scale;
+    int start_y = (list_start_coord[1] - offset_y)/scale;
+    int end_x = (list_end_coord[0] - offset_x)/scale;
+    int end_y = (list_end_coord[1] - offset_y)/scale;
+    double width = end_x - start_x;
+    double height = end_y - start_y;
+    cairo_set_line_width(cr, 2);
+    cairo_set_source_rgb(cr, 0, 0, 1);  // Couleur bleue
+    cairo_rectangle(cr, start_x, start_y, width, height);
+    cairo_stroke(cr);  // Appliquer les dessins
+  }
 
   return FALSE;
 }

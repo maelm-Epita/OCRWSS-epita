@@ -16,4 +16,5 @@ void solving_screen(void);
 
 void detection_screen(void);
 
+void framing_screen(void);
 #endif
