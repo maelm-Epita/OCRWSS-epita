@@ -46,3 +46,25 @@ gboolean on_draw(GtkWidget *widget, cairo_t *cr, gpointer data) {
 
   return FALSE;
 }
+
+void apply_theme(const char *theme_path) {
+    GtkSettings *settings = gtk_settings_get_default();
+    g_object_set(settings, "gtk-theme-name", "rose-pine-dawn", NULL);
+    GtkCssProvider *provider = gtk_css_provider_new();
+    GdkDisplay *display = gdk_display_get_default();
+    GdkScreen *screen = gdk_display_get_default_screen(display);
+
+    // Charge le fichier CSS
+    if (!gtk_css_provider_load_from_path(provider, theme_path, NULL)) {
+        g_printerr("Impossible de charger le fichier CSS : %s\n", theme_path);
+        return;
+    }
+
+    // Applique le style au screen
+    gtk_style_context_add_provider_for_screen(screen,
+                                              GTK_STYLE_PROVIDER(provider),
+                                              GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+
+    g_object_unref(provider);
+}
+

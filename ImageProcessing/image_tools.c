@@ -6,6 +6,13 @@
 
 #define BRIGHTNESS_FACTOR 2.0
 
+void PutPixel32_nolock(SDL_Surface *surface, int x, int y, Uint8 r, Uint8 g,
+                       Uint8 b) {
+  Uint8 *pixel = (Uint8 *)surface->pixels;
+  pixel += (y * surface->pitch) + (x * surface->format->BytesPerPixel);
+  *((Uint32 *)pixel) = SDL_MapRGB(surface->format, r, g, b);
+}
+
 void get_luminance(Uint32 pixel, SDL_PixelFormat *format, Uint8 *r, Uint8 *g,
                    Uint8 *b) {
   SDL_GetRGB(pixel, format, r, g, b);
@@ -14,7 +21,7 @@ void get_luminance(Uint32 pixel, SDL_PixelFormat *format, Uint8 *r, Uint8 *g,
   double lum_b = *b / 255.0;
   double luminance = 0.299 * lum_r + 0.587 * lum_g + 0.114 * lum_b;
 
-  double res;
+  double res = 0;
   if (luminance <= 0.0031308)
     res = 12.92 * luminance;
   else
@@ -23,47 +30,51 @@ void get_luminance(Uint32 pixel, SDL_PixelFormat *format, Uint8 *r, Uint8 *g,
 }
 
 void gray_level(SDL_Surface *surface) {
-  Uint32 *pixels = surface->pixels;
-  size_t size = surface->w * surface->h;
   SDL_LockSurface(surface);
   SDL_PixelFormat *format = surface->format;
 
-  for (size_t i = 0; i < size; i++) {
-    Uint8 r, g, b;
-    Uint32 *pixel = pixels + i;
-    get_luminance(*pixel, format, &r, &g, &b);
-    *pixel = SDL_MapRGB(format, r, g, b);
+  for (int j = 0; j < surface->h; j++) {
+    Uint8 *row = (Uint8 *)surface->pixels + j * surface->pitch;
+    for (int i = 0; i < surface->w; i++) {
+      Uint8 r, g, b;
+      Uint32 *pixel = (Uint32 *)(row + i * surface->format->BytesPerPixel);
+      get_luminance(*pixel, format, &r, &g, &b);
+      PutPixel32_nolock(surface, i, j, r, g, b);
+    }
   }
-
   SDL_UnlockSurface(surface);
 }
 
 void black_and_white(SDL_Surface *surface) {
-  Uint32 *pixels = surface->pixels;
-  size_t size = surface->w * surface->h;
   SDL_LockSurface(surface);
   SDL_PixelFormat *format = surface->format;
 
-  for (size_t i = 0; i < size; i++) {
-    Uint8 r, g, b, n;
-    SDL_GetRGB(pixels[i], format, &r, &g, &b);
-    n = (r + g + b) / 3 > 170 ? 255 : 0;
-    pixels[i] = SDL_MapRGB(format, n, n, n);
+  for (int j = 0; j < surface->h; j++) {
+    Uint8 *row = (Uint8 *)surface->pixels + j * surface->pitch;
+    for (int i = 0; i < surface->w; i++) {
+      Uint32 *pixel = (Uint32 *)(row + i * surface->format->BytesPerPixel);
+      Uint8 r, g, b, n;
+      SDL_GetRGB(*pixel, format, &r, &g, &b);
+      n = (r + g + b) / 3 > 170 ? 255 : 0;
+      PutPixel32_nolock(surface, i, j, n, n, n);
+    }
   }
 
   SDL_UnlockSurface(surface);
 }
 
 void negatif(SDL_Surface *surface) {
-  Uint32 *pixels = surface->pixels;
-  size_t size = surface->w * surface->h;
   SDL_LockSurface(surface);
   SDL_PixelFormat *format = surface->format;
 
-  for (size_t i = 0; i < size; i++) {
-    Uint8 r, g, b;
-    SDL_GetRGB(pixels[i], format, &r, &g, &b);
-    pixels[i] = SDL_MapRGB(format, 255 - r, 255 - g, 255 - b);
+  for (int j = 0; j < surface->h; j++) {
+    Uint8 *row = (Uint8 *)surface->pixels + j * surface->pitch;
+    for (int i = 0; i < surface->w; i++) {
+      Uint32 *pixel = (Uint32 *)(row + i * surface->format->BytesPerPixel);
+      Uint8 r, g, b;
+      SDL_GetRGB(*pixel, format, &r, &g, &b);
+      PutPixel32_nolock(surface, i, j, 255 - r, 255 - g, 255 - b);
+    }
   }
 
   SDL_UnlockSurface(surface);
@@ -76,20 +87,22 @@ Uint8 f(Uint8 c, double n) {
     return 255 - f(255 - c, n);
 }
 void contrast(SDL_Surface *surface, double n) {
-  Uint32 *pixels = surface->pixels;
-  size_t size = surface->w * surface->h;
   SDL_LockSurface(surface);
   SDL_PixelFormat *format = surface->format;
 
-  for (size_t i = 0; i < size; i++) {
-    Uint8 r, g, b;
-    SDL_GetRGB(pixels[i], format, &r, &g, &b);
+  for (int j = 0; j < surface->h; j++) {
+    Uint8 *row = (Uint8 *)surface->pixels + j * surface->pitch;
+    for (int i = 0; i < surface->w; i++) {
+      Uint32 *pixel = (Uint32 *)(row + i * surface->format->BytesPerPixel);
+      Uint8 r, g, b;
+      SDL_GetRGB(*pixel, format, &r, &g, &b);
 
-    r = f(r, n);
-    g = f(g, n);
-    b = f(b, n);
+      r = f(r, n);
+      g = f(g, n);
+      b = f(b, n);
 
-    pixels[i] = SDL_MapRGB(format, r, g, b);
+      PutPixel32_nolock(surface, i, j, r, g, b);
+    }
   }
 
   SDL_UnlockSurface(surface);
@@ -98,20 +111,22 @@ void increase_contrast(SDL_Surface *surface) { contrast(surface, 2); }
 void decrease_contrast(SDL_Surface *surface) { contrast(surface, -2); }
 
 void change_brightness(SDL_Surface *surface, double n) {
-  Uint32 *pixels = (Uint32 *)surface->pixels;
-  size_t size = surface->w * surface->h;
   SDL_LockSurface(surface);
   SDL_PixelFormat *format = surface->format;
 
-  for (size_t i = 0; i < size; i++) {
-    Uint8 r, g, b;
-    SDL_GetRGB(pixels[i], format, &r, &g, &b);
+  for (int j = 0; j < surface->h; j++) {
+    Uint8 *row = (Uint8 *)surface->pixels + j * surface->pitch;
+    for (int i = 0; i < surface->w; i++) {
+      Uint32 *pixel = (Uint32 *)(row + i * surface->format->BytesPerPixel);
+      Uint8 r, g, b;
+      SDL_GetRGB(*pixel, format, &r, &g, &b);
 
-    r = (Uint8)(255 * SDL_pow((double)r / 255.0, n));
-    g = (Uint8)(255 * SDL_pow((double)g / 255.0, n));
-    b = (Uint8)(255 * SDL_pow((double)b / 255.0, n));
+      r = (Uint8)(255 * SDL_pow((double)r / 255.0, n));
+      g = (Uint8)(255 * SDL_pow((double)g / 255.0, n));
+      b = (Uint8)(255 * SDL_pow((double)b / 255.0, n));
 
-    pixels[i] = SDL_MapRGB(format, r, g, b);
+      PutPixel32_nolock(surface, i, j, r, g, b);
+    }
   }
 
   SDL_UnlockSurface(surface);

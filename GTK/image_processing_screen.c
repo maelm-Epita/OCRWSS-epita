@@ -4,9 +4,7 @@
 
 #include "../ImageProcessing/image_tools.h"
 #include "gtk_tools.h"
-#include "image_processing_screen.h"
-#include "solving_screen.h"
-#include "toolchain_screen.h"
+#include "screens.h"
 
 extern GtkWidget *window;
 extern GtkWidget *box;
