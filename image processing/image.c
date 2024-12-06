@@ -1,3 +1,5 @@
+#include <SDL2/SDL_pixels.h>
+#include <SDL2/SDL_stdinc.h>
 #define _GNU_SOURCE
 
 #include <SDL2/SDL.h>
@@ -11,6 +13,7 @@
 
 #include "image_rotate.h"
 #include "image_tools.h"
+#include "resize.h"
 
 #define STEP_ANGLE 5
 #define SDL_SaveBMP(surface, file)                                             \
@@ -66,6 +69,7 @@ int main(int argc, char *argv[]) {
           angle += STEP_ANGLE;
           break;
         case SDL_SCANCODE_G:
+          printf("enter in the fct\n");
           gray_level(image);
           break;
         case SDL_SCANCODE_B:
@@ -105,6 +109,16 @@ int main(int argc, char *argv[]) {
           SDL_SaveBMP(image, "Preprocess.bmp");
           //printf("Saved %s\n", name);
           //free(name);
+        case SDL_SCANCODE_U:
+          if (image->format->BitsPerPixel != 8){
+              SDL_Surface *grayone = SDL_ConvertSurfaceFormat(image, SDL_PIXELFORMAT_INDEX8, 0);
+              SDL_FreeSurface(image);
+              image = grayone;
+          }
+          SDL_Surface *resized = resize(image);
+          SDL_free(image);
+          image = resized;
+          break;
         default:
           break;
         }
