@@ -1,101 +1,112 @@
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
-#include <gtk/gtk.h>
 #include "../ImageProcessing/image_tools.h"
 #include "gtk_tools.h"
 #include "screens.h"
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
+#include <gtk/gtk.h>
 
 extern GtkWidget *window;
 extern GtkWidget *box;
 extern size_t version;
+extern double offset_x, offset_y;
+extern double scale;
+
+int image_w = 0, image_h = 0;
+
 gboolean DrawGridRectangle;
 gboolean DrawListRectangle;
-gdouble grid_start_coord[2];
-gdouble grid_end_coord[2];
-gdouble list_start_coord[2];
-gdouble list_end_coord[2];
+gdouble grid_coord[4] = {0, 0, 0, 0};
+gdouble list_coord[4] = {0, 0, 0, 0};
 GtkWidget *indication_label;
 gint click_coordinates[2];
 int fg = 0;
 int fl = 0;
 
 gboolean drawing_rectangle(GtkWidget *widget, cairo_t *cr, gpointer data) {
-  if (fg == 3){
+  if (fg == 3)
     fg = 0;
-  }
-  if (fl == 3){
+  if (fl == 3)
     fl = 0;
-  }
   return FALSE;
 }
 
-void frame_grid(void){
-  if (fg == 0){
+void frame_grid(void) {
+  if (fg == 0) {
     DrawGridRectangle = FALSE;
     fg = 1;
     fl = 0;
-    gtk_label_set_text(GTK_LABEL(indication_label), "Encadrement de la grille : \nSelectionnez le premier coin.\n");
-  }
-  else if (fg == 2){
-    g_print("First Coord : %d, %d\n", click_coordinates[0], click_coordinates[1]);
-    grid_start_coord[0] = click_coordinates[0];
-    grid_start_coord[1] = click_coordinates[1];
-  }
-  else if (fg == 3){
-    g_print("Second Coord : %d, %d\n", click_coordinates[0], click_coordinates[1]);
-    grid_end_coord[0] = click_coordinates[0];
-    grid_end_coord[1] = click_coordinates[1];
+    gtk_label_set_text(
+        GTK_LABEL(indication_label),
+        "Encadrement de la grille : \nSelectionnez le premier coin.\n");
+  } else if (fg == 2) {
+    g_print("First Coord : %d, %d\n", click_coordinates[0],
+            click_coordinates[1]);
+    grid_coord[0] = click_coordinates[0];
+    grid_coord[1] = click_coordinates[1];
+  } else if (fg == 3) {
+    g_print("Second Coord : %d, %d\n", click_coordinates[0],
+            click_coordinates[1]);
+    grid_coord[2] = click_coordinates[0];
+    grid_coord[3] = click_coordinates[1];
     DrawGridRectangle = TRUE;
   }
-}                        
+}
 
-void frame_list(void){
-  if (fl == 0){
+void frame_list(void) {
+  if (fl == 0) {
     DrawListRectangle = FALSE;
     fl = 1;
     fg = 0;
-    gtk_label_set_text(GTK_LABEL(indication_label), "Encadrement de la grille : \nSelectionnez le premier coin.\n");
-  }
-  else if (fl == 2){
-    g_print("First Coord : %d, %d\n", click_coordinates[0], click_coordinates[1]);
-    list_start_coord[0] = click_coordinates[0];
-    list_start_coord[1] = click_coordinates[1];
-    gtk_label_set_text(GTK_LABEL(indication_label), "Encadrement de la grille : \nSelectionnez le second coin.\n");
-  }
-  else if (fl == 3){
-    g_print("Second Coord : %d, %d\n", click_coordinates[0], click_coordinates[1]);
-    list_end_coord[0] = click_coordinates[0];
-    list_end_coord[1] = click_coordinates[1];
+    gtk_label_set_text(
+        GTK_LABEL(indication_label),
+        "Encadrement de la grille : \nSelectionnez le premier coin.\n");
+  } else if (fl == 2) {
+    g_print("First Coord : %d, %d\n", click_coordinates[0],
+            click_coordinates[1]);
+    list_coord[0] = click_coordinates[0];
+    list_coord[1] = click_coordinates[1];
+    gtk_label_set_text(
+        GTK_LABEL(indication_label),
+        "Encadrement de la grille : \nSelectionnez le second coin.\n");
+  } else if (fl == 3) {
+    g_print("Second Coord : %d, %d\n", click_coordinates[0],
+            click_coordinates[1]);
+    list_coord[2] = click_coordinates[0];
+    list_coord[3] = click_coordinates[1];
     DrawListRectangle = TRUE;
   }
 }
 
-gboolean drawing_clicked(GtkWidget *widget, GdkEventButton *event, gpointer data){
-  if (event->button==1){
-    click_coordinates[0] = event->x;
-    click_coordinates[1] = event->y;
-    g_print("Click Coord : %d, %d\n", click_coordinates[0], click_coordinates[1]);
-    if (fg == 1){
-      fg = 2;
-      frame_grid();
+gboolean drawing_clicked(GtkWidget *widget, GdkEventButton *event,
+                         gpointer data) {
+  if (event->button == 1) {
+    click_coordinates[0] = (event->x - offset_x) / scale;
+    click_coordinates[1] = (event->y - offset_y) / scale;
+    if (click_coordinates[0] >= 0 && click_coordinates[0] < image_w &&
+        click_coordinates[1] >= 0 && click_coordinates[1] < image_h) {
+
+      g_print("Click Coord : %d, %d\n", click_coordinates[0],
+              click_coordinates[1]);
+      if (fg == 1) {
+        fg = 2;
+        frame_grid();
+      } else if (fg == 2) {
+        fg = 3;
+        frame_grid();
+        gtk_widget_queue_draw(widget);
+        gtk_label_set_text(GTK_LABEL(indication_label), "");
+      } else if (fl == 1) {
+        fl = 2;
+        frame_list();
+      } else if (fl == 2) {
+        fl = 3;
+        frame_list();
+        gtk_widget_queue_draw(widget);
+        gtk_label_set_text(GTK_LABEL(indication_label), "");
+      }
     }
-    else if (fg == 2){
-      fg = 3;
-      frame_grid();
-      gtk_widget_queue_draw(widget);
-      gtk_label_set_text(GTK_LABEL(indication_label), "");
-    }
-    else if (fl == 1){
-      fl = 2;
-      frame_list();
-    }
-    else if (fl == 2){
-      fl = 3;
-      frame_list();
-      gtk_widget_queue_draw(widget);
-      gtk_label_set_text(GTK_LABEL(indication_label), "");
-    }
-  }
+  } else
+    puts("clic en dehors de l'image");
   return FALSE;
 }
 
@@ -115,20 +126,22 @@ void framing_screen(void) {
   GtkWidget *drawing_area = gtk_drawing_area_new();
   g_signal_connect(drawing_area, "draw", G_CALLBACK(on_draw), image_surface);
   free(image_path);
-  
+
   // Label
-  indication_label =
-    gtk_label_new("");
+  indication_label = gtk_label_new("");
   // buttons
   GtkWidget *toolchain_button = gtk_button_new_with_label("Valider");
   GtkWidget *grid_button = gtk_button_new_with_label("Encadrer la grille");
-  GtkWidget *list_button = gtk_button_new_with_label("Encadrer la liste de mots");
+  GtkWidget *list_button =
+      gtk_button_new_with_label("Encadrer la liste de mots");
   // events
-  gtk_widget_add_events(drawing_area, GDK_BUTTON_PRESS_MASK);
-  g_signal_connect(toolchain_button, "clicked", G_CALLBACK(toolchain_screen), NULL);
+  gtk_widget_set_events(drawing_area, GDK_BUTTON_PRESS_MASK);
+  g_signal_connect(toolchain_button, "clicked", G_CALLBACK(toolchain_screen),
+                   NULL);
   g_signal_connect(grid_button, "clicked", G_CALLBACK(frame_grid), NULL);
   g_signal_connect(list_button, "clicked", G_CALLBACK(frame_list), NULL);
-  g_signal_connect(drawing_area, "button-press-event", G_CALLBACK(drawing_clicked), NULL);
+  g_signal_connect(drawing_area, "button-press-event",
+                   G_CALLBACK(drawing_clicked), NULL);
   g_signal_connect(drawing_area, "draw", G_CALLBACK(drawing_rectangle), NULL);
 
   // label final setup

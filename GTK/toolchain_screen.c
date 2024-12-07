@@ -14,7 +14,7 @@ void toolchain_screen() {
 
   gtk_container_remove(GTK_CONTAINER(window), box);
   box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);
-  GtkWidget *buttons_box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
+  GtkWidget *buttons_box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
 
   GdkPixbuf *pixbuf = gdk_pixbuf_new_from_file(image_path, NULL);
   cairo_surface_t *image_surface = create_cairo_surface_from_pixbuf(pixbuf);
@@ -34,13 +34,13 @@ void toolchain_screen() {
   g_signal_connect(solve_button, "clicked", G_CALLBACK(solving_screen), NULL);
   g_signal_connect(frame_button, "clicked", G_CALLBACK(framing_screen), NULL);
   g_signal_connect(other_file, "clicked", G_CALLBACK(choose_file), NULL);
-  gtk_box_pack_start(GTK_BOX(buttons_box), processing_button, TRUE, TRUE, 10);
-  gtk_box_pack_start(GTK_BOX(buttons_box), solve_button, TRUE, TRUE, 10);
-  gtk_box_pack_start(GTK_BOX(buttons_box), frame_button, TRUE, TRUE, 10);
-  gtk_box_pack_start(GTK_BOX(buttons_box), other_file, TRUE, TRUE, 10);
+  gtk_box_pack_start(GTK_BOX(buttons_box), processing_button, TRUE, TRUE, 5);
+  gtk_box_pack_start(GTK_BOX(buttons_box), solve_button, TRUE, TRUE, 5);
+  gtk_box_pack_start(GTK_BOX(buttons_box), frame_button, TRUE, TRUE, 5);
+  gtk_box_pack_start(GTK_BOX(buttons_box), other_file, TRUE, TRUE, 5);
 
-  gtk_box_pack_start(GTK_BOX(box), drawing_area, TRUE, TRUE, 10);
-  gtk_box_pack_start(GTK_BOX(box), buttons_box, FALSE, FALSE, 10);
+  gtk_box_pack_start(GTK_BOX(box), drawing_area, TRUE, TRUE, 5);
+  gtk_box_pack_start(GTK_BOX(box), buttons_box, FALSE, FALSE, 5);
   gtk_container_add(GTK_CONTAINER(window), box);
 
   gtk_widget_show_all(window);
