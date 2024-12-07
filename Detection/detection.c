@@ -214,25 +214,33 @@ void detect_grid_and_word_list(SDL_Surface *surface) {
   int nb_block = 0;
 
   // browse by block
+  // the image subdivided into blocks of block_size
   for (int by = 0; by < h; by += BLOCK_SIZE) {
     for (int bx = 0; bx < w; bx += BLOCK_SIZE) {
+      // total number of black pixels in the block
       size_t nb_black_p = 0;
+      // total number of pixels in the block
       int total = BLOCK_SIZE * BLOCK_SIZE;
-
       // get the numver of black pixels
+      // we browse pixel by pixel through the block, making sure
+      // not to go outside the image's bounds
       for (int y = by; y < by + BLOCK_SIZE && y < h; y++) {
         for (int x = bx; x < bx + BLOCK_SIZE && x < w; x++) {
+          // we get a component of the pixel's color (does not matter because the image will be black and white)
           Uint8 r;
           SDL_GetRGB(pixels[y * w + x], surface->format, &r, &r, &r);
+          // if this component is 0 then we know the pixel is black
+          // if not it would be white (because the image is in black and white
           if (!r)
             nb_black_p++;
         }
       }
-
+      // we get the density of the block
       double density = (double)nb_black_p / (double)total;
       if (density > THRESHOLD) {
+        // we try to see if any block is adjacent
         block *blocka = get_block_adjacent(list_block, nb_block, bx, by);
-
+        // if not we simply add the block to our list of blocks
         if (blocka == NULL) {
           nb_block++;
           list_block = realloc(list_block, nb_block * sizeof(struct block *));
@@ -240,18 +248,19 @@ void detect_grid_and_word_list(SDL_Surface *surface) {
           list_block[nb_block - 1]->min = (point){bx, by};
           list_block[nb_block - 1]->max =
               (point){bx + BLOCK_SIZE, by + BLOCK_SIZE};
+        // otherwise we merge the two blocks
         } else {
           blocka->min.x = blocka->min.x < bx ? blocka->min.x : bx;
           blocka->min.y = blocka->min.y < by ? blocka->min.y : by;
           blocka->max.x = blocka->max.x > bx ? blocka->max.x : bx;
           blocka->max.y = blocka->max.y > by ? blocka->max.y : by;
         }
-
+        // we check if these operations created any more merges to be done
         check_merge(list_block, nb_block);
       }
     }
   }
-
+  // after finding all blocks, 
   for (int b = 0; b < nb_block; b++) {
     block *block = list_block[b];
     if (block != NULL) {
