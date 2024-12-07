@@ -51,10 +51,12 @@ gboolean on_draw(GtkWidget *widget, cairo_t *cr, gpointer data) {
   cairo_paint(cr);
 
   if (DrawGridRectangle) {
-    int start_x = (grid_coord[0] - offset_x) / scale;
-    int start_y = (grid_coord[1] - offset_y) / scale;
-    int end_x = (grid_coord[2] - offset_x) / scale;
-    int end_y = (grid_coord[3] - offset_y) / scale;
+    int start_x = grid_coord[0] * scale + offset_x;
+    printf("scale: %lf  offset_x: %lf  grid: %lf  start: %d\n", scale, offset_x,
+           grid_coord[0], start_x);
+    int start_y = grid_coord[1] * scale + offset_y;
+    int end_x = grid_coord[2] * scale + offset_x;
+    int end_y = grid_coord[3] * scale + offset_y;
     double width = end_x - start_x;
     double height = end_y - start_y;
     cairo_set_line_width(cr, 1);
