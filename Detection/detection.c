@@ -322,6 +322,7 @@ int main(int argc, char *argv[]) {
     SDL_UpdateWindowSurface(screen);
     puts("END");
     wait_for_keypressed();
+    wait_for_keypressed();
 
     SDL_FreeSurface(image);
 
