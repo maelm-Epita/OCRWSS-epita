@@ -31,14 +31,14 @@ void exec_filter(__attribute__((unused)) GtkWidget *widget,
                  gpointer user_data) {
   void (*filter)(SDL_Surface *surface) = user_data;
   char *image_path = NULL;
-  asprintf(&image_path, "%s/image-%li.png", IMAGES_PATH, version);
+  asprintf(&image_path, "%s/image-%li.bmp", IMAGES_PATH, version);
   SDL_Surface *surface = IMG_Load(image_path);
   filter(surface);
   version++;
   max_version = version > max_version ? version : max_version;
   free(image_path);
-  asprintf(&image_path, "%s/image-%li.png", IMAGES_PATH, version);
-  IMG_SavePNG(surface, image_path);
+  asprintf(&image_path, "%s/image-%li.bmp", IMAGES_PATH, version);
+  SDL_SaveBMP(surface, image_path);
   free(image_path);
   SDL_FreeSurface(surface);
   image_processing_screen();
@@ -46,14 +46,14 @@ void exec_filter(__attribute__((unused)) GtkWidget *widget,
 
 void exec_rotate(){
   char *image_path = NULL;
-  asprintf(&image_path, "%s/image-%li.png", IMAGES_PATH, version);
+  asprintf(&image_path, "%s/image-%li.bmp", IMAGES_PATH, version);
   SDL_Surface *surface = IMG_Load(image_path);
   surface = autoRotate(surface);
   version++;
   max_version = version > max_version ? version : max_version;
   free(image_path);
-  asprintf(&image_path, "%s/image-%li.png", IMAGES_PATH, version);
-  IMG_SavePNG(surface, image_path);
+  asprintf(&image_path, "%s/image-%li.bmp", IMAGES_PATH, version);
+  SDL_SaveBMP(surface, image_path);
   free(image_path);
   SDL_FreeSurface(surface);
   image_processing_screen();
@@ -61,7 +61,7 @@ void exec_rotate(){
 
 void image_processing_screen(void) {
   char *image_path = NULL;
-  asprintf(&image_path, "%s/image-%li.png", IMAGES_PATH, version);
+  asprintf(&image_path, "%s/image-%li.bmp", IMAGES_PATH, version);
 
   gtk_container_remove(GTK_CONTAINER(window), box);
   box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
@@ -79,7 +79,7 @@ void image_processing_screen(void) {
 
   GtkWidget *undo_b = gtk_button_new_with_label("Undo");
   GtkWidget *redo_b = gtk_button_new_with_label("Redo");
-  GtkWidget *toolchain = gtk_button_new_with_label("Valider");
+  GtkWidget *toolchain = gtk_button_new_with_label("Validate");
   g_signal_connect(undo_b, "clicked", G_CALLBACK(undo), NULL);
   g_signal_connect(redo_b, "clicked", G_CALLBACK(redo), NULL);
   g_signal_connect(toolchain, "clicked", G_CALLBACK(toolchain_screen), NULL);

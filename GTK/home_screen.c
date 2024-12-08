@@ -9,7 +9,8 @@ extern size_t version;
 void open_file(char *filename) {
   char *cmd = NULL;
   version = 0;
-  asprintf(&cmd, "magick \"%s\" /tmp/OCR/Images/image-0.png", filename);
+  asprintf(&cmd, "magick \"%s\" /tmp/OCR/Images/image-0.bmp", filename);
+  puts(cmd);
   system(cmd);
   free(cmd);
 
@@ -29,13 +30,8 @@ void choose_file(void) {
   if (res == GTK_RESPONSE_ACCEPT) {
     char *filename = NULL;
     GtkFileChooser *chooser = GTK_FILE_CHOOSER(dialog);
-    GtkFileFilter *filter = gtk_file_filter_new();
-    gtk_file_filter_add_pattern(filter, "*.png");
-    gtk_file_filter_add_pattern(filter, "*.bmp");
-    gtk_file_filter_add_pattern(filter, "*.jpg");
-    gtk_file_filter_add_pattern(filter, "*.jpeg");
-    gtk_file_chooser_add_filter(chooser, filter);
     filename = gtk_file_chooser_get_filename(chooser);
+    puts(filename);
     open_file(filename);
     g_free(filename);
   }

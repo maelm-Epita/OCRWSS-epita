@@ -104,11 +104,11 @@ void framing_screen(void) {
 
   // image path setup
   char *image_path = NULL;
-  asprintf(&image_path, "cp %s/image-%li.png %s/image-detection.png",
+  asprintf(&image_path, "cp %s/image-%li.bmp %s/image-detection.bmp",
            IMAGES_PATH, version, IMAGES_PATH);
   system(image_path);
   free(image_path);
-  asprintf(&image_path, "%s/image-detection.png", IMAGES_PATH);
+  asprintf(&image_path, "%s/image-detection.bmp", IMAGES_PATH);
 
   cairo_surface_destroy(image_surface);
   GdkPixbuf *pixbuf = gdk_pixbuf_new_from_file(image_path, NULL);

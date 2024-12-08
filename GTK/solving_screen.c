@@ -9,6 +9,9 @@ extern GtkWidget *box;
 extern size_t version;
 extern cairo_surface_t *image_surface;
 
+extern DrawingData DrawGrid;
+extern DrawingData DrawWords;
+
 void save_file() {
   GtkWidget *dialog;
   GtkFileChooser *chooser;
@@ -27,22 +30,25 @@ void save_file() {
     char *filename;
 
     char *image_path = NULL;
-    // asprintf(&image_path, "%s/image-solve.png", IMAGES_PATH);
-    image_path = "/home/lepotototor/nvam.png";
+    asprintf(&image_path, "%s/image-%li.bmp", IMAGES_PATH, version);
+    // image_path = "/home/lepotototor/nvam.bmp";
     filename = gtk_file_chooser_get_filename(chooser);
-    IMG_SavePNG(IMG_Load(image_path), filename);
+    SDL_Surface *surface = IMG_Load(image_path);
+    SDL_SaveBMP(surface, filename);
+    SDL_FreeSurface(surface);
     // save_to_file(filename);
     g_free(filename);
-    // free(image_path);
+    free(image_path);
   }
 
   gtk_widget_destroy(dialog);
 }
 
 void solving_screen(void) {
+  puts("heeere");
   char *image_path = NULL;
-  // asprintf(&image_path, "%s/image-solve.png", IMAGES_PATH);
-  image_path = "/home/lepotototor/nvam.png";
+  asprintf(&image_path, "%s/image-%li.bmp", IMAGES_PATH, version);
+  // image_path = "/home/lepotototor/nvam.bmp";
 
   gtk_container_remove(GTK_CONTAINER(window), box);
   box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);
@@ -55,7 +61,7 @@ void solving_screen(void) {
   g_object_unref(pixbuf);
   g_signal_connect(drawing_area, "draw", G_CALLBACK(on_draw), image_surface);
 
-  // free(image_path);
+  free(image_path);
 
   GtkWidget *processing_button = gtk_button_new_with_label("Remodifiy Image");
   GtkWidget *save_button = gtk_button_new_with_label("Save the grid");
@@ -64,7 +70,7 @@ void solving_screen(void) {
 
   g_signal_connect(processing_button, "clicked",
                    G_CALLBACK(image_processing_screen), NULL);
-  g_signal_connect(save_button, "clicked", G_CALLBACK(solving_screen), NULL);
+  g_signal_connect(save_button, "clicked", G_CALLBACK(save_file), NULL);
   g_signal_connect(other_file, "clicked", G_CALLBACK(choose_file), NULL);
   g_signal_connect(detection_button, "clicked", G_CALLBACK(detection_screen),
                    NULL);
