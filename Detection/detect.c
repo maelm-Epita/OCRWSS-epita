@@ -431,8 +431,8 @@ void detect(SDL_Surface *img, point grid_start, point grid_end, point list_start
   // Make 2d word list matrix
   // Add cells according to coordinates
   // Load AI
-  printf("Loading AI model...\n");
-  struct Network net = load_network(NETWORK_PATH);
+  //printf("Loading AI model...\n");
+  //struct Network net = load_network(NETWORK_PATH);
   // For each cell, save it and call the network on it 
   // Then add it to the corresponding place in the grid matrix or word list
 
