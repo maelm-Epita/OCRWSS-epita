@@ -137,27 +137,6 @@ SDL_Surface *rotate(SDL_Surface *original_surface, double angle) {
   return surface;
 }
 
-/*
-void update_image(double angle) {
-    current_angle = angle;
-    int width = gdk_pixbuf_get_width(original_pixbuf);
-    int height = gdk_pixbuf_get_height(original_pixbuf);
-    cairo_surface_t *surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32,
-width, height); cairo_t *cr = cairo_create(surface);
-    cairo_set_source_rgb(cr, 1.0, 1.0, 1.0);
-    cairo_paint(cr);
-    cairo_translate(cr, width / 2.0, height / 2.0);
-    cairo_rotate(cr, current_angle * G_PI / 180.0);
-    cairo_translate(cr, -width / 2.0, -height / 2.0);
-    gdk_cairo_set_source_pixbuf(cr, original_pixbuf, 0, 0);
-    cairo_paint(cr);
-    GdkPixbuf *rotated_pixbuf = gdk_pixbuf_get_from_surface(surface, 0, 0,
-width, height); gtk_image_set_from_pixbuf(GTK_IMAGE(original_image),
-rotated_pixbuf); cairo_destroy(cr); cairo_surface_destroy(surface);
-    g_object_unref(rotated_pixbuf);
-}
-*/
-
 SDL_Surface *autoRotate(SDL_Surface *surface) {
   int size = 0, threshold = 0;
   int **accumulatorArray = detectLines(surface, &size, &threshold);
