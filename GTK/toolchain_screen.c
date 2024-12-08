@@ -7,6 +7,7 @@
 extern GtkWidget *window;
 extern GtkWidget *box;
 extern size_t version;
+extern cairo_surface_t *image_surface;
 
 void toolchain_screen() {
   char *image_path = NULL;
@@ -16,9 +17,13 @@ void toolchain_screen() {
   box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);
   GtkWidget *buttons_box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
 
+  if (image_surface != NULL)
+    cairo_surface_destroy(image_surface);
+
   GdkPixbuf *pixbuf = gdk_pixbuf_new_from_file(image_path, NULL);
-  cairo_surface_t *image_surface = create_cairo_surface_from_pixbuf(pixbuf);
+  image_surface = create_cairo_surface_from_pixbuf(pixbuf);
   GtkWidget *drawing_area = gtk_drawing_area_new();
+  g_object_unref(pixbuf);
   g_signal_connect(drawing_area, "draw", G_CALLBACK(on_draw), image_surface);
 
   free(image_path);

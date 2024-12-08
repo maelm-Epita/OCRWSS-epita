@@ -16,4 +16,6 @@ gboolean on_draw(GtkWidget *widget, cairo_t *cr, gpointer data);
 
 void apply_theme(const char *theme_path);
 
+void free_all_elements_in_box(GtkBox *box);
+
 #endif

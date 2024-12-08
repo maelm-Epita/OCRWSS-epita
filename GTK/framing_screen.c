@@ -8,6 +8,7 @@
 extern GtkWidget *window;
 extern GtkWidget *box;
 extern size_t version;
+extern cairo_surface_t *image_surface;
 extern double offset_x, offset_y;
 extern double scale;
 
@@ -113,10 +114,11 @@ void framing_screen(void) {
   free(image_path);
   asprintf(&image_path, "%s/image-detection.png", IMAGES_PATH);
 
-  // load image
+  cairo_surface_destroy(image_surface);
   GdkPixbuf *pixbuf = gdk_pixbuf_new_from_file(image_path, NULL);
-  cairo_surface_t *image_surface = create_cairo_surface_from_pixbuf(pixbuf);
+  image_surface = create_cairo_surface_from_pixbuf(pixbuf);
   GtkWidget *drawing_area = gtk_drawing_area_new();
+  g_object_unref(pixbuf);
   g_signal_connect(drawing_area, "draw", G_CALLBACK(on_draw), image_surface);
   free(image_path);
 

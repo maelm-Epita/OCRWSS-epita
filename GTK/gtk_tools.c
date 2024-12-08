@@ -73,3 +73,17 @@ void apply_theme(const char *theme_path) {
 
   g_object_unref(provider);
 }
+
+
+void free_all_elements_in_box(GtkBox *box) {
+    GList *children, *iter;
+
+    children = gtk_container_get_children(GTK_CONTAINER(box));
+    for (iter = children; iter != NULL; iter = g_list_next(iter)) {
+        GtkWidget *child = GTK_WIDGET(iter->data);
+        gtk_container_remove(GTK_CONTAINER(box), child);
+    }
+
+    g_list_free(children);
+}
+

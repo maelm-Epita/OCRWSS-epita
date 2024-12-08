@@ -14,6 +14,7 @@
 GtkWidget *window = NULL;
 GtkWidget *box = NULL;
 size_t version = 0;
+cairo_surface_t *image_surface = NULL;
 
 void quit() {
   gtk_widget_destroy(box);
