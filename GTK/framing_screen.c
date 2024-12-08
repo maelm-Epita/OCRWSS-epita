@@ -15,7 +15,7 @@ gdouble grid_end_coord[2];
 gdouble list_start_coord[2];
 gdouble list_end_coord[2];
 GtkWidget *indication_label;
-gint click_coordinates[2];
+gdouble click_coordinates[2];
 int fg = 0;
 int fl = 0;
 
@@ -37,12 +37,12 @@ void frame_grid(void){
     gtk_label_set_text(GTK_LABEL(indication_label), "Encadrement de la grille : \nSelectionnez le premier coin.\n");
   }
   else if (fg == 2){
-    g_print("First Coord : %d, %d\n", click_coordinates[0], click_coordinates[1]);
+    g_print("First Coord : %f, %f\n", click_coordinates[0], click_coordinates[1]);
     grid_start_coord[0] = click_coordinates[0];
     grid_start_coord[1] = click_coordinates[1];
   }
   else if (fg == 3){
-    g_print("Second Coord : %d, %d\n", click_coordinates[0], click_coordinates[1]);
+    g_print("Second Coord : %f, %f\n", click_coordinates[0], click_coordinates[1]);
     grid_end_coord[0] = click_coordinates[0];
     grid_end_coord[1] = click_coordinates[1];
     DrawGridRectangle = TRUE;
@@ -57,13 +57,13 @@ void frame_list(void){
     gtk_label_set_text(GTK_LABEL(indication_label), "Encadrement de la grille : \nSelectionnez le premier coin.\n");
   }
   else if (fl == 2){
-    g_print("First Coord : %d, %d\n", click_coordinates[0], click_coordinates[1]);
+    g_print("First Coord : %f, %f\n", click_coordinates[0], click_coordinates[1]);
     list_start_coord[0] = click_coordinates[0];
     list_start_coord[1] = click_coordinates[1];
     gtk_label_set_text(GTK_LABEL(indication_label), "Encadrement de la grille : \nSelectionnez le second coin.\n");
   }
   else if (fl == 3){
-    g_print("Second Coord : %d, %d\n", click_coordinates[0], click_coordinates[1]);
+    g_print("Second Coord : %f, %f\n", click_coordinates[0], click_coordinates[1]);
     list_end_coord[0] = click_coordinates[0];
     list_end_coord[1] = click_coordinates[1];
     DrawListRectangle = TRUE;
@@ -74,7 +74,7 @@ gboolean drawing_clicked(GtkWidget *widget, GdkEventButton *event, gpointer data
   if (event->button==1){
     click_coordinates[0] = event->x;
     click_coordinates[1] = event->y;
-    g_print("Click Coord : %d, %d\n", click_coordinates[0], click_coordinates[1]);
+    g_print("Click Coord : %f, %f\n", click_coordinates[0], click_coordinates[1]);
     if (fg == 1){
       fg = 2;
       frame_grid();
@@ -128,7 +128,7 @@ void framing_screen(void) {
   g_signal_connect(toolchain_button, "clicked", G_CALLBACK(toolchain_screen), NULL);
   g_signal_connect(grid_button, "clicked", G_CALLBACK(frame_grid), NULL);
   g_signal_connect(list_button, "clicked", G_CALLBACK(frame_list), NULL);
-  g_signal_connect(drawing_area, "button-press-event", G_CALLBACK(drawing_clicked), NULL);
+  g_signal_connect(drawing_area, "button-press-event", G_CALLBACK(drawing_clicked), pixbuf);
   g_signal_connect(drawing_area, "draw", G_CALLBACK(drawing_rectangle), NULL);
 
   // label final setup

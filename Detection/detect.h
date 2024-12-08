@@ -18,4 +18,7 @@ typedef struct{
 
 
 typedef struct{
+  point top_left;
+  point bot_right;
+  char c;
 } letter;

@@ -1,9 +1,9 @@
 CC := gcc
-CFLAGS := -std=c99 -Wextra -Wall -pedantic -Werror -Wvla
+CFLAGS := -std=c99 -Wextra -Wall -pedantic -Wvla
 LDFLAGS := -lSDL2_image -lSDL2 -lm
-SRC := detection.c
+SRC := detect.c
 OBJ := $(SRC:.c=.o)
-BIN := detection
+BIN := detect
 
 all: $(BIN)
 
