@@ -26,4 +26,6 @@ Uint32 gaussian(SDL_Surface *surface, int i, int j);
 
 void gauss(SDL_Surface *surface);
 
+void median(SDL_Surface *surface);
+
 #endif

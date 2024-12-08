@@ -1,10 +1,10 @@
 #include <cairo.h>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
 #include <gtk/gtk.h>
 
 extern GtkWidget *window;
 extern gboolean DrawGridRectangle, DrawListRectangle;
-extern gdouble grid_coord[4];
-extern gdouble list_coord[4];
 extern int image_w, image_h;
 
 double offset_x = 0, offset_y = 0, scale = 0;
@@ -49,33 +49,6 @@ gboolean on_draw(GtkWidget *widget, cairo_t *cr, gpointer data) {
   cairo_scale(cr, scale, scale);
   cairo_set_source_surface(cr, surface, 0, 0);
   cairo_paint(cr);
-
-  if (DrawGridRectangle) {
-    int start_x = grid_coord[0] * scale + offset_x;
-    printf("scale: %lf  offset_x: %lf  grid: %lf  start: %d\n", scale, offset_x,
-           grid_coord[0], start_x);
-    int start_y = grid_coord[1] * scale + offset_y;
-    int end_x = grid_coord[2] * scale + offset_x;
-    int end_y = grid_coord[3] * scale + offset_y;
-    double width = end_x - start_x;
-    double height = end_y - start_y;
-    cairo_set_line_width(cr, 1);
-    cairo_set_source_rgb(cr, 1, 0, 0); // Couleur rouge
-    cairo_rectangle(cr, start_x, start_y, width, height);
-    cairo_stroke(cr); // Appliquer les dessins
-  }
-  if (DrawListRectangle) {
-    int start_x = (list_coord[0] - offset_x) / scale;
-    int start_y = (list_coord[1] - offset_y) / scale;
-    int end_x = (list_coord[2] - offset_x) / scale;
-    int end_y = (list_coord[3] - offset_y) / scale;
-    double width = end_x - start_x;
-    double height = end_y - start_y;
-    cairo_set_line_width(cr, 1);
-    cairo_set_source_rgb(cr, 0, 0, 1); // Couleur bleue
-    cairo_rectangle(cr, start_x, start_y, width, height);
-    cairo_stroke(cr); // Appliquer les dessins
-  }
 
   return FALSE;
 }

@@ -69,13 +69,13 @@ void image_processing_screen(void) {
   gtk_box_pack_start(GTK_BOX(action_buttons), toolchain, TRUE, TRUE, 10);
 
   GtkWidget *grayscale = gtk_button_new_with_label("Grayscale");
-  GtkWidget *black_and_white_b = gtk_button_new_with_label("Noir et blanc");
-  GtkWidget *negatif_b = gtk_button_new_with_label("Négatif");
+  GtkWidget *black_and_white_b = gtk_button_new_with_label("Black and white");
+  GtkWidget *negatif_b = gtk_button_new_with_label("Remove Shape");
   GtkWidget *gauss_b = gtk_button_new_with_label("Gauss");
   g_signal_connect(grayscale, "clicked", G_CALLBACK(exec_filter), gray_level);
   g_signal_connect(black_and_white_b, "clicked", G_CALLBACK(exec_filter),
                    black_and_white);
-  g_signal_connect(negatif_b, "clicked", G_CALLBACK(exec_filter), negatif);
+  g_signal_connect(negatif_b, "clicked", G_CALLBACK(exec_filter), median);
   g_signal_connect(gauss_b, "clicked", G_CALLBACK(exec_filter), gauss);
   gtk_box_pack_start(GTK_BOX(filter_buttons), grayscale, TRUE, TRUE, 10);
   gtk_box_pack_start(GTK_BOX(filter_buttons), black_and_white_b, TRUE, TRUE,
@@ -83,10 +83,10 @@ void image_processing_screen(void) {
   gtk_box_pack_start(GTK_BOX(filter_buttons), negatif_b, TRUE, TRUE, 10);
   gtk_box_pack_start(GTK_BOX(filter_buttons), gauss_b, TRUE, TRUE, 10);
 
-  GtkWidget *inc_contrast = gtk_button_new_with_label("Contraste +");
-  GtkWidget *dec_contrast = gtk_button_new_with_label("Contraste -");
-  GtkWidget *inc_luminosity = gtk_button_new_with_label("Luminosité +");
-  GtkWidget *dec_luminosity = gtk_button_new_with_label("Luminosité -");
+  GtkWidget *inc_contrast = gtk_button_new_with_label("Contrast +");
+  GtkWidget *dec_contrast = gtk_button_new_with_label("Contrast -");
+  GtkWidget *inc_luminosity = gtk_button_new_with_label("Luminosity +");
+  GtkWidget *dec_luminosity = gtk_button_new_with_label("Luminosity -");
   g_signal_connect(inc_contrast, "clicked", G_CALLBACK(exec_filter),
                    increase_contrast);
   g_signal_connect(dec_contrast, "clicked", G_CALLBACK(exec_filter),
