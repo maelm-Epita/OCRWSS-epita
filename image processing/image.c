@@ -109,16 +109,6 @@ int main(int argc, char *argv[]) {
           SDL_SaveBMP(image, "Preprocess.bmp");
           //printf("Saved %s\n", name);
           //free(name);
-        case SDL_SCANCODE_U:
-          if (image->format->BitsPerPixel != 8){
-              SDL_Surface *grayone = SDL_ConvertSurfaceFormat(image, SDL_PIXELFORMAT_INDEX8, 0);
-              SDL_FreeSurface(image);
-              image = grayone;
-          }
-          SDL_Surface *resized = resize(image);
-          SDL_free(image);
-          image = resized;
-          break;
         default:
           break;
         }
