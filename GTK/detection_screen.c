@@ -17,14 +17,20 @@ extern DrawingData DrawWords;
 int init = 0;
 
 void draw_detection_lines(SDL_Surface *surface, DrawingData data) {
-  for (int j = data.res[0]; j < data.res[2]; j++) {
-    Uint8 *row = (Uint8 *)surface->pixels + j * surface->pitch;
-    Uint32 *pixel =
-        (Uint32 *)(row + data.res[1] * surface->format->BytesPerPixel);
-    *pixel = SDL_MapRGB(surface->format, 255, 0, 0);
-    pixel = (Uint32 *)(row + data.res[3] * surface->format->BytesPerPixel);
-    *pixel = SDL_MapRGB(surface->format, 255 * data.colors[0],
-                        255 * data.colors[0], 255 * data.colors[0]);
+  Uint32 *pixels = surface->pixels;
+  int w = surface->w;
+  Uint8 r = data.colors[0] * 255;
+  Uint8 g = data.colors[1] * 255;
+  Uint8 b = data.colors[2] * 255;
+
+  for (int i = data.res[0]; i < data.res[2]; i++) {
+    pixels[data.res[1] * w + i] = SDL_MapRGB(surface->format, r, g, b);
+    pixels[data.res[3] * w + i] = SDL_MapRGB(surface->format, r, g, b);
+  }
+
+  for (int j = data.res[1]; j < data.res[3]; j++) {
+    pixels[j * w + data.res[0]] = SDL_MapRGB(surface->format, r, g, b);
+    pixels[j * w + data.res[2]] = SDL_MapRGB(surface->format, r, g, b);
   }
 }
 
@@ -41,19 +47,13 @@ void exec_detection() {
     int res[8] = {0};
     detect_grid_and_word_list(surface, res);
     for (int i = 0; i < 4; i++) {
-      DrawGrid.res[0] = res[0];
-      DrawWords.res[0] = res[i + 4];
+      DrawGrid.res[i] = res[i];
+      DrawWords.res[i] = res[i + 4];
     }
-    DrawGrid.res[0] = 98;
-    DrawGrid.res[1] = 147;
-    DrawGrid.res[2] = 735;
-    DrawGrid.res[3] = 735;
     init = 1;
-    printf("%i %i %i %i\n", DrawGrid.res[0], DrawGrid.res[1], DrawGrid.res[2],
-           DrawGrid.res[3]);
   }
-  //draw_detection_lines(surface, DrawGrid);
-  //draw_detection_lines(surface, DrawWords);
+  draw_detection_lines(surface, DrawGrid);
+  draw_detection_lines(surface, DrawWords);
   SDL_SaveBMP(surface, "/tmp/OCR/Images/image-detection.bmp");
   free(surface);
 }

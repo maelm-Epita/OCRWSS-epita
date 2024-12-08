@@ -4,6 +4,7 @@
 #include <err.h>
 #include <stdlib.h>
 
+#include "../Detection/detect.h"
 #include "grid.h"
 #include "list_word.h"
 #include "tree_words.h"

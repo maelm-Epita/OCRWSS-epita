@@ -127,7 +127,7 @@ void framing_screen(void) {
                                           GDK_BUTTON_RELEASE_MASK |
                                           GDK_POINTER_MOTION_MASK);
 
-  g_signal_connect(toolchain_button, "clicked", G_CALLBACK(toolchain_screen),
+  g_signal_connect(toolchain_button, "clicked", G_CALLBACK(detection_screen),
                    NULL);
   g_signal_connect(grid_button, "clicked", G_CALLBACK(frame_grid), NULL);
   g_signal_connect(list_button, "clicked", G_CALLBACK(frame_list), NULL);

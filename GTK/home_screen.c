@@ -10,7 +10,6 @@ void open_file(char *filename) {
   char *cmd = NULL;
   version = 0;
   asprintf(&cmd, "magick \"%s\" /tmp/OCR/Images/image-0.bmp", filename);
-  puts(cmd);
   system(cmd);
   free(cmd);
 
@@ -31,7 +30,6 @@ void choose_file(void) {
     char *filename = NULL;
     GtkFileChooser *chooser = GTK_FILE_CHOOSER(dialog);
     filename = gtk_file_chooser_get_filename(chooser);
-    puts(filename);
     open_file(filename);
     g_free(filename);
   }

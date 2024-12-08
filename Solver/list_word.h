@@ -2,10 +2,7 @@
 #define LIST_WORD_H
 
 #include <stddef.h>
-
-typedef struct point{
-  int x, y;
-} point;
+#include "../Detection/detect.h"
 
 typedef struct list_word{
   char *word;

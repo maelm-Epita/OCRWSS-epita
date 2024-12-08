@@ -100,6 +100,10 @@ int **detectLines(SDL_Surface *surface, int *size, int *threshold) {
     }
   }
 
+  for (int i = 0; i < height; i++)
+    free(matrix[i]);
+  free(matrix);
+
   return accumulatorArray;
 }
 
