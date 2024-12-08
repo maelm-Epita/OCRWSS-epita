@@ -9,6 +9,7 @@
 extern GtkWidget *window;
 extern GtkWidget *box;
 extern size_t version;
+extern cairo_surface_t *image_surface;
 
 size_t max_version = 0;
 
@@ -39,6 +40,22 @@ void exec_filter(__attribute__((unused)) GtkWidget *widget,
   asprintf(&image_path, "%s/image-%li.png", IMAGES_PATH, version);
   IMG_SavePNG(surface, image_path);
   free(image_path);
+  SDL_FreeSurface(surface);
+  image_processing_screen();
+}
+
+void exec_rotate(){
+  char *image_path = NULL;
+  asprintf(&image_path, "%s/image-%li.png", IMAGES_PATH, version);
+  SDL_Surface *surface = IMG_Load(image_path);
+  surface = autoRotate(surface);
+  version++;
+  max_version = version > max_version ? version : max_version;
+  free(image_path);
+  asprintf(&image_path, "%s/image-%li.png", IMAGES_PATH, version);
+  IMG_SavePNG(surface, image_path);
+  free(image_path);
+  SDL_FreeSurface(surface);
   image_processing_screen();
 }
 
@@ -52,9 +69,11 @@ void image_processing_screen(void) {
   GtkWidget *filter_buttons = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
   GtkWidget *plus_minus_buttons = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
 
+  cairo_surface_destroy(image_surface);
   GdkPixbuf *pixbuf = gdk_pixbuf_new_from_file(image_path, NULL);
-  cairo_surface_t *image_surface = create_cairo_surface_from_pixbuf(pixbuf);
+  image_surface = create_cairo_surface_from_pixbuf(pixbuf);
   GtkWidget *drawing_area = gtk_drawing_area_new();
+  g_object_unref(pixbuf);
   g_signal_connect(drawing_area, "draw", G_CALLBACK(on_draw), image_surface);
   free(image_path);
 
@@ -69,13 +88,13 @@ void image_processing_screen(void) {
   gtk_box_pack_start(GTK_BOX(action_buttons), toolchain, TRUE, TRUE, 10);
 
   GtkWidget *grayscale = gtk_button_new_with_label("Grayscale");
-  GtkWidget *black_and_white_b = gtk_button_new_with_label("Noir et blanc");
-  GtkWidget *negatif_b = gtk_button_new_with_label("Négatif");
+  GtkWidget *black_and_white_b = gtk_button_new_with_label("Black and white");
+  GtkWidget *negatif_b = gtk_button_new_with_label("Rotate");
   GtkWidget *gauss_b = gtk_button_new_with_label("Gauss");
   g_signal_connect(grayscale, "clicked", G_CALLBACK(exec_filter), gray_level);
   g_signal_connect(black_and_white_b, "clicked", G_CALLBACK(exec_filter),
                    black_and_white);
-  g_signal_connect(negatif_b, "clicked", G_CALLBACK(exec_filter), negatif);
+  g_signal_connect(negatif_b, "clicked", G_CALLBACK(exec_rotate), NULL);
   g_signal_connect(gauss_b, "clicked", G_CALLBACK(exec_filter), gauss);
   gtk_box_pack_start(GTK_BOX(filter_buttons), grayscale, TRUE, TRUE, 10);
   gtk_box_pack_start(GTK_BOX(filter_buttons), black_and_white_b, TRUE, TRUE,
@@ -83,10 +102,10 @@ void image_processing_screen(void) {
   gtk_box_pack_start(GTK_BOX(filter_buttons), negatif_b, TRUE, TRUE, 10);
   gtk_box_pack_start(GTK_BOX(filter_buttons), gauss_b, TRUE, TRUE, 10);
 
-  GtkWidget *inc_contrast = gtk_button_new_with_label("Contraste +");
-  GtkWidget *dec_contrast = gtk_button_new_with_label("Contraste -");
-  GtkWidget *inc_luminosity = gtk_button_new_with_label("Luminosité +");
-  GtkWidget *dec_luminosity = gtk_button_new_with_label("Luminosité -");
+  GtkWidget *inc_contrast = gtk_button_new_with_label("Contrast +");
+  GtkWidget *dec_contrast = gtk_button_new_with_label("Contrast -");
+  GtkWidget *inc_luminosity = gtk_button_new_with_label("Luminosity +");
+  GtkWidget *dec_luminosity = gtk_button_new_with_label("Luminosity -");
   g_signal_connect(inc_contrast, "clicked", G_CALLBACK(exec_filter),
                    increase_contrast);
   g_signal_connect(dec_contrast, "clicked", G_CALLBACK(exec_filter),
