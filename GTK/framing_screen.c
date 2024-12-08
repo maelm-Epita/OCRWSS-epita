@@ -63,8 +63,6 @@ static gboolean on_button_release_event(GtkWidget *widget,
     return FALSE;
 
   DrawingData *data = current == 1 ? &DrawGrid : &DrawWords;
-  if (data == &DrawWords)
-    puts("oh no");
 
   if (event->button == GDK_BUTTON_PRIMARY &&
       data->is_drawing) { // Left mouse button
@@ -77,8 +75,6 @@ static gboolean on_button_release_event(GtkWidget *widget,
   data->res[1] = (data->start_y - offset_y) / scale;
   data->res[2] = (data->end_x - offset_x) / scale;
   data->res[3] = (data->end_y - offset_y) / scale;
-  printf("(%d,%d)  -->  (%d,%d)\n", data->res[0], data->res[1], data->res[2],
-         data->res[3]);
   current = 0;
 
   return TRUE;

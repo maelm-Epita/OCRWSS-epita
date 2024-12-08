@@ -8,7 +8,8 @@ SRC = nvam.c \
 			framing_screen.c \
 			image_processing_screen.c \
 			detection_screen.c gtk_tools.c \
-			../ImageProcessing/image_tools.c
+			../ImageProcessing/image_tools.c	\
+			../ImageProcessing/rotate.c
 OBJ = *.o
 BIN = nvam-ocr
 

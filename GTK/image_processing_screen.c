@@ -44,6 +44,21 @@ void exec_filter(__attribute__((unused)) GtkWidget *widget,
   image_processing_screen();
 }
 
+void exec_rotate(){
+  char *image_path = NULL;
+  asprintf(&image_path, "%s/image-%li.png", IMAGES_PATH, version);
+  SDL_Surface *surface = IMG_Load(image_path);
+  surface = autoRotate(surface);
+  version++;
+  max_version = version > max_version ? version : max_version;
+  free(image_path);
+  asprintf(&image_path, "%s/image-%li.png", IMAGES_PATH, version);
+  IMG_SavePNG(surface, image_path);
+  free(image_path);
+  SDL_FreeSurface(surface);
+  image_processing_screen();
+}
+
 void image_processing_screen(void) {
   char *image_path = NULL;
   asprintf(&image_path, "%s/image-%li.png", IMAGES_PATH, version);
@@ -74,12 +89,12 @@ void image_processing_screen(void) {
 
   GtkWidget *grayscale = gtk_button_new_with_label("Grayscale");
   GtkWidget *black_and_white_b = gtk_button_new_with_label("Black and white");
-  GtkWidget *negatif_b = gtk_button_new_with_label("Remove Shape");
+  GtkWidget *negatif_b = gtk_button_new_with_label("Rotate");
   GtkWidget *gauss_b = gtk_button_new_with_label("Gauss");
   g_signal_connect(grayscale, "clicked", G_CALLBACK(exec_filter), gray_level);
   g_signal_connect(black_and_white_b, "clicked", G_CALLBACK(exec_filter),
                    black_and_white);
-  g_signal_connect(negatif_b, "clicked", G_CALLBACK(exec_filter), median);
+  g_signal_connect(negatif_b, "clicked", G_CALLBACK(exec_rotate), NULL);
   g_signal_connect(gauss_b, "clicked", G_CALLBACK(exec_filter), gauss);
   gtk_box_pack_start(GTK_BOX(filter_buttons), grayscale, TRUE, TRUE, 10);
   gtk_box_pack_start(GTK_BOX(filter_buttons), black_and_white_b, TRUE, TRUE,
