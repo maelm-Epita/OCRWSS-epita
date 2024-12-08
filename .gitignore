@@ -39,5 +39,5 @@ Module.symvers
 Mkfile.old
 dkms.conf
 
-# ignore training data DO NOT REMOVE
-training-set/
+# ignore largest training data DO NOT REMOVE
+handwritten_letters.csv
