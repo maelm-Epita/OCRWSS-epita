@@ -45,7 +45,6 @@ void save_file() {
 }
 
 void solving_screen(void) {
-  puts("heeere");
   char *image_path = NULL;
   asprintf(&image_path, "%s/image-%li.bmp", IMAGES_PATH, version);
   // image_path = "/home/lepotototor/nvam.bmp";

@@ -77,6 +77,17 @@ static gboolean on_button_release_event(GtkWidget *widget,
   data->res[3] = (data->end_y - offset_y) / scale;
   current = 0;
 
+  if (data->res[0] > data->res[2]){
+    int temp = data->res[2];
+    data->res[2] = data->res[0];
+    data->res[0] = temp;
+  }
+  if (data->res[1] > data->res[3]){
+    int temp = data->res[3];
+    data->res[3] = data->res[1];
+    data->res[1] = temp;
+  }
+
   return TRUE;
 }
 

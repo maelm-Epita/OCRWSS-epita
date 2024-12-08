@@ -67,7 +67,6 @@ void resize(char* path) {
     errx(EXIT_FAILURE, "Could not load image: %s", SDL_GetError());
   }
 
-  Uint32 pixels[WIDTH * HEIGHT];
   double fact_scale_hor = (double)src->w / WIDTH;
   double fact_scale_ver = (double)src->h / HEIGHT;
   SDL_Surface *dst = SDL_CreateRGBSurfaceWithFormat(0, WIDTH, HEIGHT, src->format->BitsPerPixel, src->format->format);

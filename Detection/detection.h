@@ -12,7 +12,7 @@ typedef struct{
   point max;
 } block;
 
-void detect_grid_and_word_list(SDL_Surface *surface, int *res);
+void detect_grid_and_word_list(const SDL_Surface *surface, int *res);
 
 
 void lines(SDL_Surface* img, block *block);

@@ -55,7 +55,7 @@ void exec_detection() {
   draw_detection_lines(surface, DrawGrid);
   draw_detection_lines(surface, DrawWords);
   SDL_SaveBMP(surface, "/tmp/OCR/Images/image-detection.bmp");
-  free(surface);
+  SDL_FreeSurface(surface);
 }
 
 void detection_screen(void) {
@@ -77,8 +77,8 @@ void detection_screen(void) {
   free(image_path);
 
   GtkWidget *processing_button = gtk_button_new_with_label("Remodifiy Image");
-  GtkWidget *other_file = gtk_button_new_with_label("Try another image");
-  GtkWidget *solve_button = gtk_button_new_with_label("Try with detection");
+  GtkWidget *other_file = gtk_button_new_with_label("Choose another image");
+  GtkWidget *solve_button = gtk_button_new_with_label("Try to solve");
   GtkWidget *frame_button = gtk_button_new_with_label("Set manually");
 
   g_signal_connect(processing_button, "clicked",

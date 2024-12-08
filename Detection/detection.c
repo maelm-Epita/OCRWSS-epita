@@ -5,7 +5,7 @@
 
 #include "detection.h"
 
-double get_picture_density(SDL_Surface *surface) {
+double get_picture_density(const SDL_Surface *surface) {
   int nb_black = 0;
   Uint32 *pixels = surface->pixels;
   Uint8 r;
@@ -56,7 +56,7 @@ void check_merge(block **list_block, int nb_block, int BLOCK_SIZE) {
   }
 }
 
-void detect_grid_and_word_list(SDL_Surface *surface, int *res) {
+void detect_grid_and_word_list(const SDL_Surface *surface, int *res) {
   int BLOCK_SIZE = (double)surface->w * surface->h / 18000;
   double THRESHOLD = get_picture_density(surface);
 
