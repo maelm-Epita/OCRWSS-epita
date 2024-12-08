@@ -2,14 +2,9 @@ CC = gcc
 CFLAGS = -Wall -Wextra -Wvla `pkg-config --cflags gtk+-3.0`
 LDFLAGS = `pkg-config --libs gtk+-3.0` -lm -lSDL2 -lSDL2_image
 SRC = nvam.c \
-			home_screen.c \
-			toolchain_screen.c \
-			solving_screen.c \
-			framing_screen.c \
-			image_processing_screen.c \
-			detection_screen.c gtk_tools.c \
-			../ImageProcessing/image_tools.c	\
-			../ImageProcessing/rotate.c
+			GTK/*screen*.c \
+			GTK/gtk_tools.c \
+			ImageProcessing/*.c
 OBJ = *.o
 BIN = nvam-ocr
 
