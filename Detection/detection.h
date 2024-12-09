@@ -3,9 +3,7 @@
 
 #include <SDL2/SDL.h>
 
-typedef struct{
-  int x, y;
-} point;
+#include "detect.h"
 
 typedef struct{
   point min;

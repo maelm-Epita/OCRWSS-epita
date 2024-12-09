@@ -117,14 +117,14 @@ void detect_grid_and_word_list(const SDL_Surface *surface, int *res) {
     }
   }
 
-  if (nb_block > 0) {
+  if (nb_block > 0 && list_block[0]) {
     res[0] = list_block[0]->min.x;
     res[1] = list_block[0]->min.y;
     res[2] = list_block[0]->max.x + BLOCK_SIZE;
     res[3] = list_block[0]->max.y + BLOCK_SIZE;
   } else
     res[0] = res[1] = res[2] = res[3] = 0;
-  if (nb_block > 1) {
+  if (nb_block > 1 && list_block[1]) {
     res[4] = list_block[1]->min.x;
     res[5] = list_block[1]->min.y;
     res[6] = list_block[1]->max.x + BLOCK_SIZE;
