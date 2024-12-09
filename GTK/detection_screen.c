@@ -63,12 +63,7 @@ void exec_detection() {
 }
 
 void detection_screen(void) {
-  if (DrawGrid.res[0] == 0 && DrawGrid.res[1] == 0 && DrawGrid.res[2] == 0 && DrawGrid.res[3] == 0){
-    exec_detection();
-  }
-  else{
-    // TODO : make it draw the manually set stuff
-  }
+  exec_detection();
   char *image_path = NULL;
   asprintf(&image_path, "%s/image-detection.bmp", IMAGES_PATH);
 
