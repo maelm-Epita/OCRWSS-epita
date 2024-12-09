@@ -14,7 +14,7 @@
 #include "../ImageProcessing/resize.h"
 #include "../DeepLearning/neural-net/network_functions.h"
 
-#define NETWORK_PATH "../DeepLearning/models/easy-final.model"
+#define NETWORK_PATH "./DeepLearning/models/easy-final.model"
 #define IMAGE_SAVING_PATH "/tmp/OCR/Letters"
 
 int MAX_CELL_AREA;
@@ -333,7 +333,7 @@ cell shape_to_cell(shape sh){
   int min_y = -1;
   for (int i=0; i<sh.pointnb; i++){
     point p = sh.points[i];
-    printf("Shape: Point = (%d, %d)\n", p.x, p.y);
+    //printf("Shape: Point = (%d, %d)\n", p.x, p.y);
     if (min_x == -1){
       min_x = p.x;
     }
@@ -395,7 +395,7 @@ int separate_cells(cell* cells, int cell_nb, cell** new_cells_p){
       // find the amount of cells to split into
       int split_nb = width/expected_width;
       // if we would only split into once cell, we can just add the cell as it was and skip this iteration
-      if (split_nb == 1){
+      if (split_nb <= 1){
         new_cell_nb++;
         new_cells = realloc(new_cells, new_cell_nb*sizeof(cell));
         new_cells[new_cell_nb-1] = c;
@@ -618,6 +618,12 @@ int detect_cells(SDL_Surface *img, point area_start, point area_end, cell** cell
 void detect(SDL_Surface *img, point grid_start, point grid_end, point list_start, point list_end, 
             letter** *grid_matrix, int* grid_mat_size_x, int* grid_mat_size_y,
             char** *word_list, int* word_list_size){
+  MAX_CELL_AREA = (img->w*img->h)/300;
+  MIN_CELL_AREA = (img->w*img->h)/3000;
+  PADDING = 5;
+  CELL_LENGTH_MAX_ERR_FACTOR = 1.2;
+  GRID_POSITION_THRESHOLD = 30;
+  LIST_POSITION_THRESHOLD = 5;
   cell* grid_cells = NULL;
   cell* list_cells = NULL;
   int grid_cell_nb = detect_cells(img, grid_start, grid_end, &grid_cells);
@@ -637,6 +643,7 @@ void detect(SDL_Surface *img, point grid_start, point grid_end, point list_start
   // Load AI
   printf("Loading AI model...\n");
   struct Network net = load_network(NETWORK_PATH);
+  printf("Finished loading AI model.\n");
   // For each cell in grid matrix, save the image and call the network on it
   // Then place the result at the correct location in the new grid matrix
   letter** grid_letter_mat = calloc(*grid_mat_size_y, sizeof(letter*));
@@ -744,7 +751,7 @@ void debgug(char* path, int grid_start_x, int grid_start_y, int grid_end_x, int 
   SDL_FreeSurface(image);*/
 }
 
-int main(int argc, char *argv[]) {
+/*int main(int argc, char *argv[]) {
   if (argc == 2) {
     SDL_Surface *image = IMG_Load(argv[1]);
     SDL_Window *screen = display_img(image);
@@ -795,7 +802,7 @@ int main(int argc, char *argv[]) {
     }
     */
     // print result grid
-    for (int y=0; y<gmy; y++){
+    /*for (int y=0; y<gmy; y++){
       printf("[ ");
       for (int x=0; x<gmx; x++){
         if (x==gmx-1){
@@ -822,4 +829,4 @@ int main(int argc, char *argv[]) {
   }
 
   return 1;
-}
+}*/

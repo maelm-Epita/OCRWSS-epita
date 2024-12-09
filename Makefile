@@ -8,7 +8,11 @@ SRC = nvam.c \
 			ImageProcessing/*.c \
 			Detection/detect.c \
 			Detection/detection.c \
-			Solver/*.c
+			Solver/*.c \
+			DeepLearning/neural-net/Network.c \
+			DeepLearning/neural-net/network_functions.c \
+			DeepLearning/shared/math_helpers.c \
+			DeepLearning/shared/arr_helpers.c 
 OBJ = *.o
 BIN = nvam-ocr
 
