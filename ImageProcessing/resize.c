@@ -17,7 +17,6 @@ Uint8 get_gray(SDL_Surface *src, size_t x, size_t y) {
   if (x >= (size_t)src->w || y >= (size_t)src->h) {
     errx(EXIT_FAILURE, "the pixel is outside the borders of the image");
   }
-  printf("pixel lu est : (%lu,%lu)\n", x, y);
   Uint8 r, g, b;
   Uint32 *pix = (Uint32 *)src->pixels;
   SDL_GetRGB(pix[y * (src->pitch / 4) + x], src->format, &r, &g, &b);
@@ -81,8 +80,6 @@ void resize(char* path) {
       double y0 = floor(srcy);
 
       double mat[4][4];
-      printf("gonna see for mat of center : (%f,%f)\n", x0, y0);
-      printf("-------------------------------------\n");
       for (size_t j = 0; j < 4; j++) {
         for (size_t i = 0; i < 4; i++) {
           int px = fmin(fmax(x0 + i, 0), src->w - 1);
@@ -94,8 +91,6 @@ void resize(char* path) {
           mat[j][i] = get_gray(src, px, py);
         }
       }
-
-      printf("\n\n");
       double tx = srcx - floor(srcx);
       double ty = srcy - floor(srcy);
 
@@ -109,20 +104,12 @@ void resize(char* path) {
     errx(EXIT_FAILURE, "resize returned a NULL surface");
   }
 
-  // Vérifiez les propriétés de la surface
-  printf("Resized surface info: width=%d, height=%d, pitch=%d, format=%s\n",
-         dst->w, dst->h, dst->pitch,
-         SDL_GetPixelFormatName(dst->format->format));
-
-
   // Sauvegardez l'image
-  if (SDL_SaveBMP(dst, "resized.bmp") != 0) {
+  if (SDL_SaveBMP(dst, path) != 0) {
     errx(EXIT_FAILURE, "Could not save BMP: %s", SDL_GetError());
   }
 
   // Libérez les surfaces
   SDL_FreeSurface(dst);
   SDL_FreeSurface(src);
-  printf("done\n");
-
 }

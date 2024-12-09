@@ -1,8 +1,21 @@
 CC := gcc
-CFLAGS := -std=c99 -Wextra -Wall -pedantic -Wvla
+CFLAGS := -std=c99 -Wextra -Wall -pedantic -Wvla -D_GNU_SOURCE
 LDFLAGS := -lSDL2_image -lSDL2 -lm
-SRC_DETECT := detect.c
-OBJ_DETECT := $(SRC_DETECT:.c=.o)
+SRC_DETECT := detect.c \
+							../DeepLearning/neural-net/Network.c \
+							../DeepLearning/neural-net/network_functions.c \
+							../DeepLearning/shared/math_helpers.c \
+							../DeepLearning/shared/arr_helpers.c \
+							../ImageProcessing/image_tools.c \
+							../ImageProcessing/resize.c
+OBJ_DETECT := detect.o \
+							Network.o \
+							network_functions.o \
+							math_helpers.o \
+							arr_helpers.o \
+							image_tools.o \
+							resize.o
+							
 BIN_DETECT := detect
 SRC_DETECTION := detection.c
 OBJ_DETECTION := $(SRC_DETECTION:.c=.o)

@@ -9,8 +9,13 @@
 #include <err.h>
 #include "detect.h"
 #include "../DeepLearning/neural-net/Network.h"
+#include "../DeepLearning/shared/arr_helpers.h"
+#include "../ImageProcessing/image_tools.h"
+#include "../ImageProcessing/resize.h"
+#include "../DeepLearning/neural-net/network_functions.h"
 
 #define NETWORK_PATH "../DeepLearning/models/easy-final.model"
+#define IMAGE_SAVING_PATH "/tmp/OCR/Letters"
 
 int MAX_CELL_AREA;
 int MIN_CELL_AREA;
@@ -352,13 +357,6 @@ cell shape_to_cell(shape sh){
   return res;
 }
 
-//
-//
-// TODO : REMOVE THE MAKE SQUARE AND PAD FROM THE FILTERING AS THEY WILL INTRODUCE OVERLAP
-// INSTEAD PAD AND CORRECT ASPECT RATIO AFTER SAVING THE IMAGE FILE
-// MAKE A FUNCTION TO SPLIT UP THE SHAPES IF THEY ARE ONLY HELD BY FEW PIXELS
-//
-//
 // This function splits cells that contain multiple letters
 // it checks the length of the cell and compares it to an average length
 // if it is too big, we split it into multiple cells of the expected size
@@ -458,6 +456,63 @@ void pad(cell *cell){
   cell->bot_right.y+=PADDING;
 }
 
+void fill_white(SDL_Surface* img){
+  int size = img->w*img->h;
+  Uint32* pix = img->pixels;
+  for(int i=0; i<size; i++){
+    pix[i] = SDL_MapRGB(img->format, 255,255,255);
+  }
+}
+
+void draw_region(SDL_Surface* dst, SDL_Surface* src, cell c, int start_x, int start_y,
+                 int end_x, int end_y){
+  Uint32* srcpix = src->pixels;
+  Uint32* dstpix = dst->pixels;
+  int w = end_x-start_x;
+  int h = end_y-start_y;
+  for (int y=0; y<=h; y++){
+    for (int x=0; x<=w; x++){
+      dstpix[(y+start_y) * dst->w + x+start_x] = srcpix[(y+c.top_left.y) * src->w + x+c.top_left.x];
+    }
+  }
+}
+
+// takes a cell and saves it in proper format for input to the network
+char* save_cell(SDL_Surface* img, cell c, int x, int y){
+  // Find correct dimensions
+  int w = c.bot_right.x-c.top_left.x;
+  int h = c.bot_right.y-c.top_left.y;
+  int unused_side = min(h,w);
+  int size = max(h,w);
+  int padded_size = size+PADDING;
+  // Create surface
+  SDL_Surface* cell_img = SDL_CreateRGBSurfaceWithFormat(0, padded_size, padded_size, img->format->BitsPerPixel, img->format->format);
+  // Draw the cell at the center of the surface
+  int start_x, start_y;
+  if (size == h){
+    start_x = (padded_size-unused_side)/2;
+    start_y = (padded_size-size)/2;
+  }
+  else{
+    start_y = (padded_size-unused_side)/2;
+    start_x = (padded_size-size)/2;
+  }
+  int end_x = start_x+w;
+  int end_y = start_y+h;
+  fill_white(cell_img);
+  draw_region(cell_img, img, c, start_x, start_y, end_x, end_y);
+  // Negative the image
+  negatif(cell_img);
+  // Save as an image
+  char* path;
+  asprintf(&path, "%s/grid_letter_%d%d", IMAGE_SAVING_PATH, x,y);
+  SDL_SaveBMP(cell_img, path);
+  SDL_FreeSurface(cell_img);
+  // Resize the image
+  resize(path);
+  return path;
+}
+
 int filter_and_refine_cells(cell* cells, int cell_nb, cell** new_cells_p){
   // we check if the array was not null so we dont leak any memory
   if (*new_cells_p != NULL){
@@ -554,8 +609,8 @@ int detect_cells(SDL_Surface *img, point area_start, point area_end, cell** cell
 }
 
 void detect(SDL_Surface *img, point grid_start, point grid_end, point list_start, point list_end, 
-            cell** *grid_matrix, int* grid_mat_size_x, int* grid_mat_size_y,
-            cell** *word_list, int** word_list_sizes_x, int* word_list_size_y){
+            letter** *grid_matrix, int* grid_mat_size_x, int* grid_mat_size_y,
+            char** *word_list, int* word_list_size){
   cell* grid_cells = NULL;
   cell* list_cells = NULL;
   int grid_cell_nb = detect_cells(img, grid_start, grid_end, &grid_cells);
@@ -566,32 +621,69 @@ void detect(SDL_Surface *img, point grid_start, point grid_end, point list_start
   }
   // Convert results to input of solver
   // Make 2d grid cell matrix
-  grid_to_matrix(grid_cells, grid_cell_nb, grid_matrix, grid_mat_size_x, grid_mat_size_y);
+  cell** grid_cell_mat;
+  grid_to_matrix(grid_cells, grid_cell_nb, &grid_cell_mat, grid_mat_size_x, grid_mat_size_y);
   // Make 2d word list matrix
-  word_to_matrix(list_cells, list_cell_nb, word_list, word_list_sizes_x, word_list_size_y);
+  cell** word_cell_mat;
+  int* word_cell_mat_sizes_x;
+  word_to_matrix(list_cells, list_cell_nb, &word_cell_mat, &word_cell_mat_sizes_x, word_list_size);
   // Load AI
   printf("Loading AI model...\n");
   struct Network net = load_network(NETWORK_PATH);
-  letter** grid_letter_mat = calloc(*grid_mat_size_y, sizeof(letter*));
-  char** word_char_list = calloc(*word_list_size_y, sizeof(char*));
   // For each cell in grid matrix, save the image and call the network on it
   // Then place the result at the correct location in the new grid matrix
+  letter** grid_letter_mat = calloc(*grid_mat_size_y, sizeof(letter*));
   for (int y=0; y<*grid_mat_size_y; y++){
     grid_letter_mat[y] = calloc(*grid_mat_size_x, sizeof(letter));
     for (int x=0; x<*grid_mat_size_x; x++){
-      // Find correct height and width
-      // Create surface
-      // Draw the cell at the center of the surface
-      // Save as an image
+      cell c = grid_cell_mat[y][x];
+      // Save the image in the proper format
+      char* path = save_cell(img, c, x, y);
       // Load the image as input
+      double* input = image_to_input(path);
       // Call the network on said input
+      double **a_mat = calloc(net.layernb, sizeof(double*));
+      double **z_mat = calloc(net.layernb, sizeof(double*));
+      double* result = feedforward(net, input, z_mat, a_mat);
       // Get the result char
+      char res = output_to_prediction(result, NULL);
+      free_double_matrix(a_mat, net.layernb);
+      free_double_matrix(z_mat, net.layernb);
       // Create the letter by copying positions and the result of the network
+      letter l = {c.top_left, c.bot_right, res};
       // Place it into the matrix
+      grid_letter_mat[y][x] = l;
+      free(path);
     }
   }
+  *grid_matrix = grid_letter_mat;
   // For each cell in word list, save the image and call the network on it
   // Then place the result at the correct location in the new word list
+  char** word_char_list = calloc(*word_list_size, sizeof(char*));
+  for (int y=0; y<*word_list_size; y++){
+    word_char_list[y] = calloc(word_cell_mat_sizes_x[y]+1, sizeof(letter));
+    for (int x=0; x<word_cell_mat_sizes_x[y]; x++){
+      cell c = word_cell_mat[y][x];
+      // Save the image in the proper format
+      char* path = save_cell(img, c, x, y);
+      // Load the image as input
+      double* input = image_to_input(path);
+      // Call the network on said input
+      double **a_mat = calloc(net.layernb, sizeof(double*));
+      double **z_mat = calloc(net.layernb, sizeof(double*));
+      double* result = feedforward(net, input, z_mat, a_mat);
+      // Get the result char
+      char res = output_to_prediction(result, NULL);
+      free_double_matrix(a_mat, net.layernb);
+      free_double_matrix(z_mat, net.layernb);
+      // Place it into the right word of the list
+      word_char_list[y][x] = res;
+      free(path);
+    }
+    // add the 0 to mark the end of the string
+    word_char_list[y][word_cell_mat_sizes_x[y]] = 0;
+  }
+  *word_list = word_char_list;
 
   if (grid_cells != NULL){
     free(grid_cells);
@@ -623,13 +715,12 @@ void debgug(char* path, int grid_start_x, int grid_start_y, int grid_end_x, int 
   point g_end = {grid_end_x, grid_end_y};
   point l_start = {list_start_x, list_start_y};
   point l_end = {list_end_x, list_end_y};
-  cell** grid_mat;
+  letter** grid_mat;
   int gmx;
   int gmy;
-  int* wmx;
-  int wmy;
-  detect(image, g_start, g_end, l_start, l_end, &grid_mat, &gmx, &gmy, NULL, &wmx, &wmy);
-  for (int y =0; y<gmy; y++){
+  int wls;
+  detect(image, g_start, g_end, l_start, l_end, &grid_mat, &gmx, &gmy, NULL, &wls);
+  /*for (int y =0; y<gmy; y++){
     for (int x=0; x<gmx; x++){
       cell c = grid_mat[y][x];
       draw_rectangle(image, c.top_left, c.bot_right);
@@ -643,7 +734,7 @@ void debgug(char* path, int grid_start_x, int grid_start_y, int grid_end_x, int 
   puts("END");
   wait_for_keypressed();
   wait_for_keypressed();
-  SDL_FreeSurface(image);
+  SDL_FreeSurface(image);*/
 }
 
 int main(int argc, char *argv[]) {
@@ -668,32 +759,49 @@ int main(int argc, char *argv[]) {
     point g_end = {633,673};
     point l_start = {641, 12};
     point l_end = {769, 386};
-    cell** grid_mat;
-    cell** word_list;
+    letter** grid_mat;
+    char** word_list;
     int gmx;
     int gmy;
-    int* wmx;
-    int wmy;
-    detect(image, g_start, g_end, l_start, l_end, &grid_mat, &gmx, &gmy, &word_list, &wmx, &wmy);
+    int wls;
+    detect(image, g_start, g_end, l_start, l_end, &grid_mat, &gmx, &gmy, &word_list, &wls);
+    /*
     // print list
     for (int y =0; y<wmy; y++){
       for (int x=0; x<wmx[y]; x++){
         cell c = word_list[y][x];
         draw_rectangle(image, c.top_left, c.bot_right);
-        wait_for_keypressed();
+        //wait_for_keypressed();
         SDL_BlitSurface(image, NULL, SDL_GetWindowSurface(screen), 0);
         SDL_UpdateWindowSurface(screen);
       }
     }
     // print grid
     for (int y =0; y<gmy; y++){
-      wait_for_keypressed();
+      //wait_for_keypressed();
       for (int x=0; x<gmx; x++){
         cell c = grid_mat[y][x];
         draw_rectangle(image, c.top_left, c.bot_right);
       }
       SDL_BlitSurface(image, NULL, SDL_GetWindowSurface(screen), 0);
       SDL_UpdateWindowSurface(screen);
+    }
+    */
+    // print result grid
+    for (int y=0; y<gmy; y++){
+      printf("[ ");
+      for (int x=0; x<gmx; x++){
+        if (x==gmx-1){
+          printf("%c", grid_mat[y][x].c);
+        }
+        else{
+          printf("%c, ", grid_mat[y][x].c);
+        }
+      }
+      printf(" ]\n");
+    }
+    for (int i=0; i<wls; i++){
+      printf("%s\n", word_list[i]);
     }
     SDL_BlitSurface(image, NULL, SDL_GetWindowSurface(screen), 0);
     SDL_UpdateWindowSurface(screen);
