@@ -241,7 +241,7 @@ struct Network load_network(char *path) {
         double f_data = strtod(curr_data, &endptr);
         if (*endptr != '\0'){
           errx(EXIT_FAILURE,
-               "data could not be converted to a double or was null, %s, ended on : %c\n", curr_data, *endptr);
+               "data could not be converted to a double or was null, %s, ended on : %c, double data : %f\n", curr_data, *endptr, f_data);
         }
         // if the sep was a newline or a EOF, we know we were on the last column
         // of the line, thus the data is the bias we can then increase the
