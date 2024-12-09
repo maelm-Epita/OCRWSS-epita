@@ -58,14 +58,14 @@ void fill_grid(FILE *file, grid *g) {
     if (c == '\n')
       i--;
     else if (c >= 'a' && c <= 'z')
-      g->letters[i] = c - 32;
+      g->letters[i].c = c - 32;
     else if (c >= 'A' && c <= 'Z')
-      g->letters[i] = c;
+      g->letters[i].c = c;
     else
       errx(1, "Invalid grid: grid can only contain letters");
     i++;
   }
-  g->letters[g->w * g->h] = '\0';
+  g->letters[g->w * g->h].c = '\0';
 }
 
 void destroy_grid(grid **g) {
@@ -85,7 +85,7 @@ void print_grid(grid *g) {
   for (int i = 0; i < g->h; i++) {
     printf("%i  ", i);
     for (int j = 0; j < g->w; j++) {
-      putchar(g->letters[i * g->w + j]);
+      putchar(g->letters[i * g->w + j].c);
       putchar(' ');
     }
     putchar('\n');

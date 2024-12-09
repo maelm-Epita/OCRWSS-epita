@@ -13,7 +13,7 @@ grid *get_grid(char *path);
 
 char **get_words(char *path, int *nb_words);
 
-list_word *find_all_words(char *grid_path, char **words, size_t nb_words);
+list_word *find_all_words(grid *grid, char **words, size_t nb_words);
 
 void solve(grid *grid, tree_word *tree, list_word *res);
 
