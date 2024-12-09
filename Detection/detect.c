@@ -16,6 +16,8 @@ int MAX_CELL_AREA;
 int MIN_CELL_AREA;
 int PADDING;
 double CELL_LENGTH_MAX_ERR_FACTOR;
+int GRID_POSITION_THRESHOLD;
+int LIST_POSITION_THRESHOLD;
 
 int min(int n1, int n2){
   if (n1 < n2){
@@ -60,6 +62,150 @@ void wait_for_keypressed() {
   } while (event.type != SDL_KEYUP);
 }
 
+// sorts the cell array based on a dimension 
+// if 0, will sort based in x values
+// if 1, will sort based on y values
+void sort_with_threshold(cell* arr, int size, int threshold, int dim){
+  for (int i=0; i<size; i++){
+    int min_i = i;
+    for (int j=i+1; j<size; j++){
+      int el1, el2;
+      if (dim == 0){
+        el1 = arr[j].top_left.x;
+        el2 = arr[min_i].top_left.x;
+      }
+      else{
+        el1 = arr[j].top_left.y;
+        el2 = arr[min_i].top_left.y;
+      }
+      if (el1 < el2 - threshold){
+        min_i = j;
+      }
+    }
+    cell temp = arr[i];
+    arr[i] = arr[min_i];
+    arr[min_i] = temp;
+  }
+}
+
+void sort_no_threshold(cell* arr, int size, int dim){
+  for (int i=0; i<size; i++){
+    int min_i = i;
+    for (int j=i+1; j<size; j++){
+      int el1, el2;
+      if (dim == 0){
+        el1 = arr[j].top_left.x;
+        el2 = arr[min_i].top_left.x;
+      }
+      else{
+        el1 = arr[j].top_left.y;
+        el2 = arr[min_i].top_left.y;
+      }
+      if (el1 < el2){
+        min_i = j;
+      }
+    }
+    cell temp = arr[i];
+    arr[i] = arr[min_i];
+    arr[min_i] = temp;
+  }
+}
+
+void grid_to_matrix(cell* grid_cell_list, int cell_nb, cell** *grid_matrix, int* mat_size_x, int* mat_size_y){
+  // sort based on y value with a threshold
+  sort_with_threshold(grid_cell_list, cell_nb, GRID_POSITION_THRESHOLD, 1);
+  // divide the sorted cells into different lines of a matrix
+  int current_level = 0;
+  int current_el = 0;
+  cell** grid_mat = NULL;
+  for (int i=0; i<cell_nb; i++){
+    cell c = grid_cell_list[i];
+    // if first element of the array we initialize
+    if (i==0){
+      grid_mat = realloc(grid_mat, (current_level+1)*sizeof(cell*));
+      grid_mat[current_level] = NULL;
+      grid_mat[current_level] = realloc(grid_mat[current_level], (current_el+1)*sizeof(cell));
+      grid_mat[current_level][current_el] = c;
+      current_el++;
+    }
+    // if we are on any other element
+    else{
+      // if we are on a different y level with threshold
+      if (c.top_left.y - GRID_POSITION_THRESHOLD > grid_mat[current_level][current_el-1].top_left.y){
+        // we alloc another level
+        // we are now on the 0th el of this new level
+        current_level++;
+        current_el = 0;
+        grid_mat = realloc(grid_mat, (current_level+1)*sizeof(cell*));
+        grid_mat[current_level] = NULL;
+      }
+      // we add the element at the current level as the current element
+      grid_mat[current_level] = realloc(grid_mat[current_level], (current_el+1)*sizeof(cell));
+      grid_mat[current_level][current_el] = c;
+      current_el++;
+    }
+  }
+  // we will end on the last element of the last level thus we have the dimensions
+  *mat_size_y = current_level+1;
+  *mat_size_x = current_el;
+  // now we sort each level based on the x value
+  for (int i=0; i<*mat_size_y; i++){
+    sort_no_threshold(grid_mat[i], *mat_size_x, 0);
+  }
+  // we have now sorted our cells into a grid based on positions
+  *grid_matrix = grid_mat;
+}
+
+void word_to_matrix(cell* word_cell_list, int cell_nb, cell** *grid_matrix, int** mat_sizes_x, int* mat_size_y){
+  // sort based on y value with a threshold
+  sort_with_threshold(word_cell_list, cell_nb, LIST_POSITION_THRESHOLD, 1);
+  // divide the sorted cells into different lines of a matrix
+  int current_level = 0;
+  int current_el = 0;
+  int* w_sizes = NULL;
+  cell** word_mat = NULL;
+  for (int i=0; i<cell_nb; i++){
+    cell c = word_cell_list[i];
+    // if first element of the array we initialize
+    if (i==0){
+      w_sizes = realloc(w_sizes, (current_level+1)*sizeof(int));
+      word_mat = realloc(word_mat, (current_level+1)*sizeof(cell*));
+      word_mat[current_level] = NULL;
+      word_mat[current_level] = realloc(word_mat[current_level], (current_el+1)*sizeof(cell));
+      word_mat[current_level][current_el] = c;
+      current_el++;
+    }
+    // if we are on any other element
+    else{
+      // if we are on a different y level with threshold
+      if (c.top_left.y - LIST_POSITION_THRESHOLD> word_mat[current_level][current_el-1].top_left.y){
+        // we store the level's size in the list
+        w_sizes[current_level] = current_el;
+        // we alloc another level
+        // we are now on the 0th el of this new level
+        current_level++;
+        current_el = 0;
+        w_sizes = realloc(w_sizes, (current_level+1)*sizeof(int));
+        word_mat = realloc(word_mat, (current_level+1)*sizeof(cell*));
+        word_mat[current_level] = NULL;
+      }
+      // we add the element at the current level as the current element
+      word_mat[current_level] = realloc(word_mat[current_level], (current_el+1)*sizeof(cell));
+      word_mat[current_level][current_el] = c;
+      current_el++;
+    }
+  }
+  // we will end on the last element of the last level thus we have the dimensions
+  w_sizes[current_level] = current_el;
+  *mat_size_y = current_level+1;
+  *mat_sizes_x = w_sizes;
+  // now we sort each level based on the x value
+  for (int i=0; i<*mat_size_y; i++){
+    sort_no_threshold(word_mat[i], w_sizes[i], 0);
+  }
+  // we have now sorted our cells into a grid based on positions
+  *grid_matrix = word_mat;
+}
 
 SDL_Window *display_img(SDL_Surface *image) {
   if (SDL_VideoInit(NULL) < 0) // Initialize SDL
@@ -407,7 +553,9 @@ int detect_cells(SDL_Surface *img, point area_start, point area_end, cell** cell
   return cell_nb;
 }
 
-void detect(SDL_Surface *img, point grid_start, point grid_end, point list_start, point list_end, letter** grid_matrix, char** word_list){
+void detect(SDL_Surface *img, point grid_start, point grid_end, point list_start, point list_end, 
+            cell** *grid_matrix, int* grid_mat_size_x, int* grid_mat_size_y,
+            cell** *word_list, int** word_list_sizes_x, int* word_list_size_y){
   cell* grid_cells = NULL;
   cell* list_cells = NULL;
   int grid_cell_nb = detect_cells(img, grid_start, grid_end, &grid_cells);
@@ -416,24 +564,34 @@ void detect(SDL_Surface *img, point grid_start, point grid_end, point list_start
   if (grid_cells == NULL){
     errx(EXIT_FAILURE, "grid is null \n");
   }
-  for (int i = 0; i<grid_cell_nb; i++){
-    cell c = grid_cells[i];
-    draw_rectangle(img, c.top_left, c.bot_right);
-  }
-  for (int i = 0; i<list_cell_nb; i++){
-    cell c = list_cells[i];
-    draw_rectangle(img, c.top_left, c.bot_right);
-  }
   // Convert results to input of solver
   // Make 2d grid cell matrix
-  // Add cells according to coordinates
+  grid_to_matrix(grid_cells, grid_cell_nb, grid_matrix, grid_mat_size_x, grid_mat_size_y);
   // Make 2d word list matrix
-  // Add cells according to coordinates
+  word_to_matrix(list_cells, list_cell_nb, word_list, word_list_sizes_x, word_list_size_y);
   // Load AI
-  //printf("Loading AI model...\n");
-  //struct Network net = load_network(NETWORK_PATH);
-  // For each cell, save it and call the network on it 
-  // Then add it to the corresponding place in the grid matrix or word list
+  printf("Loading AI model...\n");
+  struct Network net = load_network(NETWORK_PATH);
+  letter** grid_letter_mat = calloc(*grid_mat_size_y, sizeof(letter*));
+  char** word_char_list = calloc(*word_list_size_y, sizeof(char*));
+  // For each cell in grid matrix, save the image and call the network on it
+  // Then place the result at the correct location in the new grid matrix
+  for (int y=0; y<*grid_mat_size_y; y++){
+    grid_letter_mat[y] = calloc(*grid_mat_size_x, sizeof(letter));
+    for (int x=0; x<*grid_mat_size_x; x++){
+      // Find correct height and width
+      // Create surface
+      // Draw the cell at the center of the surface
+      // Save as an image
+      // Load the image as input
+      // Call the network on said input
+      // Get the result char
+      // Create the letter by copying positions and the result of the network
+      // Place it into the matrix
+    }
+  }
+  // For each cell in word list, save the image and call the network on it
+  // Then place the result at the correct location in the new word list
 
   if (grid_cells != NULL){
     free(grid_cells);
@@ -452,6 +610,8 @@ void debgug(char* path, int grid_start_x, int grid_start_y, int grid_end_x, int 
   MIN_CELL_AREA = (image->w*image->h)/3000;
   PADDING = 5;
   CELL_LENGTH_MAX_ERR_FACTOR = 1.2;
+  GRID_POSITION_THRESHOLD = 30;
+  GRID_POSITION_THRESHOLD = 5;
   // program
   puts("init");
   SDL_BlitSurface(image, NULL, SDL_GetWindowSurface(screen), 0);
@@ -463,7 +623,21 @@ void debgug(char* path, int grid_start_x, int grid_start_y, int grid_end_x, int 
   point g_end = {grid_end_x, grid_end_y};
   point l_start = {list_start_x, list_start_y};
   point l_end = {list_end_x, list_end_y};
-  detect(image, g_start, g_end, l_start, l_end, NULL, NULL);
+  cell** grid_mat;
+  int gmx;
+  int gmy;
+  int* wmx;
+  int wmy;
+  detect(image, g_start, g_end, l_start, l_end, &grid_mat, &gmx, &gmy, NULL, &wmx, &wmy);
+  for (int y =0; y<gmy; y++){
+    for (int x=0; x<gmx; x++){
+      cell c = grid_mat[y][x];
+      draw_rectangle(image, c.top_left, c.bot_right);
+      wait_for_keypressed();
+      SDL_BlitSurface(image, NULL, SDL_GetWindowSurface(screen), 0);
+      SDL_UpdateWindowSurface(screen);
+    }
+  }
   SDL_BlitSurface(image, NULL, SDL_GetWindowSurface(screen), 0);
   SDL_UpdateWindowSurface(screen);
   puts("END");
@@ -471,7 +645,8 @@ void debgug(char* path, int grid_start_x, int grid_start_y, int grid_end_x, int 
   wait_for_keypressed();
   SDL_FreeSurface(image);
 }
-/*int main(int argc, char *argv[]) {
+
+int main(int argc, char *argv[]) {
   if (argc == 2) {
     SDL_Surface *image = IMG_Load(argv[1]);
     SDL_Window *screen = display_img(image);
@@ -479,7 +654,9 @@ void debgug(char* path, int grid_start_x, int grid_start_y, int grid_end_x, int 
     MAX_CELL_AREA = (image->w*image->h)/300;
     MIN_CELL_AREA = (image->w*image->h)/3000;
     PADDING = 5;
-    CELL_LENGTH_MAX_ERR_FACTOR = 1;
+    CELL_LENGTH_MAX_ERR_FACTOR = 1.2;
+    GRID_POSITION_THRESHOLD = 30;
+    LIST_POSITION_THRESHOLD = 5;
     // program
     puts("init");
     SDL_BlitSurface(image, NULL, SDL_GetWindowSurface(screen), 0);
@@ -491,7 +668,33 @@ void debgug(char* path, int grid_start_x, int grid_start_y, int grid_end_x, int 
     point g_end = {633,673};
     point l_start = {641, 12};
     point l_end = {769, 386};
-    detect(image, g_start, g_end, l_start, l_end, NULL, NULL);
+    cell** grid_mat;
+    cell** word_list;
+    int gmx;
+    int gmy;
+    int* wmx;
+    int wmy;
+    detect(image, g_start, g_end, l_start, l_end, &grid_mat, &gmx, &gmy, &word_list, &wmx, &wmy);
+    // print list
+    for (int y =0; y<wmy; y++){
+      for (int x=0; x<wmx[y]; x++){
+        cell c = word_list[y][x];
+        draw_rectangle(image, c.top_left, c.bot_right);
+        wait_for_keypressed();
+        SDL_BlitSurface(image, NULL, SDL_GetWindowSurface(screen), 0);
+        SDL_UpdateWindowSurface(screen);
+      }
+    }
+    // print grid
+    for (int y =0; y<gmy; y++){
+      wait_for_keypressed();
+      for (int x=0; x<gmx; x++){
+        cell c = grid_mat[y][x];
+        draw_rectangle(image, c.top_left, c.bot_right);
+      }
+      SDL_BlitSurface(image, NULL, SDL_GetWindowSurface(screen), 0);
+      SDL_UpdateWindowSurface(screen);
+    }
     SDL_BlitSurface(image, NULL, SDL_GetWindowSurface(screen), 0);
     SDL_UpdateWindowSurface(screen);
     puts("END");
@@ -504,4 +707,4 @@ void debgug(char* path, int grid_start_x, int grid_start_y, int grid_end_x, int 
   }
 
   return 1;
-}*/
+}
