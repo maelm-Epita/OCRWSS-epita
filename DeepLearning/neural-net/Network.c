@@ -237,7 +237,7 @@ struct Network load_network(char *path) {
           neuron->weights = calloc(neuron->inputsize, sizeof(double));
         }
         // convert data buffer to double
-        char *endptr;
+        char *endptr = "";
         double f_data = strtod(curr_data, &endptr);
         if (*endptr != '\0'){
           errx(EXIT_FAILURE,

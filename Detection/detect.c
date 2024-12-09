@@ -53,6 +53,13 @@ void free_2d_matrix(char** mat, int h){
   free(mat);
 }
 
+void free_2d_cell_matrix(cell** mat, int y){
+  for (int i=0; i<y; i++){
+    free(mat[i]);
+  }
+  free(mat);
+}
+
 void wait_for_keypressed() {
   SDL_Event event;
 
@@ -632,7 +639,7 @@ void detect(SDL_Surface *img, point grid_start, point grid_end, point list_start
   cell* list_cells = NULL;
   int grid_cell_nb = detect_cells(img, grid_start, grid_end, &grid_cells);
   int list_cell_nb = detect_cells(img, list_start, list_end, &list_cells);
-  printf("gnb : %d, lnb : %d\n", grid_cell_nb, list_cell_nb);
+  printf("grid cell nb : %d, list cell nb : %d\n", grid_cell_nb, list_cell_nb);
   if (grid_cells == NULL){
     errx(EXIT_FAILURE, "grid is null \n");
   }
@@ -672,6 +679,7 @@ void detect(SDL_Surface *img, point grid_start, point grid_end, point list_start
       // Place it into the matrix
       grid_letter_mat[y][x] = l;
       free(path);
+      free(input);
     }
   }
   *grid_matrix = grid_letter_mat;
@@ -697,20 +705,43 @@ void detect(SDL_Surface *img, point grid_start, point grid_end, point list_start
       // Place it into the right word of the list
       word_char_list[y][x] = res;
       free(path);
+      free(input);
     }
     // add the 0 to mark the end of the string
     word_char_list[y][word_cell_mat_sizes_x[y]] = 0;
   }
   *word_list = word_char_list;
 
+  // print result grid
+  for (int y=0; y<*grid_mat_size_y; y++){
+    printf("[ ");
+    for (int x=0; x<*grid_mat_size_x; x++){
+      if (x==*grid_mat_size_x-1){
+        printf("%c", grid_letter_mat[y][x].c);
+      }
+      else{
+        printf("%c, ", grid_letter_mat[y][x].c);
+      }
+    }
+    printf(" ]\n");
+  }
+  for (int i=0; i<*word_list_size; i++){
+    printf("%s\n", word_char_list[i]);
+  }
+
+  // clean up
   if (grid_cells != NULL){
     free(grid_cells);
   }
   if (list_cells != NULL){
     free(list_cells);
   }
+  free_2d_cell_matrix(grid_cell_mat, *grid_mat_size_y);
+  free_2d_cell_matrix(word_cell_mat, *word_list_size);
+  free_network_loaded(&net);
 }
 
+/*
 void debgug(char* path, int grid_start_x, int grid_start_y, int grid_end_x, int grid_end_y,
             int list_start_x, int list_start_y, int list_end_x, int list_end_y){
   SDL_Surface *image = IMG_Load(path);
@@ -738,7 +769,7 @@ void debgug(char* path, int grid_start_x, int grid_start_y, int grid_end_x, int 
   int gmy;
   int wls;
   detect(image, g_start, g_end, l_start, l_end, &grid_mat, &gmx, &gmy, NULL, &wls);
-  /*for (int y =0; y<gmy; y++){
+  for (int y =0; y<gmy; y++){
     for (int x=0; x<gmx; x++){
       cell c = grid_mat[y][x];
       draw_rectangle(image, c.top_left, c.bot_right);
@@ -752,10 +783,10 @@ void debgug(char* path, int grid_start_x, int grid_start_y, int grid_end_x, int 
   puts("END");
   wait_for_keypressed();
   wait_for_keypressed();
-  SDL_FreeSurface(image);*/
+  SDL_FreeSurface(image);
 }
 
-/*int main(int argc, char *argv[]) {
+int main(int argc, char *argv[]) {
   if (argc == 2) {
     SDL_Surface *image = IMG_Load(argv[1]);
     SDL_Window *screen = display_img(image);
@@ -783,7 +814,6 @@ void debgug(char* path, int grid_start_x, int grid_start_y, int grid_end_x, int 
     int gmy;
     int wls;
     detect(image, g_start, g_end, l_start, l_end, &grid_mat, &gmx, &gmy, &word_list, &wls);
-    /*
     // print list
     for (int y =0; y<wmy; y++){
       for (int x=0; x<wmx[y]; x++){
@@ -804,9 +834,9 @@ void debgug(char* path, int grid_start_x, int grid_start_y, int grid_end_x, int 
       SDL_BlitSurface(image, NULL, SDL_GetWindowSurface(screen), 0);
       SDL_UpdateWindowSurface(screen);
     }
-    */
+    
     // print result grid
-    /*for (int y=0; y<gmy; y++){
+    for (int y=0; y<gmy; y++){
       printf("[ ");
       for (int x=0; x<gmx; x++){
         if (x==gmx-1){
