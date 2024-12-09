@@ -76,9 +76,9 @@ char **get_words(char *path, int *nb_words) {
 list_word *find_all_words(grid *grid, char **words, size_t nb_words) {
   tree_word *tree = build_from_words(words, nb_words);
 
-  list_word *list = init_list("", (point){0, 0}, (point){0, 0});
+  list_word *list = init_list("", (point){0, 0}, (point){0, 0}, 0);
 
-  solve(grid, tree, list);
+  solve_grid(grid, tree, list);
 
   destroy_tree(&tree);
   destroy_grid(&grid);
@@ -87,13 +87,13 @@ list_word *find_all_words(grid *grid, char **words, size_t nb_words) {
   return res;
 }
 
-void solve(grid *grid, tree_word *tree, list_word *res) {
+void solve_grid(grid *grid, tree_word *tree, list_word *res) {
   for (int i = 0; i < grid->h; i++) {
     for (int j = 0; j < grid->w; j++) {
       tree_word *child = get_child(tree, grid->letters[i * grid->w + j].c);
       if (child != NULL) {
         for (int d = 0; d < 8; d++) {
-          check(grid, tree, res, i, j, moves[d][1], moves[d][0]);
+          check(grid, tree, res, i, j, moves[d][1], moves[d][0], d);
         }
       }
     }
@@ -101,7 +101,7 @@ void solve(grid *grid, tree_word *tree, list_word *res) {
 }
 
 void check(grid *grid, tree_word *tree, list_word *res, int i, int j, int i_add,
-           int j_add) {
+           int j_add, int direction) {
   char *substring = malloc(tree_length(tree) + 1);
   if (substring == NULL)
     errx(1, "malloc()");
@@ -123,7 +123,7 @@ void check(grid *grid, tree_word *tree, list_word *res, int i, int j, int i_add,
         errx(1, "malloc()");
       strcpy(str, substring);
 
-      add_element(res, str, (point){j, i}, (point){y - j_add, x - i_add});
+      add_element(res, str, (point){j, i}, (point){y - j_add, x - i_add}, direction);
       child = NULL;
     }
     if (child != NULL) {

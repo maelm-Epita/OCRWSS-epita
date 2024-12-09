@@ -4,18 +4,30 @@
 #include "../Detection/detect.h"
 #include <stddef.h>
 
+enum directions {
+  right,
+  down,
+  left,
+  up,
+  up_right,
+  down_right,
+  down_left,
+  up_left
+};
+
 typedef struct list_word {
   char *word;
   point start;
   point end;
+  enum directions direction;
   struct list_word *next;
 } list_word;
 
 static const size_t LWSIZE = sizeof(list_word);
 
-list_word *init_list(char *word, point start, point end);
+list_word *init_list(char *word, point start, point end, enum directions direction);
 
-void add_element(list_word *list, char *word, point start, point end);
+void add_element(list_word *list, char *word, point start, point end, enum directions direction);
 
 void destroy_list(list_word **list);
 

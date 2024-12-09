@@ -7,7 +7,8 @@ SRC = nvam.c \
 			GTK/draw_res.c \
 			ImageProcessing/*.c \
 			Detection/detect.c \
-			Detection/detection.c
+			Detection/detection.c \
+			Solver/*.c
 OBJ = *.o
 BIN = nvam-ocr
 
