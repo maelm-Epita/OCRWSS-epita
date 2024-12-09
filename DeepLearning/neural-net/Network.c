@@ -1,78 +1,82 @@
+#include "Network.h"
+#include "../shared/arr_helpers.h"
+#include "../shared/math_helpers.h"
 #include <err.h>
+#include <locale.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
-#include "../shared/arr_helpers.h"
-#include "../shared/math_helpers.h"
-#include "Network.h"
 
 // arbitrary size to calloc with, we assume that no single double/size_t data
 // will be more than 20 chars
 #define CALLOC_MAX_DATA_SIZE 20
 
-double get_z(double *inputs, double *weights, double bias, size_t inputsize){
+double get_z(double *inputs, double *weights, double bias, size_t inputsize) {
   double sum_weighted_inputs = 0;
-  for (size_t i = 0; i < inputsize; i++){
+  for (size_t i = 0; i < inputsize; i++) {
     sum_weighted_inputs += inputs[i] * weights[i];
   }
   return sum_weighted_inputs + bias;
 }
 
-double activation(double z){
-  return leaky_ReLu(z);
+double activation(double z) { return leaky_ReLu(z); }
+
+double calculate_output(struct Neuron neuron, double *inputs) {
+  return activation(
+      get_z(inputs, neuron.weights, neuron.bias, neuron.inputsize));
 }
 
-double calculate_output(struct Neuron neuron, double* inputs){
-  return activation(get_z(inputs, neuron.weights, neuron.bias, neuron.inputsize));
-}
-
-void calc_weight_bias_amount(struct Network net, size_t* weight_total, size_t* bias_total){
+void calc_weight_bias_amount(struct Network net, size_t *weight_total,
+                             size_t *bias_total) {
   size_t w_t = 0;
   size_t b_t = 0;
-  for (size_t l=0; l<net.layernb; l++){
+  for (size_t l = 0; l < net.layernb; l++) {
     // There are inputsize weights for each neuron so inputsize*layersize
-    w_t += ((net.layers+l)->neurons)->inputsize * *(net.layersizes+l);
+    w_t += ((net.layers + l)->neurons)->inputsize * *(net.layersizes + l);
     // There is one bias for each neuron in the layer
-    b_t += *(net.layersizes+l);
+    b_t += *(net.layersizes + l);
   }
   *weight_total = w_t;
   *bias_total = b_t;
-
 }
 
-double *feedforward(struct Network net, double *input, double** z_mat, double** a_mat) {
+double *feedforward(struct Network net, double *input, double **z_mat,
+                    double **a_mat) {
   double *prev_out = input;
-  // if we provided z mat and a mat pointers, we are doing the forward pass in the backprop
-  if (z_mat != NULL && a_mat != NULL){
-    //size_t dead_neurons = 0;
-    for (size_t l=0; l<net.layernb; l++){
-      size_t layer_size = *(net.layersizes+l);
+  // if we provided z mat and a mat pointers, we are doing the forward pass in
+  // the backprop
+  if (z_mat != NULL && a_mat != NULL) {
+    // size_t dead_neurons = 0;
+    for (size_t l = 0; l < net.layernb; l++) {
+      size_t layer_size = *(net.layersizes + l);
       double *zs = calloc(layer_size, sizeof(double));
       double *activations = calloc(layer_size, sizeof(double));
-      for (size_t n=0; n<layer_size; n++){
-        struct Neuron neuron = *((net.layers+l)->neurons+n);
-        double z = get_z(prev_out, neuron.weights, neuron.bias, neuron.inputsize);
-        *(zs+n) = z;
-        // IF WE ARE ON THE OUTPUT LAYER ; SOFTMAX WILL BE APPLIED (Because we need a probability distribution)
-        // WE APPLY SOFTMAX AFTER ALL LOGITS ARE CALCULATED
-        // ELSE FOR THE HIDDEN LAYER ; RELU WILL BE APPLIED (Because we need to prevent vanihsing gradient
-        if (l < net.layernb-1){
-          *(activations+n) = activation(z);
+      for (size_t n = 0; n < layer_size; n++) {
+        struct Neuron neuron = *((net.layers + l)->neurons + n);
+        double z =
+            get_z(prev_out, neuron.weights, neuron.bias, neuron.inputsize);
+        *(zs + n) = z;
+        // IF WE ARE ON THE OUTPUT LAYER ; SOFTMAX WILL BE APPLIED (Because we
+        // need a probability distribution) WE APPLY SOFTMAX AFTER ALL LOGITS
+        // ARE CALCULATED ELSE FOR THE HIDDEN LAYER ; RELU WILL BE APPLIED
+        // (Because we need to prevent vanihsing gradient
+        if (l < net.layernb - 1) {
+          *(activations + n) = activation(z);
         }
       }
-      // THIS IS WHERE SOFTMAX IS APPLIED ONTO 
-      if (l == net.layernb-1){
+      // THIS IS WHERE SOFTMAX IS APPLIED ONTO
+      if (l == net.layernb - 1) {
         softmax(zs, layer_size, activations);
       }
       prev_out = activations;
-      *(z_mat+l) = zs;
-      *(a_mat+l) = activations;
+      *(z_mat + l) = zs;
+      *(a_mat + l) = activations;
     }
   }
-  return *(a_mat+net.layernb-1);
+  return *(a_mat + net.layernb - 1);
 }
 
 char *neuron_to_str(struct Neuron neur) {
@@ -238,11 +242,19 @@ struct Network load_network(char *path) {
           neuron->weights = calloc(neuron->inputsize, sizeof(double));
         }
         // convert data buffer to double
+        // Sauvegarder la locale actuelle
+        char *old_locale = setlocale(LC_NUMERIC, NULL);
+        old_locale = old_locale ? strdup(old_locale) : NULL;
+
+        // Fixer la locale à "C" (format américain avec le point)
+        setlocale(LC_NUMERIC, "C");
         char *endptr = "";
         double f_data = strtod(curr_data, &endptr);
-        if (*endptr != '\0'){
+        if (*endptr != '\0') {
           errx(EXIT_FAILURE,
-               "data could not be converted to a double or was null, %s, ended on : %c, double data : %f\n", curr_data, *endptr, f_data);
+               "data could not be converted to a double or was null, %s, ended "
+               "on : %c, double data : %f\n",
+               curr_data, *endptr, f_data);
         }
         // if the sep was a newline or a EOF, we know we were on the last column
         // of the line, thus the data is the bias we can then increase the
