@@ -386,6 +386,10 @@ int separate_cells(cell* cells, int cell_nb, cell** new_cells_p){
     cell c = cells[i];
     int width = c.bot_right.x - c.top_left.x;
     int height = c.bot_right.y - c.top_left.y;
+    // if the height is 0 the cell is garbage so we can just skip it
+    if (height == 0){
+      break;
+    }
     int ratio = width/height;
     // if the length is alot bigger (at least 2x bigger) than the expected length)
     if (ratio >= expected_ratio * CELL_LENGTH_MAX_ERR_FACTOR){
