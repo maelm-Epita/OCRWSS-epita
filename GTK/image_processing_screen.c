@@ -91,16 +91,19 @@ void image_processing_screen(void) {
   GtkWidget *black_and_white_b = gtk_button_new_with_label("Black and white");
   GtkWidget *negatif_b = gtk_button_new_with_label("Rotate");
   GtkWidget *gauss_b = gtk_button_new_with_label("Gauss");
+  GtkWidget *median_b = gtk_button_new_with_label("Median");
   g_signal_connect(grayscale, "clicked", G_CALLBACK(exec_filter), gray_level);
   g_signal_connect(black_and_white_b, "clicked", G_CALLBACK(exec_filter),
                    black_and_white);
   g_signal_connect(negatif_b, "clicked", G_CALLBACK(exec_rotate), NULL);
   g_signal_connect(gauss_b, "clicked", G_CALLBACK(exec_filter), gauss);
+  g_signal_connect(median_b, "clicked", G_CALLBACK(exec_filter), median);
   gtk_box_pack_start(GTK_BOX(filter_buttons), grayscale, TRUE, TRUE, 10);
   gtk_box_pack_start(GTK_BOX(filter_buttons), black_and_white_b, TRUE, TRUE,
                      10);
   gtk_box_pack_start(GTK_BOX(filter_buttons), negatif_b, TRUE, TRUE, 10);
   gtk_box_pack_start(GTK_BOX(filter_buttons), gauss_b, TRUE, TRUE, 10);
+  gtk_box_pack_start(GTK_BOX(filter_buttons), median_b, TRUE, TRUE, 10);
 
   GtkWidget *inc_contrast = gtk_button_new_with_label("Contrast +");
   GtkWidget *dec_contrast = gtk_button_new_with_label("Contrast -");

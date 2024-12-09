@@ -50,7 +50,11 @@ void exec_detection() {
       DrawGrid.res[i] = res[i];
       DrawWords.res[i] = res[i + 4];
     }
-    init = 1;
+    if ((res[0] == res[2] && res[1] == res[3]) ||
+        (res[4] == res[6] && res[5] == res[7]))
+      init = 0;
+    else
+      init = 1;
   }
   draw_detection_lines(surface, DrawGrid);
   draw_detection_lines(surface, DrawWords);
