@@ -1,3 +1,5 @@
+#pragma once
+
 // a point is 2 coordinates
 typedef struct{
   int x;
