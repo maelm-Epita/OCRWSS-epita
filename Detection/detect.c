@@ -244,7 +244,7 @@ int separate_cells(cell* cells, int cell_nb, cell** new_cells_p){
     expected_ratio+=ratio;
   }
   expected_ratio/=cell_nb;
-  printf("Expected len : %f\n", expected_ratio);
+  printf("Expected ratio: %f\n", expected_ratio);
   // Now we compare and possibly split each cell
   for (int i=0; i<cell_nb; i++){
     cell c = cells[i];
@@ -258,6 +258,13 @@ int separate_cells(cell* cells, int cell_nb, cell** new_cells_p){
       int expected_width = height*expected_ratio;
       // find the amount of cells to split into
       int split_nb = width/expected_width;
+      // if we would only split into once cell, we can just add the cell as it was and skip this iteration
+      if (split_nb == 1){
+        new_cell_nb++;
+        new_cells = realloc(new_cells, new_cell_nb*sizeof(cell));
+        new_cells[new_cell_nb-1] = c;
+        continue;
+      }
       // find the spacing between each cell
       int pad_nb = width/split_nb - expected_width;
       // each new cell's top left point x will be this much off of the last
@@ -339,7 +346,7 @@ int filter_and_refine_cells(cell* cells, int cell_nb, cell** new_cells_p){
   return new_cell_nb;
 }
 
-int detect_cells(SDL_Surface *img, point area_start, point area_end, cell** cell_list, SDL_Window* screen){
+int detect_cells(SDL_Surface *img, point area_start, point area_end, cell** cell_list){
   // free any cell list that was provided
   if (*cell_list != NULL){
     free(*cell_list);
@@ -400,19 +407,19 @@ int detect_cells(SDL_Surface *img, point area_start, point area_end, cell** cell
   // after we are done we will filter cells to keep only likely letters
   // we also apply transformations such as correcting the aspect ratio
   // to be a square while keeping the letter centered
-  //cell* separated_cells = NULL;
-  //cell_nb = separate_cells(cells, cell_nb, &separated_cells);
+  cell* separated_cells = NULL;
+  cell_nb = separate_cells(cells, cell_nb, &separated_cells);
   cell* filtered_cells = NULL;
-  cell_nb = filter_and_refine_cells(cells, cell_nb, &filtered_cells);
+  cell_nb = filter_and_refine_cells(separated_cells, cell_nb, &filtered_cells);
   *cell_list = filtered_cells;
   return cell_nb;
 }
 
-void detect(SDL_Surface *img, point grid_start, point grid_end, point list_start, point list_end, letter** grid_matrix, char** word_list, SDL_Window* screen){
+void detect(SDL_Surface *img, point grid_start, point grid_end, point list_start, point list_end, letter** grid_matrix, char** word_list){
   cell* grid_cells = NULL;
   cell* list_cells = NULL;
-  int grid_cell_nb = detect_cells(img, grid_start, grid_end, &grid_cells, screen);
-  int list_cell_nb = detect_cells(img, list_start, list_end, &list_cells, screen);
+  int grid_cell_nb = detect_cells(img, grid_start, grid_end, &grid_cells);
+  int list_cell_nb = detect_cells(img, list_start, list_end, &list_cells);
   printf("gnb : %d, lnb : %d\n", grid_cell_nb, list_cell_nb);
   if (grid_cells == NULL){
     errx(EXIT_FAILURE, "grid is null \n");
@@ -452,7 +459,7 @@ int main(int argc, char *argv[]) {
     MAX_CELL_AREA = (image->w*image->h)/300;
     MIN_CELL_AREA = (image->w*image->h)/3000;
     PADDING = 5;
-    CELL_LENGTH_MAX_ERR_FACTOR = 1.2;
+    CELL_LENGTH_MAX_ERR_FACTOR = 1;
     // program
     puts("init");
     SDL_BlitSurface(image, NULL, SDL_GetWindowSurface(screen), 0);
@@ -462,7 +469,7 @@ int main(int argc, char *argv[]) {
     wait_for_keypressed();
     point start = {0,0};
     point end = {image->w-1,image->h-1};
-    detect(image, start, end, start, end, NULL, NULL, screen);
+    detect(image, start, end, start, end, NULL, NULL);
     SDL_BlitSurface(image, NULL, SDL_GetWindowSurface(screen), 0);
     SDL_UpdateWindowSurface(screen);
     puts("END");
