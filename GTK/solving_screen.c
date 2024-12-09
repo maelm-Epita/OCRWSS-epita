@@ -18,8 +18,20 @@ void solve(void){
   asprintf(&image_path, "%s/image-%li.bmp", IMAGES_PATH, version);
   printf("Grid start : %d, %d\nGrid end : %d, %d\n Word start : %d, %d\nWord end : %d, %d\n", DrawGrid.res[0], DrawGrid.res[1], DrawGrid.res[2], DrawGrid.res[3],
          DrawWords.res[0], DrawWords.res[1], DrawWords.res[2], DrawWords.res[3]);
-  debgug(image_path, DrawGrid.res[0], DrawGrid.res[1], DrawGrid.res[2], DrawGrid.res[3],
-        DrawWords.res[0], DrawWords.res[1], DrawWords.res[2], DrawWords.res[3]);
+  // Preparing arguments
+  SDL_Surface* img = SDL_LoadBMP(image_path); 
+  point grid_start = {DrawGrid.res[0], DrawGrid.res[1]};
+  point grid_end = {DrawGrid.res[2], DrawGrid.res[3]};
+  point list_start = {DrawWords.res[0], DrawWords.res[1]};
+  point list_end = {DrawWords.res[2], DrawWords.res[3]};
+  // Preparing return variables
+  int grid_size_x, grid_size_y, word_list_size;
+  letter** grid_matrix;
+  char** word_list;
+  // detection
+  detect(img, grid_start, grid_end, list_start, list_end,
+         &grid_matrix, &grid_size_x, &grid_size_y,
+         &word_list, &word_list_size);
 }
 
 void save_file() {

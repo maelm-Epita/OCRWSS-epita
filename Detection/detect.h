@@ -1,5 +1,7 @@
 #pragma once
 
+#include <SDL2/SDL_surface.h>
+
 // a point is 2 coordinates
 typedef struct{
   int x;
@@ -26,5 +28,6 @@ typedef struct{
 } letter;
 
 
-void debgug(char* path, int grid_start_x, int grid_start_y, int grid_end_x, int grid_end_y,
-            int list_start_x, int list_start_y, int list_end_x, int list_end_y);
+void detect(SDL_Surface *img, point grid_start, point grid_end, point list_start, point list_end, 
+            letter** *grid_matrix, int* grid_mat_size_x, int* grid_mat_size_y,
+            char** *word_list, int* word_list_size);
