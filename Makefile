@@ -4,6 +4,7 @@ LDFLAGS = `pkg-config --libs gtk+-3.0` -lm -lSDL2 -lSDL2_image
 SRC = nvam.c \
 			GTK/*screen*.c \
 			GTK/gtk_tools.c \
+			GTK/draw_res.c \
 			ImageProcessing/*.c \
 			Detection/detection.c
 OBJ = *.o
