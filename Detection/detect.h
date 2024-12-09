@@ -22,3 +22,7 @@ typedef struct{
   point bot_right;
   char c;
 } letter;
+
+
+void debgug(char* path, int grid_start_x, int grid_start_y, int grid_end_x, int grid_end_y,
+            int list_start_x, int list_start_y, int list_end_x, int list_end_y);
