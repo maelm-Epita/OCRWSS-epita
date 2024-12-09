@@ -20,10 +20,10 @@
 #define __DATA_NB 372451
 #define ___DATA_NB 13130
 #define _DATA_NB 26
-#define DATA_NB 151
+#define DATA_NB 607
 #define MINIBATCH_SIZE 26
 #define EPOCHS 75
-#define RATE 1e-1
+#define RATE 1e-3
 #define BACKPROP_NUMBER -1
 #define ___TRAINING_SET_PATH "./training-set/handwritten_letters.csv"
 #define ____TRAINING_SET_PATH "./training-set/digital_letters.csv"

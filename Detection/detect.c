@@ -14,7 +14,7 @@
 #include "../ImageProcessing/resize.h"
 #include "../DeepLearning/neural-net/network_functions.h"
 
-#define NETWORK_PATH "./DeepLearning/models/easy-final.model"
+#define NETWORK_PATH "./DeepLearning/models/grid-final.model"
 #define IMAGE_SAVING_PATH "/tmp/OCR/Letters"
 
 int MAX_CELL_AREA;
