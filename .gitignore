@@ -41,3 +41,6 @@ dkms.conf
 
 # ignore largest training data DO NOT REMOVE
 handwritten_letters.csv
+
+
+nvam-ocr
