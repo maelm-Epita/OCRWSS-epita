@@ -25,7 +25,7 @@ $(OBJ_DETECT):
 	$(CC) $(CFLAGS) -c $(SRC_DETECT)
 
 .PHONY debug: CFLAGS += -g -O0 -fsanitize=address
-.PHONY debug: $(BIN)
+.PHONY debug: $(BIN_DETECT)
 
 .PHONY: clean
 clean:

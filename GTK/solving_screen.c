@@ -3,6 +3,7 @@
 
 #include "gtk_tools.h"
 #include "screens.h"
+#include "../Detection/detect.h"
 
 extern GtkWidget *window;
 extern GtkWidget *box;
@@ -11,6 +12,15 @@ extern cairo_surface_t *image_surface;
 
 extern DrawingData DrawGrid;
 extern DrawingData DrawWords;
+
+void solve(void){
+  char* image_path;
+  asprintf(&image_path, "%s/image-%li.bmp", IMAGES_PATH, version);
+  printf("Grid start : %d, %d\nGrid end : %d, %d\n Word start : %d, %d\nWord end : %d, %d\n", DrawGrid.res[0], DrawGrid.res[1], DrawGrid.res[2], DrawGrid.res[3],
+         DrawWords.res[0], DrawWords.res[1], DrawWords.res[2], DrawWords.res[3]);
+  //debgug(image_path, DrawGrid.res[0], DrawGrid.res[1], DrawGrid.res[2], DrawGrid.res[3],
+   //      DrawWords.res[0], DrawWords.res[1], DrawWords.res[2], DrawWords.res[3]);
+}
 
 void save_file() {
   GtkWidget *dialog;
@@ -45,6 +55,7 @@ void save_file() {
 }
 
 void solving_screen(void) {
+  solve();
   char *image_path = NULL;
   asprintf(&image_path, "%s/image-%li.bmp", IMAGES_PATH, version);
   // image_path = "/home/lepotototor/nvam.bmp";

@@ -60,18 +60,6 @@ void wait_for_keypressed() {
   } while (event.type != SDL_KEYUP);
 }
 
-double get_picture_density(SDL_Surface *surface) {
-  int nb_black = 0;
-  Uint32 *pixels = surface->pixels;
-  Uint8 r;
-  for (int i = 0; i < surface->w * surface->h; i++) {
-    SDL_GetRGB(pixels[i], surface->format, &r, &r, &r);
-    if (!r)
-      nb_black++;
-  }
-
-  return (double)nb_black / (surface->w * surface->h);
-}
 
 SDL_Window *display_img(SDL_Surface *image) {
   if (SDL_VideoInit(NULL) < 0) // Initialize SDL
@@ -244,6 +232,10 @@ int separate_cells(cell* cells, int cell_nb, cell** new_cells_p){
     expected_ratio+=ratio;
   }
   expected_ratio/=cell_nb;
+  // nudge in the right direction (usually 0,6 is a good ratio)
+  // it means 6/10 = width/height
+  expected_ratio += 0.6;
+  expected_ratio /= 2;
   printf("Expected ratio: %f\n", expected_ratio);
   // Now we compare and possibly split each cell
   for (int i=0; i<cell_nb; i++){
@@ -451,7 +443,35 @@ void detect(SDL_Surface *img, point grid_start, point grid_end, point list_start
   }
 }
 
-int main(int argc, char *argv[]) {
+void debgug(char* path, int grid_start_x, int grid_start_y, int grid_end_x, int grid_end_y,
+            int list_start_x, int list_start_y, int list_end_x, int list_end_y){
+  SDL_Surface *image = IMG_Load(path);
+  SDL_Window *screen = display_img(image);
+  // magic constants
+  MAX_CELL_AREA = (image->w*image->h)/300;
+  MIN_CELL_AREA = (image->w*image->h)/3000;
+  PADDING = 5;
+  CELL_LENGTH_MAX_ERR_FACTOR = 1.2;
+  // program
+  puts("init");
+  SDL_BlitSurface(image, NULL, SDL_GetWindowSurface(screen), 0);
+  puts("Blit");
+  SDL_UpdateWindowSurface(screen);
+  puts("Update");
+  wait_for_keypressed();
+  point g_start = {grid_start_x,grid_start_y};
+  point g_end = {grid_end_x, grid_end_y};
+  point l_start = {list_start_x, list_start_y};
+  point l_end = {list_end_x, list_end_y};
+  detect(image, g_start, g_end, l_start, l_end, NULL, NULL);
+  SDL_BlitSurface(image, NULL, SDL_GetWindowSurface(screen), 0);
+  SDL_UpdateWindowSurface(screen);
+  puts("END");
+  wait_for_keypressed();
+  wait_for_keypressed();
+  SDL_FreeSurface(image);
+}
+/*int main(int argc, char *argv[]) {
   if (argc == 2) {
     SDL_Surface *image = IMG_Load(argv[1]);
     SDL_Window *screen = display_img(image);
@@ -467,9 +487,11 @@ int main(int argc, char *argv[]) {
     SDL_UpdateWindowSurface(screen);
     puts("Update");
     wait_for_keypressed();
-    point start = {0,0};
-    point end = {image->w-1,image->h-1};
-    detect(image, start, end, start, end, NULL, NULL);
+    point g_start = {12,16};
+    point g_end = {633,673};
+    point l_start = {641, 12};
+    point l_end = {769, 386};
+    detect(image, g_start, g_end, l_start, l_end, NULL, NULL);
     SDL_BlitSurface(image, NULL, SDL_GetWindowSurface(screen), 0);
     SDL_UpdateWindowSurface(screen);
     puts("END");
@@ -482,4 +504,4 @@ int main(int argc, char *argv[]) {
   }
 
   return 1;
-}
+}*/
