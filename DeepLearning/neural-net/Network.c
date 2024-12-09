@@ -183,6 +183,7 @@ struct Network load_network(char *path) {
     // a newline, therefore we dont consider EOF as a separator, we just dont
     // care for it
     if (buf == ' ' || buf == '\n') {
+      printf("found sep: %c\n", buf);
       *(curr_data + cdi) = 0;
       cdi = 0;
       // inputsize and layernumber line
