@@ -84,9 +84,24 @@ void load_training_data(char* path, double** *inputs_p, double** *outputs_p, siz
     double *input;
     double *output;
     if (linesize>1){
-      // if we are loading the handwritten training set ; the lines are : expected label index -- pixels
-      if (strcmp(path, "./training-set/handwritten_letters.csv") == 0 || strcmp(path, "./training-set/easy_font.csv") == 0 ||
-          strcmp(path, "./training-set/hard_font.csv") == 0) {
+      // if we are loading the digital training set ; the lines are : pixels -- expected letter guess
+      if (strcmp(path, "./training-set/digital_letters.csv") == 0 || 
+          strcmp(path, "./training-set/digital_letters_alt.csv") == 0)
+      {
+        // the first element in the line is the index (data number) so we just discard it
+        strtok(line, ",");
+        // get the first input_size columns which are the pixels and convert them to a number then from 0-255 to 0-1
+        input = calloc(input_size, sizeof(double));
+        for (size_t i = 0; i<input_size; i++){
+          *(input+i) = atof(strtok(NULL, ","))/255;
+        }
+        // get the expected output of the training data; we get the line until the first ,
+        // then convert that to a number then get the output from that number
+        // as in the other format, the last element in the line (the label here)
+        output = snum_to_output(*(strtok(NULL, ""))-'A');
+      }
+      // if we are loading the other training set ; assume the lines are : expected label index -- pixels
+      else {
         // get the expected output of the training data; we get the line until the first , 
         // then convert that to a number then get the output from that number
         output = snum_to_output(str_to_size(strtok(line, ",")));
@@ -102,25 +117,6 @@ void load_training_data(char* path, double** *inputs_p, double** *outputs_p, siz
             *(input+i) = atof(strtok(NULL, ","))/255;
           }
         }
-      }
-      // if we are loading the digital training set ; the lines are : pixels -- expected letter guess
-      else if (strcmp(path, "./training-set/digital_letters.csv") == 0 || 
-          strcmp(path, "./training-set/digital_letters_alt.csv") == 0)
-      {
-        // the first element in the line is the index (data number) so we just discard it
-        strtok(line, ",");
-        // get the first input_size columns which are the pixels and convert them to a number then from 0-255 to 0-1
-        input = calloc(input_size, sizeof(double));
-        for (size_t i = 0; i<input_size; i++){
-          *(input+i) = atof(strtok(NULL, ","))/255;
-        }
-        // get the expected output of the training data; we get the line until the first ,
-        // then convert that to a number then get the output from that number
-        // as in the other format, the last element in the line (the label here)
-        output = snum_to_output(*(strtok(NULL, ""))-'A');
-      }
-      else{
-        errx(EXIT_FAILURE, "Unknown training set path : %s, can't infer formatting.\n", path);
       }
       if (input == NULL || output == NULL){
         errx(EXIT_FAILURE, "Failed to load the data for line %lu\n", line_nb);

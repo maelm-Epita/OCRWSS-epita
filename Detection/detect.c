@@ -478,7 +478,9 @@ void draw_region(SDL_Surface* dst, SDL_Surface* src, cell c, int start_x, int st
 }
 
 // takes a cell and saves it in proper format for input to the network
-char* save_cell(SDL_Surface* img, cell c, int x, int y){
+// if grid == 0 then word list path is used
+// else grid path is used
+char* save_cell(SDL_Surface* img, cell c, int x, int y, int grid){
   // Find correct dimensions
   int w = c.bot_right.x-c.top_left.x;
   int h = c.bot_right.y-c.top_left.y;
@@ -505,7 +507,12 @@ char* save_cell(SDL_Surface* img, cell c, int x, int y){
   negatif(cell_img);
   // Save as an image
   char* path;
-  asprintf(&path, "%s/grid_letter_%d%d", IMAGE_SAVING_PATH, x,y);
+  if (grid == 0){
+    asprintf(&path, "%s/list_letter_%d%d", IMAGE_SAVING_PATH, x,y);
+  }
+  else{
+    asprintf(&path, "%s/grid_letter_%d%d", IMAGE_SAVING_PATH, x,y);
+  }
   SDL_SaveBMP(cell_img, path);
   SDL_FreeSurface(cell_img);
   // Resize the image
@@ -638,7 +645,7 @@ void detect(SDL_Surface *img, point grid_start, point grid_end, point list_start
     for (int x=0; x<*grid_mat_size_x; x++){
       cell c = grid_cell_mat[y][x];
       // Save the image in the proper format
-      char* path = save_cell(img, c, x, y);
+      char* path = save_cell(img, c, x, y,1);
       // Load the image as input
       double* input = image_to_input(path);
       // Call the network on said input
@@ -665,7 +672,7 @@ void detect(SDL_Surface *img, point grid_start, point grid_end, point list_start
     for (int x=0; x<word_cell_mat_sizes_x[y]; x++){
       cell c = word_cell_mat[y][x];
       // Save the image in the proper format
-      char* path = save_cell(img, c, x, y);
+      char* path = save_cell(img, c, x, y,0);
       // Load the image as input
       double* input = image_to_input(path);
       // Call the network on said input

@@ -18,16 +18,18 @@
 #define LAYER_NUMBER 3
 #define LAYER_SIZES {32, 32, 26}
 #define __DATA_NB 372451
-#define DATA_NB 13130
+#define ___DATA_NB 13130
 #define _DATA_NB 26
+#define DATA_NB 151
 #define MINIBATCH_SIZE 26
 #define EPOCHS 75
 #define RATE 1e-1
 #define BACKPROP_NUMBER -1
 #define ___TRAINING_SET_PATH "./training-set/handwritten_letters.csv"
-#define TRAINING_SET_PATH "./training-set/digital_letters.csv"
+#define ____TRAINING_SET_PATH "./training-set/digital_letters.csv"
 #define __TRAINING_SET_PATH "./training-set/easy_font.csv"
 #define _TRAINING_SET_PATH "./training-set/hard_font.csv"
+#define TRAINING_SET_PATH "./training-set/grid.csv"
 #define DEFAULT_SAVE_PATH "./models/letter.model"
 // fork specific
 #define NETWORK_NUMBER 8
