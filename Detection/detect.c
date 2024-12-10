@@ -14,7 +14,7 @@
 #include "../ImageProcessing/resize.h"
 #include "../DeepLearning/neural-net/network_functions.h"
 
-#define NETWORK_PATH "./DeepLearning/models/grid-final.model"
+#define NETWORK_PATH "./DeepLearning/models/grid-final1.model"
 #define IMAGE_SAVING_PATH "/tmp/OCR/Letters"
 
 int MAX_CELL_AREA;
@@ -633,7 +633,7 @@ void detect(SDL_Surface *img, point grid_start, point grid_end, point list_start
   MIN_CELL_AREA = (img->w*img->h)/3000;
   PADDING = 5;
   CELL_LENGTH_MAX_ERR_FACTOR = 1.2;
-  GRID_POSITION_THRESHOLD = 30;
+  GRID_POSITION_THRESHOLD = 15;
   LIST_POSITION_THRESHOLD = 5;
   cell* grid_cells = NULL;
   cell* list_cells = NULL;
