@@ -1,6 +1,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 
+#include "../Solver/list_word.h"
 #include "gtk_tools.h"
 
 // Helper function to draw a filled circle
@@ -60,17 +61,20 @@ void draw(SDL_Renderer *renderer, letter letter1, letter letter2, int radius) {
   draw_rounded_rect(renderer, rect_x, rect_y, rect_w, rect_h, radius);
 }
 
-void draw_between_letters(const char *filepath, letter letter1, letter letter2) {
+void draw_between_letters(const char *filepath, letter letter1,
+                          letter letter2) {
   SDL_Surface *original_surface = IMG_Load(filepath);
 
-  SDL_Window *window = SDL_CreateWindow(
-      "Dessiner un rectangle arrondi", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-      original_surface->w, original_surface->h, SDL_WINDOW_HIDDEN);
+  SDL_Window *window =
+      SDL_CreateWindow("Dessiner un rectangle arrondi", SDL_WINDOWPOS_CENTERED,
+                       SDL_WINDOWPOS_CENTERED, original_surface->w,
+                       original_surface->h, SDL_WINDOW_HIDDEN);
   SDL_Renderer *renderer =
       SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 
   // Créer une texture à partir de l'image chargée
-  SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, original_surface);
+  SDL_Texture *texture =
+      SDL_CreateTextureFromSurface(renderer, original_surface);
 
   // Effacer le renderer et copier la texture source
   SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
@@ -78,7 +82,8 @@ void draw_between_letters(const char *filepath, letter letter1, letter letter2) 
   SDL_RenderCopy(renderer, texture, NULL, NULL);
 
   // Dessiner le rectangle arrondi
-  SDL_SetRenderDrawColor(renderer, 255, 0, 0, SDL_ALPHA_OPAQUE); // Couleur rouge
+  SDL_SetRenderDrawColor(renderer, 255, 0, 0,
+                         SDL_ALPHA_OPAQUE); // Couleur rouge
   draw(renderer, letter1, letter2, 50);
 
   // Présenter le rendu
@@ -86,7 +91,8 @@ void draw_between_letters(const char *filepath, letter letter1, letter letter2) 
 
   // Lire les pixels du rendu dans une surface
   SDL_Surface *surface = SDL_CreateRGBSurfaceWithFormat(
-      0, original_surface->w, original_surface->h, 32, SDL_PIXELFORMAT_ARGB8888);
+      0, original_surface->w, original_surface->h, 32,
+      SDL_PIXELFORMAT_ARGB8888);
 
   SDL_RenderReadPixels(renderer, NULL, surface->format->format, surface->pixels,
                        surface->pitch);
@@ -102,3 +108,65 @@ void draw_between_letters(const char *filepath, letter letter1, letter letter2) 
   SDL_DestroyWindow(window);
 }
 
+void draw_word(const char *filepath, const list_word *word) {
+  SDL_Surface *original_surface = IMG_Load(filepath);
+
+  SDL_Window *window = SDL_CreateWindow(
+      "test", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+      original_surface->w, original_surface->h, SDL_WINDOW_HIDDEN);
+  SDL_Renderer *renderer =
+      SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+
+  // Créer une texture à partir de l'image chargée
+  SDL_Texture *texture =
+      SDL_CreateTextureFromSurface(renderer, original_surface);
+
+  // Effacer le renderer et copier la texture source
+  SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
+  SDL_RenderClear(renderer);
+  SDL_RenderCopy(renderer, texture, NULL, NULL);
+
+  // Dessiner le rectangle arrondi
+  SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+  SDL_SetRenderDrawColor(renderer, 255, 0, 0, 128);
+
+  if (word->direction < 4) {
+    int x = (word->start.top_left.x < word->end.top_left.x)
+                ? word->start.top_left.x
+                : word->end.top_left.x;
+    int y = (word->start.top_left.y < word->end.top_left.y)
+                ? word->start.top_left.y
+                : word->end.top_left.y;
+
+    int x_max = (word->start.bot_right.x > word->end.bot_right.x)
+                    ? word->start.bot_right.x
+                    : word->end.bot_right.x;
+    int y_max = (word->start.bot_right.y > word->end.bot_right.y)
+                    ? word->start.bot_right.y
+                    : word->end.bot_right.y;
+
+    int w = x_max - x;
+    int h = y_max - y;
+    SDL_Rect rect = {x, y, w, h};
+    SDL_RenderFillRect(renderer, &rect);
+    SDL_RenderPresent(renderer);
+  }
+
+  // Lire les pixels du rendu dans une surface
+  SDL_Surface *surface = SDL_CreateRGBSurfaceWithFormat(
+      0, original_surface->w, original_surface->h, 32,
+      SDL_PIXELFORMAT_ARGB8888);
+
+  SDL_RenderReadPixels(renderer, NULL, surface->format->format, surface->pixels,
+                       surface->pitch);
+
+  // SDL_Delay(5000);
+  SDL_SaveBMP(surface, filepath);
+
+  // Libérer les ressources
+  SDL_FreeSurface(surface);
+  SDL_FreeSurface(original_surface);
+  SDL_DestroyTexture(texture);
+  SDL_DestroyRenderer(renderer);
+  SDL_DestroyWindow(window);
+}

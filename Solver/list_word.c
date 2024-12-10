@@ -4,7 +4,7 @@
 
 #include "list_word.h"
 
-list_word *init_list(char *word, point start, point end, enum directions direction){
+list_word *init_list(char *word, letter start, letter end, enum directions direction){
   list_word *res = malloc(LWSIZE);
   if (res == NULL)
     errx(1, "malloc()");
@@ -17,7 +17,7 @@ list_word *init_list(char *word, point start, point end, enum directions directi
   return res;
 }
 
-void add_element(list_word *list, char *word, point start, point end, enum directions direction) {
+void add_element(list_word *list, char *word, letter start, letter end, enum directions direction) {
   while (list->next != NULL)
     list = list->next;
   list->next = init_list(word, start, end, direction);
@@ -37,8 +37,10 @@ void destroy_list(list_word **list) {
 
 void print_list(list_word *list) {
   if (list != NULL) {
+    /*
     printf("%s (%i, %i) -> (%i, %i)\n", list->word, list->start.x,
            list->start.y, list->end.x, list->end.y);
+    */
     if (list->next != NULL)
       print_list(list->next);
   }

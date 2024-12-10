@@ -11,7 +11,8 @@
 list_word *find_all_words(grid *grid, char **words, size_t nb_words) {
   tree_word *tree = build_from_words(words, nb_words);
 
-  list_word *list = init_list("", (point){0, 0}, (point){0, 0}, 0);
+  list_word *list = init_list("", (letter){{0, 0}, {0, 0}, '\0'},
+                              (letter){{0, 0}, {0, 0}, '\0'}, 0);
 
   solve_grid(grid, tree, list);
 
@@ -56,8 +57,8 @@ void check(grid *grid, tree_word *tree, list_word *res, int i, int j, int i_add,
         errx(1, "malloc()");
       strcpy(str, substring);
 
-      add_element(res, str, (point){j, i}, (point){y - j_add, x - i_add},
-                  direction);
+      add_element(res, str, grid->letters[i][j],
+                  grid->letters[x - i_add][y - j_add], direction);
       child = NULL;
     }
     if (child != NULL && x < grid->h && y < grid->w) {
