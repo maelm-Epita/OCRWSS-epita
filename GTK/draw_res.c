@@ -187,7 +187,7 @@ void draw_word(const char *filepath, const list_word *word) {
 
     // Remplir le rectangle en traçant des lignes horizontales
     int minX = (x1 < x2) ? x1 : x2;
-    int maxX = (x3 > x4) ? x3 : x4;
+    //int maxX = (x3 > x4) ? x3 : x4;
     int minY = (y1 < y2) ? y1 : y2;
     int maxY = (y3 > y4) ? y3 : y4;
 

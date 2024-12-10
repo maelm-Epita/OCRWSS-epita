@@ -1,5 +1,5 @@
 CC = clang
-CFLAGS = -Wall -Wextra -Wvla `pkg-config --cflags gtk+-3.0`
+CFLAGS = -Wall -Wextra -Wvla -Ofast `pkg-config --cflags gtk+-3.0`
 LDFLAGS = `pkg-config --libs gtk+-3.0` -lm -lSDL2 -lSDL2_image
 SRC = nvam.c \
 			GTK/*screen*.c \

@@ -43,7 +43,7 @@ void check(grid *grid, tree_word *tree, list_word *res, int i, int j, int i_add,
   int s = 0;
   int x = i + i_add, y = j + j_add;
 
-  while (0 <= x && x <= grid->h && 0 <= y && y <= grid->w && child != NULL) {
+  while (-1 <= x && x <= grid->h && -1 <= y && y <= grid->w && child != NULL) {
     substring[s] = child->c;
     substring[s + 1] = '\0';
     s++;
@@ -61,7 +61,7 @@ void check(grid *grid, tree_word *tree, list_word *res, int i, int j, int i_add,
                   grid->letters[x - i_add][y - j_add], direction);
       child = NULL;
     }
-    if (child != NULL && x < grid->h && y < grid->w) {
+    if (child != NULL && x >= 0 && y >= 0 && x < grid->h && y < grid->w) {
       child = get_child(child, grid->letters[x][y].c);
     }
     x += i_add;
