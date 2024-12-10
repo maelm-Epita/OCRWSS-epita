@@ -1,5 +1,6 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+#include <SDL2/SDL_opengl.h>
 
 #include "../Solver/list_word.h"
 #include "gtk_tools.h"
@@ -149,6 +150,61 @@ void draw_word(const char *filepath, const list_word *word) {
     int h = y_max - y;
     SDL_Rect rect = {x, y, w, h};
     SDL_RenderFillRect(renderer, &rect);
+    SDL_RenderPresent(renderer);
+  }
+  if (word->direction >= 4 && word->direction < 8) { // Diagonales uniquement
+    // Points de départ et d'arrivée
+    int x1 = word->start.top_left.x;
+    int y1 = word->start.top_left.y;
+    int x2 = word->end.bot_right.x;
+    int y2 = word->end.bot_right.y;
+
+    // Calcul des dimensions et vérification si diagonale
+    int dx = x2 - x1;
+    int dy = y2 - y1;
+
+    // Calcul des coins du rectangle incliné
+    int thickness = 5; // Épaisseur du rectangle
+    int offset_x = (dy > 0) ? thickness : -thickness;
+    int offset_y = (dx > 0) ? -thickness : thickness;
+
+    // Coins du rectangle incliné
+    int x3 = x2 + offset_x;
+    int y3 = y2 + offset_y;
+    int x4 = x1 + offset_x;
+    int y4 = y1 + offset_y;
+
+    // Activer le blending pour la transparence
+    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+    SDL_SetRenderDrawColor(renderer, 255, 0, 0, 128); // Rouge semi-transparent
+
+    // Dessiner les côtés du rectangle (contours)
+    SDL_RenderDrawLine(renderer, x1, y1, x2,
+                       y2); // Ligne principale (diagonale)
+    SDL_RenderDrawLine(renderer, x2, y2, x3, y3); // Côté 1
+    SDL_RenderDrawLine(renderer, x3, y3, x4, y4); // Côté 2
+    SDL_RenderDrawLine(renderer, x4, y4, x1, y1); // Côté 3
+
+    // Remplir le rectangle en traçant des lignes horizontales
+    int minX = (x1 < x2) ? x1 : x2;
+    int maxX = (x3 > x4) ? x3 : x4;
+    int minY = (y1 < y2) ? y1 : y2;
+    int maxY = (y3 > y4) ? y3 : y4;
+
+    // Remplir la zone entre les deux diagonales avec des lignes horizontales
+    for (int y = minY; y <= maxY; y++) {
+      int xStart = minX + (y - minY) * (x2 - minX) / (maxY - minY);
+      int xEnd = minX + (y - minY) * (x3 - minX) / (maxY - minY);
+      if (xStart > xEnd) {
+        int temp = xStart;
+        xStart = xEnd;
+        xEnd = temp;
+      }
+      for (int x = xStart; x <= xEnd; x++) {
+        SDL_RenderDrawPoint(renderer, x, y);
+      }
+    }
+
     SDL_RenderPresent(renderer);
   }
 

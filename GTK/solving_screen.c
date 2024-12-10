@@ -47,9 +47,12 @@ void solve(void) {
   list_word *res = NULL;
   res = find_all_words(&grid, word_list, word_list_size);
 
+  putchar('\n');
+  puts("Found:");
   while (res) {
     // printf("%s (%d, %d) -> (%d,%d)\n", res->word, res->start.x, res->start.y,
     // res->end.x, res->end.y);
+    puts(res->word);
     draw_word(image_path, res);
     res = res->next;
   }
