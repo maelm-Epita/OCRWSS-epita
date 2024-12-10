@@ -19,9 +19,9 @@ int init = 0;
 void draw_detection_lines(SDL_Surface *surface, DrawingData data) {
   Uint32 *pixels = surface->pixels;
   int w = surface->w;
-  Uint8 r = data.colors[0] * 255;
-  Uint8 g = data.colors[1] * 255;
-  Uint8 b = data.colors[2] * 255;
+  Uint8 r = data.colors[0];
+  Uint8 g = data.colors[1];
+  Uint8 b = data.colors[2];
 
   for (int i = data.res[0]; i < data.res[2]; i++) {
     pixels[data.res[1] * w + i] = SDL_MapRGB(surface->format, r, g, b);

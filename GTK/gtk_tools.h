@@ -11,7 +11,7 @@ typedef struct {
   gboolean is_drawing;
   gint start_x, start_y;
   gint end_x, end_y;
-  int colors[3];
+  double colors[3];
   int res[8];
 } DrawingData;
 

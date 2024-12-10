@@ -5,6 +5,7 @@
 #include "../Solver/list_word.h"
 #include "gtk_tools.h"
 
+int colors[3][3] = {{253, 176, 170},{170, 240, 209},{255,218,185} };
 // Helper function to draw a filled circle
 void draw_circle(SDL_Renderer *renderer, int cx, int cy, int radius) {
   for (int w = 0; w < radius * 2; w++) {
@@ -83,7 +84,7 @@ void draw_between_letters(const char *filepath, letter letter1,
   SDL_RenderCopy(renderer, texture, NULL, NULL);
 
   // Dessiner le rectangle arrondi
-  SDL_SetRenderDrawColor(renderer, 255, 0, 0,
+  SDL_SetRenderDrawColor(renderer, 255,255,255,
                          SDL_ALPHA_OPAQUE); // Couleur rouge
   draw(renderer, letter1, letter2, 50);
 
@@ -129,7 +130,9 @@ void draw_word(const char *filepath, const list_word *word) {
 
   // Dessiner le rectangle arrondi
   SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
-  SDL_SetRenderDrawColor(renderer, 255, 0, 0, 128);
+  int n = rand() % 3;
+  int r = colors[n][0], g = colors[n][1], b = colors[n][2];
+  SDL_SetRenderDrawColor(renderer, r,g,b, 128);
 
   if (word->direction < 4) {
     int x = (word->start.top_left.x < word->end.top_left.x)

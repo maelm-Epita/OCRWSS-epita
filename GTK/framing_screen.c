@@ -14,8 +14,8 @@ extern double scale;
 
 int image_w = 0, image_h = 0;
 
-DrawingData DrawGrid = {FALSE, 0, 0, 0, 0, {1, 0, 0}, {0}};
-DrawingData DrawWords = {FALSE, 0, 0, 0, 0, {0, 0, 1}, {0}};
+DrawingData DrawGrid = {FALSE, 0, 0, 0, 0, {253, 176, 170}, {0}};
+DrawingData DrawWords = {FALSE, 0, 0, 0, 0, {170, 240, 209}, {0}};
 int current = 0;
 
 void frame_grid(void) { current = 1; }
@@ -33,7 +33,7 @@ static void on_draw_event(__attribute__((unused)) GtkWidget *widget,
     gint width = abs(data->end_x - data->start_x);
     gint height = abs(data->end_y - data->start_y);
 
-    cairo_set_source_rgb(cr, data->colors[0], data->colors[1], data->colors[2]);
+    cairo_set_source_rgb(cr, data->colors[0] / 255, data->colors[1] / 255, data->colors[2] / 255);
     cairo_rectangle(cr, x, y, width, height);
     cairo_stroke(cr);
   }
