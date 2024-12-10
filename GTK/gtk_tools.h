@@ -5,6 +5,7 @@
 #include <gtk/gtk.h>
 
 #include "../Detection/detect.h"
+#include "../Solver/list_word.h"
 
 typedef struct {
   gboolean is_drawing;
@@ -22,4 +23,7 @@ void apply_theme(const char *theme_path);
 void free_all_elements_in_box(GtkBox *box);
 
 void draw_between_letters(const char *filepath, letter letter1, letter letter2);
+
+void draw_word(const char *filepath, const list_word *word);
+
 #endif

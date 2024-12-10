@@ -1,9 +1,12 @@
 #include <SDL2/SDL_image.h>
 #include <gtk/gtk.h>
 
+#include "../Detection/detect.h"
+#include "../Solver/grid.h"
+#include "../Solver/list_word.h"
+#include "../Solver/multi_solver.h"
 #include "gtk_tools.h"
 #include "screens.h"
-#include "../Detection/detect.h"
 
 extern GtkWidget *window;
 extern GtkWidget *box;
@@ -13,25 +16,43 @@ extern cairo_surface_t *image_surface;
 extern DrawingData DrawGrid;
 extern DrawingData DrawWords;
 
-void solve(void){
-  char* image_path;
-  asprintf(&image_path, "%s/image-%li.bmp", IMAGES_PATH, version);
-  printf("Grid start : %d, %d\nGrid end : %d, %d\n Word start : %d, %d\nWord end : %d, %d\n", DrawGrid.res[0], DrawGrid.res[1], DrawGrid.res[2], DrawGrid.res[3],
-         DrawWords.res[0], DrawWords.res[1], DrawWords.res[2], DrawWords.res[3]);
+void solve(void) {
+  char *cmd = NULL;
+  asprintf(&cmd,
+           "cp /tmp/OCR/Images/image-%li.bmp /tmp/OCR/Images/image-solve.bmp",
+           version);
+  system(cmd);
+  free(cmd);
+  char *image_path = "/tmp/OCR/Images/image-solve.bmp";
+  printf("Grid start : %d, %d\nGrid end : %d, %d\n Word start : %d, %d\nWord "
+         "end : %d, %d\n",
+         DrawGrid.res[0], DrawGrid.res[1], DrawGrid.res[2], DrawGrid.res[3],
+         DrawWords.res[0], DrawWords.res[1], DrawWords.res[2],
+         DrawWords.res[3]);
   // Preparing arguments
-  SDL_Surface* img = SDL_LoadBMP(image_path); 
+  SDL_Surface *img = SDL_LoadBMP(image_path);
   point grid_start = {DrawGrid.res[0], DrawGrid.res[1]};
   point grid_end = {DrawGrid.res[2], DrawGrid.res[3]};
   point list_start = {DrawWords.res[0], DrawWords.res[1]};
   point list_end = {DrawWords.res[2], DrawWords.res[3]};
   // Preparing return variables
   int grid_size_x, grid_size_y, word_list_size;
-  letter** grid_matrix;
-  char** word_list;
+  letter **grid_matrix;
+  char **word_list;
   // detection
-  detect(img, grid_start, grid_end, list_start, list_end,
-         &grid_matrix, &grid_size_x, &grid_size_y,
-         &word_list, &word_list_size);
+  detect(img, grid_start, grid_end, list_start, list_end, &grid_matrix,
+         &grid_size_x, &grid_size_y, &word_list, &word_list_size);
+
+  grid grid = {grid_size_x, grid_size_y, grid_matrix};
+  list_word *res = NULL;
+  res = find_all_words(&grid, word_list, word_list_size);
+
+  while (res) {
+    // printf("%s (%d, %d) -> (%d,%d)\n", res->word, res->start.x, res->start.y,
+    // res->end.x, res->end.y);
+    draw_word(image_path, res);
+    res = res->next;
+  }
 }
 
 void save_file() {
@@ -68,8 +89,7 @@ void save_file() {
 
 void solving_screen(void) {
   solve();
-  char *image_path = NULL;
-  asprintf(&image_path, "%s/image-%li.bmp", IMAGES_PATH, version);
+  char *image_path = "/tmp/OCR/Images/image-solve.bmp";
   // image_path = "/home/lepotototor/nvam.bmp";
 
   gtk_container_remove(GTK_CONTAINER(window), box);
@@ -82,8 +102,6 @@ void solving_screen(void) {
   GtkWidget *drawing_area = gtk_drawing_area_new();
   g_object_unref(pixbuf);
   g_signal_connect(drawing_area, "draw", G_CALLBACK(on_draw), image_surface);
-
-  free(image_path);
 
   GtkWidget *processing_button = gtk_button_new_with_label("Remodifiy Image");
   GtkWidget *save_button = gtk_button_new_with_label("Save the grid");
