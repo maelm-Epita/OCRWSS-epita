@@ -1,9 +1,10 @@
 #pragma once
+#include <stddef.h>
 
 struct Neuron{
   size_t inputsize;
-  float* weights;
-  float bias;
+  double* weights;
+  double bias;
 };
 
 struct Layer{
@@ -18,7 +19,10 @@ struct Network{
 };
 
 // calculates output of a neuron for the given input
-float calculate_output(struct Neuron Neuron, float* inputs);
+double calculate_output(struct Neuron Neuron, double* inputs);
+// total weight nb = l1*l2 + l2*l3 + .... 
+// total bias nb = l1+l2+l3+ ....
+void calc_weight_bias_amount(struct Network net, size_t* weight_total, size_t* bias_total);
 // sets all network variables and fills weights and biases with random initial values
 void fill_network(struct Network *Network); 
 // saves a neural network in a .model file with the following structure
@@ -31,7 +35,8 @@ void save_network(char *modelname, struct Network net);
 // loads network from a file formatted in the same way as the save function
 struct Network load_network(char *path);
 // calculates the output of the network based on the input
-float* feedforward(struct Network net, float* input);
+// the z matrix and a matrix will get filled out if the pointers are not null
+double* feedforward(struct Network net, double* input, double** z_mat, double** a_mat);
 // free a network, should be called when a network which was hand created and filled is no longer needed
 // if you created the layersizes array on the stack
 void free_network(struct Network *net); 

@@ -1,7 +1,11 @@
 #pragma once
+#include <stddef.h>
 
-float sigmoid(float z);
-// random float in range
-float float_rand( float min, float max );
-float* rand_float_array(float min, float max, size_t size);
-float* rand_float_array(float min, float max, size_t size);
+double leaky_ReLu(double z);
+double leaky_ReLu_derivative(double z);
+void softmax(double* z, size_t size, double* a);
+// random double in range
+double double_rand( double min, double max );
+double* rand_double_array(double min, double max, size_t size);
+double* rand_double_array(double min, double max, size_t size);
+double* he_weight_array(size_t size);

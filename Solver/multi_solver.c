@@ -3,117 +3,49 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "multi_solver.h"
 #include "grid.h"
 #include "list_word.h"
+#include "multi_solver.h"
 #include "tree_words.h"
 
-grid *get_grid(char *path) {
-  FILE *file = fopen(path, "r");
-
-  if (file == NULL)
-    errx(1, "grid: file not found\n");
-
-  grid *res = init_grid(file);
-  fclose(file);
-  return res;
-}
-
-char **get_words(char *path, int *nb_words) {
-  char **res = NULL;
-
-  FILE *file = fopen(path, "r");
-  if (file == NULL)
-    errx(1, "words: file not found");
-
-  char c;
-  char *word = NULL;
-  int word_size = 0;
-  *nb_words = 0;
-
-  while ((c = fgetc(file)) != EOF) {
-    if (c == '\n') {
-      *nb_words += 1;
-      res = realloc(res, *nb_words * sizeof(char *));
-
-      if (res == NULL)
-        errx(1, "realloc()");
-      word = realloc(word, (word_size + 1) * sizeof(char));
-      if (word == NULL)
-        errx(1, "realloc()");
-
-      word[word_size] = '\0';
-      res[*nb_words - 1] = word;
-      word = NULL;
-      word_size = 0;
-
-    } else {
-      word_size++;
-      word = realloc(word, word_size * sizeof(char));
-      if (word == NULL)
-        errx(1, "realloc()");
-      word[word_size - 1] = c;
-    }
-  }
-
-  if (word_size > 0) {
-    *nb_words += 1;
-    res = realloc(res, *nb_words * sizeof(char *));
-
-    if (res == NULL)
-      errx(1, "realloc()");
-    word = realloc(word, word_size + 1);
-    if (word == NULL)
-      errx(1, "realloc()");
-
-    word[word_size] = '\0';
-    res[*nb_words - 1] = word;
-  }
-
-  return res;
-}
-
-list_word *find_all_words(char *grid_path, char **words, size_t nb_words) {
-  grid *g = get_grid(grid_path);
-  print_grid(g);
+list_word *find_all_words(grid *grid, char **words, size_t nb_words) {
   tree_word *tree = build_from_words(words, nb_words);
 
-  list_word *list = init_list("", 0, 0, 0, 0);
+  list_word *list = init_list("", (letter){{0, 0}, {0, 0}, '\0'},
+                              (letter){{0, 0}, {0, 0}, '\0'}, 0);
 
-  solve(g, tree, list);
+  solve_grid(grid, tree, list);
 
   destroy_tree(&tree);
-  destroy_grid(&g);
+  // destroy_grid(&grid);
   list_word *res = list->next;
   free(list);
   return res;
 }
 
-void solve(grid *grid, tree_word *tree, list_word *res) {
+void solve_grid(grid *grid, tree_word *tree, list_word *res) {
   for (int i = 0; i < grid->h; i++) {
     for (int j = 0; j < grid->w; j++) {
-      tree_word *child = get_child(tree, grid->letters[i * grid->w + j]);
-      if (child != NULL) {
-        for (int d = 0; d < 8; d++) {
-          check(grid, tree, res, i, j, moves[d][1], moves[d][0]);
-        }
-      }
+      tree_word *child = get_child(tree, grid->letters[i][j].c);
+      for (int d = 0; child && d < 8; d++)
+        check(grid, tree, res, i, j, moves[d][1], moves[d][0], d);
     }
   }
 }
 
 void check(grid *grid, tree_word *tree, list_word *res, int i, int j, int i_add,
-           int j_add) {
+           int j_add, int direction) {
   char *substring = malloc(tree_length(tree) + 1);
   if (substring == NULL)
     errx(1, "malloc()");
 
-  tree_word *child = get_child(tree, grid->letters[i * grid->w + j]);
+  tree_word *child = get_child(tree, grid->letters[i][j].c);
   int s = 0;
   int x = i + i_add, y = j + j_add;
 
-  while (0 <= x && x < grid->h && 0 <= y && y <= grid->w && child != NULL) {
+  while (-1 <= x && x <= grid->h && -1 <= y && y <= grid->w && child != NULL) {
     substring[s] = child->c;
+    substring[s + 1] = '\0';
     s++;
 
     if (is_leaf(child)) {
@@ -125,11 +57,12 @@ void check(grid *grid, tree_word *tree, list_word *res, int i, int j, int i_add,
         errx(1, "malloc()");
       strcpy(str, substring);
 
-      add_element(res, str, j, i, y - j_add, x - i_add);
+      add_element(res, str, grid->letters[i][j],
+                  grid->letters[x - i_add][y - j_add], direction);
       child = NULL;
     }
-    if (child != NULL) {
-      child = get_child(child, grid->letters[x * grid->w + y]);
+    if (child != NULL && x >= 0 && y >= 0 && x < grid->h && y < grid->w) {
+      child = get_child(child, grid->letters[x][y].c);
     }
     x += i_add;
     y += j_add;

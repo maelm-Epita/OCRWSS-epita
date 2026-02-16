@@ -39,8 +39,8 @@ Module.symvers
 Mkfile.old
 dkms.conf
 
-# ignore uncompressed training data DO NOT REMOVE
-uncompressed/
-*.model
-*.zip
-huge_data.csv
+# ignore largest training data DO NOT REMOVE
+handwritten_letters.csv
+
+
+nvam-ocr

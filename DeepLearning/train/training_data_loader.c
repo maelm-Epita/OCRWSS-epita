@@ -1,7 +1,11 @@
+#include <err.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include "training_data_loader.h"
+
+#define OUTPUT_SIZE 26
 
 // helpers
 size_t str_to_size(char* str){
@@ -13,17 +17,8 @@ size_t str_to_size(char* str){
   return s;
 }
 
-// property ish
-size_t get_outputs_size(){
-  return 26;
-}
-size_t get_inputs_size(){
-  return 784;
-}
-
-
-float* snum_to_output(size_t n){
-  float* output=calloc(get_outputs_size(), sizeof(float));
+double* snum_to_output(size_t n){
+  double* output=calloc(OUTPUT_SIZE, sizeof(double));
   if (output==NULL){
     printf("could not create output array");
     exit(EXIT_FAILURE);
@@ -32,8 +27,13 @@ float* snum_to_output(size_t n){
   return output;
 }
 
-void load_training_data(FILE *file, float** *inputs_p, float** *outputs_p, size_t data_number, size_t input_size ){
-  size_t line_size_max = 2500;
+void load_training_data(char* path, double** *inputs_p, double** *outputs_p, size_t data_number, size_t input_size){
+  FILE *file;
+  file = fopen(path, "r");
+  if (file == NULL) {
+    errx(EXIT_FAILURE, "File could not be opened\n");
+  }
+  size_t line_size_max = 100000;
   char buf;
   size_t line_nb = 0;
   // free input and output if they alrdy exist
@@ -44,12 +44,12 @@ void load_training_data(FILE *file, float** *inputs_p, float** *outputs_p, size_
     free(*outputs_p);
   }
   // we alloc depending on the number of training data
-  *inputs_p = calloc(data_number, sizeof(float*));
+  *inputs_p = calloc(data_number, sizeof(double*));
   if (*inputs_p == NULL){
     printf("could not alloc input array");
     exit(EXIT_FAILURE);
   }
-  *outputs_p = calloc(data_number, sizeof(float*));
+  *outputs_p = calloc(data_number, sizeof(double*));
   if (*outputs_p == NULL){
     printf("could not alloc output array");
     exit(EXIT_FAILURE);
@@ -81,14 +81,45 @@ void load_training_data(FILE *file, float** *inputs_p, float** *outputs_p, size_
       printf("could not realloc line");
       exit(EXIT_FAILURE);
     }
+    double *input;
+    double *output;
     if (linesize>1){
-      // get the expected output of the training data; we get the line until the first , then convert that to a number then get the output from that number
-      float* output = snum_to_output(str_to_size(strtok(line, ",")));
-      // get the remaining input_size columns which are the pixels and convert them to a number then from 0-255 to 0-1
-      float* input = calloc(input_size, sizeof(float));
-      for (size_t i = 0; i<input_size; i++){
-        
-        *(input+i) = atof(strtok(NULL, ","))/255;
+      // if we are loading the digital training set ; the lines are : pixels -- expected letter guess
+      if (strcmp(path, "./training-set/digital_letters.csv") == 0 || 
+          strcmp(path, "./training-set/digital_letters_alt.csv") == 0)
+      {
+        // the first element in the line is the index (data number) so we just discard it
+        strtok(line, ",");
+        // get the first input_size columns which are the pixels and convert them to a number then from 0-255 to 0-1
+        input = calloc(input_size, sizeof(double));
+        for (size_t i = 0; i<input_size; i++){
+          *(input+i) = atof(strtok(NULL, ","))/255;
+        }
+        // get the expected output of the training data; we get the line until the first ,
+        // then convert that to a number then get the output from that number
+        // as in the other format, the last element in the line (the label here)
+        output = snum_to_output(*(strtok(NULL, ""))-'A');
+      }
+      // if we are loading the other training set ; assume the lines are : expected label index -- pixels
+      else {
+        // get the expected output of the training data; we get the line until the first , 
+        // then convert that to a number then get the output from that number
+        output = snum_to_output(str_to_size(strtok(line, ",")));
+        // get the remaining input_size columns which are the pixels and convert them to a number then from 0-255 to 0-1
+        input = calloc(input_size, sizeof(double));
+        for (size_t i = 0; i<input_size; i++){
+          // the last pixel does not have a , to separate it, it's the end of the line or of the file
+          // so we pass nothing to strtok to get the remainder of the string
+          if (i==input_size-1){
+            *(input+i) = atof(strtok(NULL, ""))/255;
+          }
+          else{
+            *(input+i) = atof(strtok(NULL, ","))/255;
+          }
+        }
+      }
+      if (input == NULL || output == NULL){
+        errx(EXIT_FAILURE, "Failed to load the data for line %lu\n", line_nb);
       }
       // we get the correct input and output from the data
       *(*inputs_p+line_nb) = input;
@@ -98,4 +129,5 @@ void load_training_data(FILE *file, float** *inputs_p, float** *outputs_p, size_
     free(line);
     line_nb++;
   }
+  fclose(file);
 }

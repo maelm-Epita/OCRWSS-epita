@@ -5,11 +5,11 @@
 #include "../shared/arr_helpers.h"
 
 // create the training set from the input and output arrays
-struct training_set create_training_set(float** inputs, float** outputs, size_t data_number, size_t input_number){
+struct training_set create_training_set(double** inputs, double** outputs, size_t data_number, size_t input_number){
   // create dataset array
   struct training_data* data = calloc(data_number, sizeof(struct training_data));
   for (size_t i =0; i<data_number; i++){
-    struct training_data d = {*(inputs+i), *(outputs+i)};
+    struct training_data d = {input_number, *(inputs+i), *(outputs+i)};
     *(data+i) = d;
   }
   // create the final training set
@@ -56,7 +56,6 @@ void shuffle_training_set(struct training_set set)
 }
 
 struct minibatch_set create_minibatch_set(struct training_set set, size_t minibatch_size){
-  printf("Creating mini-batches of size %lu\n", minibatch_size);
   size_t minibatch_nb = set.data_number/minibatch_size;
   struct minibatch_set bset = {minibatch_size, minibatch_nb, NULL};
   bset.mini_batches = calloc(minibatch_nb, sizeof(struct training_set));

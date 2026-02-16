@@ -3,17 +3,14 @@
 
 #include <SDL2/SDL.h>
 
-typedef struct{
-  int x, y;
-} point;
+#include "detect.h"
 
 typedef struct{
   point min;
   point max;
 } block;
 
-static int BLOCK_SIZE = 100;
-static double THRESHOLD = 0.1;
+void detect_grid_and_word_list(const SDL_Surface *surface, int *res);
 
 
 void lines(SDL_Surface* img, block *block);
