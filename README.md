@@ -10,7 +10,8 @@ Made with a team of 4 fellow students
 - GTK
 - SDL2
 - make
-- gcc
+- clang
+- pkg-config
 
 In repository root:
 
